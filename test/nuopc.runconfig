@@ -1,0 +1,48 @@
+###############################################
+####  esmApp Run-Time Configuration File  #####
+###############################################
+
+# A concurrent run sequence
+#runSeq::
+    @1800             # 30min time step 
+      MED
+      MED -> ATM
+      MED -> CHM
+      ATM
+      CHM
+      ATM -> MED
+      CHM -> MED
+      MED
+    @
+::
+
+# A sequential run sequence
+#runSeq::
+    @1800             # 30min time step 
+      MED
+      MED -> ATM
+      ATM
+      ATM -> MED
+      MED
+      MED
+      MED -> CHM
+      CHM
+      CHM -> MED
+      MED
+    @
+::
+
+# A run sequence for ATM only
+runSeq::
+    @360             # 6min time step 
+      ATM -> CHM :remapMethod=redist
+      ATM
+      CHM
+::
+
+# Attributes for components
+
+driverAttributes::
+  Verbosity = 0
+  Profiling = 0
+::
