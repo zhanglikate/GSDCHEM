@@ -12,6 +12,20 @@ module CHM
   
   implicit none
 
+  integer, parameter :: importFieldCount = 9
+  character(len=*), dimension(importFieldCount), parameter :: &
+    importFieldNames = (/ &
+      "air_pressure",     &
+      "air_pressure_in_model_layers",     &
+      "geopotential",     &
+      "geopotential_in_model_layers",     &
+      "air_temperature",  &
+      "x_wind",           &
+      "y_wind",           &
+      "omega" ,           &
+      "mass_fraction_of_tracers_in_air"   &
+    /)
+
 #if 0
 #ifdef ORIG_COORD
   integer, parameter :: importFieldCount = 32
@@ -55,7 +69,6 @@ module CHM
       "soil_moisture_content", &
       "tracers" &
       /)
-#else
   integer, parameter :: importFieldCount = 2
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
@@ -146,19 +159,19 @@ module CHM
 
     ! attach specializing method(s)
     ! -> NUOPC specializes by default --->>> first need to remove the default
-    if (importFieldCount > 1) then
-      call ESMF_MethodRemove(model, label_CheckImport, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-      call NUOPC_CompSpecialize(model, specLabel=label_CheckImport, &
-        specRoutine=CheckImport, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-    end if
+!   if (importFieldCount > 1) then
+!     call ESMF_MethodRemove(model, label_CheckImport, rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!       line=__LINE__, &
+!       file=__FILE__)) &
+!       return  ! bail out
+!     call NUOPC_CompSpecialize(model, specLabel=label_CheckImport, &
+!       specRoutine=CheckImport, rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!       line=__LINE__, &
+!       file=__FILE__)) &
+!       return  ! bail out
+!   end if
 
   end subroutine
   
@@ -404,7 +417,8 @@ module CHM
     type(ESMF_GeomType_flag)      :: geomtype
     type(ESMF_CoordSys_Flag)      :: coordSys
     type(ESMF_DistGrid)           :: distgrid
-    integer                       :: item, localrc, localDe, numOwnedNodes, spatialDim
+    type(ESMF_Array)              :: array
+    integer                       :: de, item, localrc, localDe, numOwnedNodes, spatialDim
     integer                       :: comm, localPet
     integer                       :: recvData(1)
     real, allocatable :: fperm(:)
@@ -412,6 +426,7 @@ module CHM
 
     integer :: dimCount, tileCount, deCount, elementCount
     integer, dimension(:),   allocatable :: seqIndexList
+    integer, dimension(:),   allocatable :: deToTileMap, localDeToDeMap
     integer, dimension(:,:), allocatable :: minIndexPDe, maxIndexPDe
 
     ! query the Component for its clock, importState and exportState
@@ -436,302 +451,133 @@ module CHM
       return  ! bail out
 
     call chemInitialize(clock, phase=0, comm=comm, rc=rc)
+    if (rc /= CHEM_RC_SUCCESS) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize chemistry component", &
+        line=__LINE__, &
+        file=__FILE__) 
+      return  ! bail out
+    end if
+
+    ! -- check if import fields are defined
+    if (importFieldCount < 1) then 
+      call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
+        msg="This component requires imported fields to be defined.", &
+        line=__LINE__, file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
 
     ! -- mark import fields as updated
-    do item = 1, importFieldCount
-      call ESMF_StateGet(importState, field=field, &
-        itemName=trim(importFieldNames(item)), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-      call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
-    end do
+!   do item = 1, importFieldCount
+!     call ESMF_StateGet(importState, field=field, &
+!       itemName=trim(importFieldNames(item)), rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!       line=__LINE__, &
+!       file=__FILE__)) &
+!       return  ! bail out
+!     call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
+!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!       line=__LINE__, &
+!       file=__FILE__)) &
+!       return  ! bail out
+!   end do
 
-    ! get coordinates from Grid/Mesh object
-    ! assume all fields on same grid/mesh
-    ! use last field from previous loop, if available
-    if (importFieldCount > 0) then
-      call ESMF_FieldGet(field, geomtype=geomtype, rc=rc)
+    ! get coordinates from Grid object
+    ! assume all fields on same grid
+    ! use first field 
+    call ESMF_StateGet(importState, field=field, &
+      itemName=trim(importFieldNames(1)), rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    call ESMF_FieldGet(field, geomtype=geomtype, localDeCount=localDeCount, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    write(6,'("-- localDeCount =",i0)') localDeCount
+    if (geomtype == ESMF_GEOMTYPE_GRID) then
+      call ESMF_FieldGet(field, array=array, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      if      (geomtype == ESMF_GEOMTYPE_MESH) then
-        call ESMF_FieldGet(field, mesh=mesh, localDeCount=localDeCount, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      call ESMF_ArrayGet(array, deCount=deCount, dimCount=dimCount, &
+        tileCount=tileCount, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      allocate(minIndexPDe(dimCount, deCount), maxIndexPDe(dimCount, deCount), &
+        deToTileMap(deCount), localDeToDeMap(localDeCount), stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
+      call ESMF_ArrayGet(array, distgrid=distgrid, &
+        deToTileMap=deToTileMap, localDeToDeMap=localDeToDeMap, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      call ESMF_DistGridGet(distgrid, minIndexPDe=minIndexPDe, &
+        maxIndexPDe=maxIndexPDe, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+
+      ! -- init chemistry model on local DEs
+      call chem_model_init(deCount=localDeCount, rc=rc)
+      if (rc /= CHEM_RC_SUCCESS) then
+        call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+          msg="Failed to initialize chemistry model for localDeCount", &
           line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        print *,'-- FIELD distgrid: localDeCount = ',localDeCount
-        if (localDeCount > 1) then
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Imported fields can only have localDeCount = 1",&
-            line=__LINE__, file=__FILE__, &
-            rcToReturn=rc)
-          return  ! bail out
-        end if
-        call ESMF_MeshGet(mesh, spatialDim=spatialDim, numOwnedNodes=numOwnedNodes, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        if (spatialDim /= 2) then
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Imported Mesh can only have spatialDim = 2.", &
-            line=__LINE__, file=__FILE__, &
-            rcToReturn=rc)
-          return  ! bail out
-        end if
-#ifndef ORIG_COORD
-        allocate(ownedNodeCoords(spatialDim*numOwnedNodes), stat=localrc)
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-        call ESMF_MeshGet(mesh, ownedNodeCoords=ownedNodeCoords, coordSys=coordSys, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        allocate(lon(numOwnedNodes), lat(numOwnedNodes), stat=localrc)
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-        if      (coordSys == ESMF_COORDSYS_SPH_RAD) then
-          lon = ESMF_COORDSYS_RAD2DEG * ownedNodeCoords(1::2)
-          lat = ESMF_COORDSYS_RAD2DEG * ownedNodeCoords(2::2)
-        else if (coordSys == ESMF_COORDSYS_SPH_DEG) then
-          lon = ownedNodeCoords(1::2)
-          lat = ownedNodeCoords(2::2)
-        end if
-        deallocate(ownedNodeCoords, stat=localrc)
-        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-#endif
-        ! -- get total number of nodes
-        call ESMF_GridCompGet(model, vm=vm, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        recvData = 0
-        call ESMF_VMAllReduce(vm, (/ numOwnedNodes /), recvData, 1, ESMF_REDUCE_SUM, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        nip = recvData(1)
-        glvl = int(log((nip-2.)/10.)/log(4.))
-        ! -- get index decomposition
-        call ESMF_MeshGet(mesh, nodalDistgrid=distgrid, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_DistGridGet(distgrid, dimCount=dimCount, tileCount=tileCount, deCount=deCount, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        if (tileCount > 1) then
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Imported Mesh should have 1 tile.", &
-            line=__LINE__, file=__FILE__, &
-            rcToReturn=rc)
-          return  ! bail out
-        end if
-        if (dimCount > 1) then
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Imported Mesh should have 1 dimension.", &
-            line=__LINE__, file=__FILE__, &
-            rcToReturn=rc)
-          return  ! bail out
-        end if
-        call ESMF_DistGridGet(distgrid, localDe=0, elementCount=elementCount, rc=rc)
-        allocate(seqIndexList(elementCount), stat=localrc)
-        seqIndexList = 0
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-        call ESMF_DistGridGet(distgrid, localDe=0, seqIndexList=seqIndexList, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        ! -- set horizontal domain decomposition
-        call chemDomainSet(js=minval(seqIndexList), je=maxval(seqIndexList), jmax=nip)
-        deallocate(seqIndexList, stat=localrc)
-        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-      else if (geomtype == ESMF_GEOMTYPE_GRID) then
-        call ESMF_FieldGet(field, grid=grid, localDeCount=localDeCount, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        write(6,'("-- localDeCount =",i0)') localDeCount
-        call ESMF_GridGet(grid, distgrid=distgrid, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_DistGridGet(distgrid, dimCount=dimCount, tileCount=tileCount, deCount=deCount, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        write(6,'("-- GRID distgrid: dimCount = ",i0," tileCount = ",i0," deCount = ",i0)') dimCount, tileCount, deCount
-        if (dimCount /= 2) then
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Imported Grid should have 2 dimensions.", &
-            line=__LINE__, file=__FILE__, &
-            rcToReturn=rc)
-          return  ! bail out
-        end if
-        allocate(minIndexPDe(dimCount, deCount), maxIndexPDe(dimCount, deCount), stat=localrc)
-        if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__,  &
-          file=__FILE__,  &
-          rcToReturn=rc)) &
-          return  ! bail out
-        minIndexPDe = 0
-        maxIndexPDe = 0
-        call ESMF_DistGridGet(distgrid, &
-          minIndexPDe=minIndexPDe, &
-          maxIndexPDe=maxIndexPDe, &
-          rc=rc)
-        write(6,'("-- GRID distgrid: minIndexPDe   = ",20i8)') minIndexPDe
-        write(6,'("-- GRID distgrid: maxIndexPDe   = ",20i8)') maxIndexPDe
-        deallocate(minIndexPDe, maxIndexPDe, stat=localrc)
-        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__,  &
-          file=__FILE__,  &
-          rcToReturn=rc)) &
-          return  ! bail out
-      else
-        call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-          msg="Imported fields can only be defined on Grid or Mesh objects.", &
-          line=__LINE__, file=__FILE__, &
-          rcToReturn=rc)
+          file=__FILE__) 
         return  ! bail out
       end if
+
+      do localDe = 0, localDeCount-1
+        de = localDeToDeMap(localDe+1) + 1
+
+        write(6,'("CHEM on localDe: ",i0," DE: ",i0)') localDe, de-1
+        write(6,'(4x,"minIndexPDe=",2i8,2x,"maxIndexPDe=",2i8)') minIndexPDe(:,de), maxIndexPDe(:,de)
+        write(6,'(4x,"tile=",i0)') deToTileMap(de)
+
+        ! -- set model domains for local DEs
+        call chem_model_domain_set(minIndexPDe(:,de), maxIndexPDe(:,de), &
+          tile=deToTileMap(de), de=localDe, rc=rc)
+        if (rc /= CHEM_RC_SUCCESS) then
+          call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+            msg="Failed to initialize chemistry model for localDeCount", &
+            line=__LINE__, &
+            file=__FILE__) 
+          return  ! bail out
+        end if
+
+      end do
+
+    else
+      call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
+        msg="Imported fields can only be defined on Grid objects.", &
+        line=__LINE__, file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
     end if
 
-    if (importFieldCount > 0) then
-      if      (geomtype == ESMF_GEOMTYPE_MESH) then
-        ! -- if single DE/PET, set pointers here once and for all
-        call importFieldSet(importState, importFieldNames, 0, rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
+    ! -- connect import fields to model
+!   call importFieldSet(importState, importFieldNames, rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     line=__LINE__, &
+!     file=__FILE__)) &
+!     return  ! bail out
 
-        ! -- set vertical domain
-        call chemDomainSet(kmax=size(tr3d, dim=1))
-
-        ! -- get index order and permutation information
-        call ESMF_VMGet(vm, localPet=localPet, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        allocate(indx(nip), perm(nip), fperm(nip))
-        indx = 0
-        perm = 0
-        fperm = 0.
-        call ESMF_StateGet(importState, field=field, itemName="grid_index", rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_FieldGather(field, fperm, 0, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        if (localPet == 0) then
-          indx = nint(fperm)
-        end if
-        fperm = 0.
-        call ESMF_StateGet(importState, field=field, itemName="grid_perm", rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        call ESMF_FieldGather(field, fperm, 0, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-        if (localPet == 0) then
-          perm = nint(fperm)
-        end if
-        deallocate(fperm)
-
-        ! -- create mapping array for FIM node indices (FIM-to-local)
-        allocate(map(nip))
-        map = 0
-        if (localPet == 0) then
-          do item = 1, nip
-            map(indx(item)) = item
-          end do
-          allocate(seqIndexList(nip))
-          seqIndexList = 0
-          do item = 1, nip
-            seqIndexList(item) = perm(map(item))
-          end do
-          perm = seqIndexList
-          deallocate(seqIndexList)
-        end if
-
-        call ESMF_VMBroadcast(vm, indx, nip, 0, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-
-        call ESMF_VMBroadcast(vm, map, nip, 0, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-
-        call ESMF_VMBroadcast(vm, perm, nip, 0, rc=rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-
-        ! initialize chemistry model (phase 2)
-        call chemInitialize(clock, phase=1)
-
-#ifndef ORIG_COORD
-        ! set model's grid coordinates
-        deg_lon(jms:jme) = lon
-        deg_lat(jms:jme) = lat
-
-        deallocate(lon, lat, stat=localrc)
-        if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)) return
-#endif
-
-        ! prepare additional arrays
-        call chem_data_prep()
-      end if
-    end if
+    ! initialize model (phase 2)
+    ! prepare additional arrays
+    ! call chem_data_prep()
 
     ! indicate that data initialization is complete (breaking out of init-loop)
     call NUOPC_CompAttributeSet(model, &
@@ -804,6 +650,13 @@ module CHM
       file=__FILE__)) &
       return  ! bail out
 
+    ! -- connect import fields to model
+    call importFieldSet(importState, importFieldNames, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
     do item = 1, importFieldCount
       call ESMF_StateGet(importState, field=field, &
         itemName=trim(importFieldNames(item)), rc=rc)
@@ -818,30 +671,15 @@ module CHM
         return  ! bail out
     end do
 
-#if 0
-    ! -- if imported Fields are defined on multiple DEs, reset pointers for each localDE
-    if (localDeCount > 1) then
-      do localDe = 0, localDeCount - 1
-        call importFieldSet(importState, importFieldNames, localDe, rc)
-        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-          line=__LINE__, &
-          file=__FILE__)) &
-          return  ! bail out
-      end do
-    end if
-#endif
-
-    return
-
     ! -- prepare additional arrays
-    call chem_data_prep()
+!   call chem_data_prep()
 
     ! -- advance model
-    call chemAdvance(clock, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+!   call chemAdvance(clock, rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     line=__LINE__, &
+!     file=__FILE__)) &
+!     return  ! bail out
 
   end subroutine
 
@@ -851,7 +689,7 @@ module CHM
 
     rc = ESMF_SUCCESS
 
-    call chemFinalize(rc)
+!   call chemFinalize(rc)
 
   end subroutine ModelFinalize
 
@@ -1073,15 +911,15 @@ module CHM
 
   !-----------------------------------------------------------------------------
 
-  subroutine importFieldSet(importState, fieldNames, localDe, rc)
-    type(ESMF_State) :: importState
+  subroutine importFieldSet(importState, fieldNames, rc)
+    type(ESMF_State),               intent(in) :: importState
     character(len=*), dimension(:), intent(in) :: fieldNames
-    integer, intent(in) :: localDe
     integer, intent(out) :: rc
 
     ! local variables
-    type(ESMF_Field) :: field
-    integer          :: item
+    type(chem_state_type), pointer :: state
+    type(ESMF_Field)      :: field
+    integer               :: item, localDe, localDeCount
 
     rc = ESMF_SUCCESS
 
@@ -1092,172 +930,77 @@ module CHM
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail
-      select case (trim(fieldNames(item)))
-#ifdef ORIG_COORD
-        case ("deg_lon")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=deg_lon, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      call ESMF_FieldGet(field, localDeCount=localDeCount, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail
+      do localDe = 0, localDeCount-1
+        call chem_model_get(stateIn=state, de=localDe, rc=rc)
+        if (rc /= CHEM_RC_SUCCESS) then
+          call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+            msg="Failed to initialize chemistry component", &
             line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("deg_lat")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=deg_lat, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-#endif
-        case ("grid_perm")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=loc_perm, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("surface_mask")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=slmsk2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("cell_area")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=area, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("area_type")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stype2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("vegetation_type")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=vtype2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("vegetation_area_fraction")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=vfrac2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("thickness_of_snowfall_amount")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=snwdph2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("atmosphere_boundary_layer_thickness")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=pb2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-!       case ("atmosphere_optical_thickness_due_to_ambient_aerosol")
-!         call ESMF_FieldGet(field, localDe=localDe, farrayPtr=?????, rc=rc)
-!         if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!           line=__LINE__, &
-!           file=__FILE__)) &
-!           return  ! bail
-        case ("convective_rainfall_amount")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=rc2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("rainfall_amount")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=rn2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("surface_skin_temperature")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=ts2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("surface_downwelling_shortwave_flux_in_air")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=rsds, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("surface_upward_sensible_heat_flux")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=hf2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("friction_velocity")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=us2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("z_over_l")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=zorl2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("air_temperature")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=tk3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("exchange")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=exch, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("omega")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=ws3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("x_wind")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=us3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("y_wind")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=vs3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("air_pressure")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=pr3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("geopotential")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=ph3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("soil_moisture_content")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=sm3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-        case ("tracers")
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=tr3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail
-      end select
+            file=__FILE__) 
+          return  ! bail out
+        end if
+        select case (trim(fieldNames(item)))
+          case ("air_pressure")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % pr3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("air_pressure_in_model_layers")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % prl3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("geopotential")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % ph3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("geopotential_in_model_layers")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % phl3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("air_temperature")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % tk3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("x_wind")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % us3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("y_wind")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % vs3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("omega")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % ws3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("mass_fraction_of_tracers_in_air")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % q, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+        end select
+      end do
       call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &

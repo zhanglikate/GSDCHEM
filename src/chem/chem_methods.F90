@@ -1,11 +1,13 @@
 module chem_methods
 
   use ESMF
+  use chem_rc_mod
   use chem_comm_mod
   use chem_shr_mod
   use chem_config_mod
   use chem_species_mod
   use chem_domain_mod
+  use chem_model_mod
   use chem_vars_mod
   use gocart_mod
 

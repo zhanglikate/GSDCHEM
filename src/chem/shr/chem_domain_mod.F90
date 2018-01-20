@@ -1,10 +1,27 @@
 module chem_domain_mod
 
+  use chem_types_mod
+
+!------ legacy
   use mpp_mod,         only : mpp_npes
   use mpp_domains_mod, only : domain2d, mpp_define_domains, mpp_get_compute_domain
   use mpp_domains_mod, only : domain1d
+!------ legacy end
 
   implicit none
+
+  type chem_domain_type
+    integer :: tile
+    integer :: is, ie, js, je
+    real(CHEM_KIND_R8), pointer :: lon(:,:)
+    real(CHEM_KIND_R8), pointer :: lat(:,:)
+  end type chem_domain_type
+
+! private
+
+! public :: chem_domain_type
+
+#if 1
 
   ! -- atmospheric grid parameters
   integer :: nip                 =  0      ! # of icosaedral cells
@@ -50,5 +67,7 @@ contains
     its =   1 ; ite =   1 
 
   end subroutine chem_domain_setup
+
+#endif
 
 end module chem_domain_mod

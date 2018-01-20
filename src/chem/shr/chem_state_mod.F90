@@ -1,6 +1,20 @@
 module chem_state_mod
 
+  use chem_types_mod
+
   implicit none
+
+  type chem_state_type
+    real(CHEM_KIND_R8), pointer :: pr3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: prl3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: ph3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: phl3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: tk3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: us3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: vs3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: ws3d(:,:,:)
+    real(CHEM_KIND_R8), pointer :: q(:,:,:,:)
+  end type chem_state_type
 
   public
 
