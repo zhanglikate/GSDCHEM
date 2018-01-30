@@ -99,14 +99,12 @@ am_libshr_a_OBJECTS = libshr_a-chem_comm_mod.$(OBJEXT) \
 	libshr_a-chem_config_mod.$(OBJEXT) \
 	libshr_a-chem_const_mod.$(OBJEXT) \
 	libshr_a-chem_domain_mod.$(OBJEXT) \
-	libshr_a-chem_io_mod.$(OBJEXT) \
 	libshr_a-chem_model_mod.$(OBJEXT) \
 	libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_shr_mod.$(OBJEXT) \
 	libshr_a-chem_species_mod.$(OBJEXT) \
 	libshr_a-chem_state_mod.$(OBJEXT) \
 	libshr_a-chem_types_mod.$(OBJEXT) \
-	libshr_a-chem_vars_mod.$(OBJEXT) \
-	libshr_a-chem_io_mod.$(OBJEXT) libshr_a-units.$(OBJEXT)
+	libshr_a-chem_vars_mod.$(OBJEXT)
 libshr_a_OBJECTS = $(am_libshr_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -261,12 +259,14 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libshr.a
-libshr_a_SOURCES = chem_comm_mod.F90 chem_config_mod.F90 chem_const_mod.F90 chem_domain_mod.F90 chem_io_mod.F90 \
+libshr_a_SOURCES = chem_comm_mod.F90 chem_config_mod.F90 chem_const_mod.F90 chem_domain_mod.F90 \
 	chem_model_mod.F90 chem_rc_mod.F90 chem_shr_mod.F90 chem_species_mod.F90 chem_state_mod.F90 chem_types_mod.F90 \
-	chem_vars_mod.F90 chem_io_mod.F90 units.F90
+	chem_vars_mod.F90 
 
-local_INCLUDE = -I . -I $(top_builddir)/src/mpp -I \
-	$(top_builddir)/src/util
+# chem_io_mod.F90 units.F90
+local_INCLUDE = -I .
+#local_INCLUDE += -I $(top_builddir)/src/mpp
+#local_INCLUDE += -I $(top_builddir)/src/util
 libshr_a_INCLUDE = $(local_INCLUDE)
 libshr_a_FCFLAGS = $(local_INCLUDE)
 all: all-am
@@ -348,12 +348,6 @@ libshr_a-chem_domain_mod.o: chem_domain_mod.F90
 libshr_a-chem_domain_mod.obj: chem_domain_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_domain_mod.obj `if test -f 'chem_domain_mod.F90'; then $(CYGPATH_W) 'chem_domain_mod.F90'; else $(CYGPATH_W) '$(srcdir)/chem_domain_mod.F90'; fi`
 
-libshr_a-chem_io_mod.o: chem_io_mod.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_io_mod.o `test -f 'chem_io_mod.F90' || echo '$(srcdir)/'`chem_io_mod.F90
-
-libshr_a-chem_io_mod.obj: chem_io_mod.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_io_mod.obj `if test -f 'chem_io_mod.F90'; then $(CYGPATH_W) 'chem_io_mod.F90'; else $(CYGPATH_W) '$(srcdir)/chem_io_mod.F90'; fi`
-
 libshr_a-chem_model_mod.o: chem_model_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_model_mod.o `test -f 'chem_model_mod.F90' || echo '$(srcdir)/'`chem_model_mod.F90
 
@@ -395,12 +389,6 @@ libshr_a-chem_vars_mod.o: chem_vars_mod.F90
 
 libshr_a-chem_vars_mod.obj: chem_vars_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_vars_mod.obj `if test -f 'chem_vars_mod.F90'; then $(CYGPATH_W) 'chem_vars_mod.F90'; else $(CYGPATH_W) '$(srcdir)/chem_vars_mod.F90'; fi`
-
-libshr_a-units.o: units.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-units.o `test -f 'units.F90' || echo '$(srcdir)/'`units.F90
-
-libshr_a-units.obj: units.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-units.obj `if test -f 'units.F90'; then $(CYGPATH_W) 'units.F90'; else $(CYGPATH_W) '$(srcdir)/units.F90'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -614,11 +602,15 @@ libshr_a-chem_domain_mod.$(OBJEXT) : libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_model_mod.$(OBJEXT)  : libshr_a-chem_types_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) \
 	libshr_a-chem_domain_mod.$(OBJEXT) libshr_a-chem_state_mod.$(OBJEXT)
 libshr_a-chem_state_mod.$(OBJEXT)  : libshr_a-chem_types_mod.$(OBJEXT)
-libshr_a-chem_io_mod.$(OBJEXT)     : libshr_a-chem_domain_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT)
-libshr_a-chem_species_mod.$(OBJEXT): libshr_a-chem_state_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT)
+#libshr_a-chem_io_mod.$(OBJEXT)     : libshr_a-chem_domain_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT)
+libshr_a-chem_species_mod.$(OBJEXT): libshr_a-chem_state_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT) \
+	libshr_a-chem_comm_mod.$(OBJEXT)
+#libshr_a-chem_shr_mod.$(OBJEXT)    : libshr_a-chem_const_mod.$(OBJEXT) libshr_a-chem_state_mod.$(OBJEXT) \
+#	libshr_a-chem_vars_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT) libshr_a-chem_domain_mod.$(OBJEXT) \
+#	libshr_a-chem_species_mod.$(OBJEXT) libshr_a-chem_io_mod.$(OBJEXT) libshr_a-chem_comm_mod.$(OBJEXT)
 libshr_a-chem_shr_mod.$(OBJEXT)    : libshr_a-chem_const_mod.$(OBJEXT) libshr_a-chem_state_mod.$(OBJEXT) \
 	libshr_a-chem_vars_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT) libshr_a-chem_domain_mod.$(OBJEXT) \
-	libshr_a-chem_species_mod.$(OBJEXT) libshr_a-chem_io_mod.$(OBJEXT) 
+	libshr_a-chem_species_mod.$(OBJEXT) libshr_a-chem_comm_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

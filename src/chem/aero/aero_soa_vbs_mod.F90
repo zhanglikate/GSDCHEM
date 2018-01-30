@@ -31,10 +31,10 @@ MODULE aero_soa_vbs_mod
 ! 30/06/2014: Modified by Paolo Tuccella
 !             The module has been modified in order to include the aqueous phase
 !
-  USE mpp_mod, ONLY : mpp_error, FATAL
 
   USE chem_state_mod
   USE chem_config_mod, ONLY : num_moist, num_chem, chem_config_type
+  USE chem_comm_mod,   ONLY : chem_comm_abort
 
   USE aero_soa_vbs_data_mod
  
@@ -7349,7 +7349,7 @@ subroutine initwet( ntype_aer, nsize_aer, ncomp_aer, massptr_aer,      &
         dr = 0.005
         nr = 1 + nint( (rhi-rlo)/dr )
         if (nr .gt. nrainsvmax) then
-            call mpp_error(FATAL,'*** subr. calc_1_impact_rate -- nr >nrainsvmax')
+            call chem_comm_abort(msg='*** subr. calc_1_impact_rate -- nr >nrainsvmax')
         end if
 
         precipmmhr = 1.0
@@ -7370,7 +7370,7 @@ subroutine initwet( ntype_aer, nsize_aer, ncomp_aer, massptr_aer,      &
 
         na = 1 + nint( (xhi-xlo)/dx )
         if (na .gt. naerosvmax) then
-            call mpp_error(FATAL, '*** subr. calc_1_impact_rate -- na >naerosvmax')
+            call chem_comm_abort(msg='*** subr. calc_1_impact_rate -- na >naerosvmax')
         end if
 
 !   air molar density

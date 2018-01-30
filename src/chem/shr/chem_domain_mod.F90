@@ -3,25 +3,34 @@ module chem_domain_mod
   use chem_types_mod
 
 !------ legacy
-  use mpp_mod,         only : mpp_npes
-  use mpp_domains_mod, only : domain2d, mpp_define_domains, mpp_get_compute_domain
-  use mpp_domains_mod, only : domain1d
+! use mpp_mod,         only : mpp_npes
+! use mpp_domains_mod, only : domain2d, mpp_define_domains, mpp_get_compute_domain
+! use mpp_domains_mod, only : domain1d
 !------ legacy end
 
   implicit none
 
   type chem_domain_type
-    integer :: tile
-    integer :: is, ie, js, je
-    real(CHEM_KIND_R8), pointer :: lon(:,:)
-    real(CHEM_KIND_R8), pointer :: lat(:,:)
+    integer :: tile = 0
+    integer :: is   = 0
+    integer :: ie   = 0
+    integer :: js   = 0
+    integer :: je   = 0
+    integer :: its  = 0
+    integer :: ite  = 0
+    integer :: jts  = 0
+    integer :: jte  = 0
+    integer :: ni   = 0
+    integer :: nl   = 0
+    integer :: nt   = 0
+    real(CHEM_KIND_R8), pointer :: lon(:,:) => null()
+    real(CHEM_KIND_R8), pointer :: lat(:,:) => null()
   end type chem_domain_type
 
 ! private
 
 ! public :: chem_domain_type
 
-#if 1
 
   ! -- atmospheric grid parameters
   integer :: nip                 =  0      ! # of icosaedral cells
@@ -32,7 +41,7 @@ module chem_domain_mod
   integer, parameter :: nvl_chem =  55     ! Number of vertical native levels
 
   ! -- domain decomposition
-  type(domain2d) :: chem_domain
+! type(domain2d) :: chem_domain
 
   integer :: ids, ide, jds, jde, kds, kde
   integer :: ims, ime, jms, jme, kms, kme
@@ -47,6 +56,10 @@ module chem_domain_mod
 
 contains
 
+  subroutine chem_domain_setup()
+  end subroutine chem_domain_setup
+
+#if 0
   subroutine chem_domain_setup(domain)
     type(domain2d), optional, intent(in) :: domain
 

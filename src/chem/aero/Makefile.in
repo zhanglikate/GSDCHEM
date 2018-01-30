@@ -252,10 +252,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libaero.a
 libaero_a_SOURCES = aero_soa_vbs_mod.F90 aero_soa_vbs_data_mod.F90
-local_INCLUDE = -I . -I $(top_builddir)/src/mpp -I ../shr/ -I ../dust/
+local_INCLUDE = -I . -I ../shr/ -I ../dust/
 libaero_a_INCLUDE = $(local_INCLUDE)
 libaero_a_FCFLAGS = $(local_INCLUDE)
-libaero_a_DEPENDENCIES = $(top_builddir)/src/mpp/libmpp.a ../shr/libshr.a ../dust/libdust.a
+libaero_a_DEPENDENCIES = ../shr/libshr.a ../dust/libdust.a
 all: all-am
 
 .SUFFIXES:

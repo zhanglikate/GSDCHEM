@@ -1,9 +1,9 @@
 module chem_shr_mod
 
-  use mpp_mod,        only : mpp_broadcast, mpp_pe, mpp_root_pe, mpp_error, stdlog, FATAL
-  use mpp_mod, only : mpp_clock_id, mpp_clock_begin, mpp_clock_end
-  use mpp_domains_mod,only : domain2d, mpp_get_compute_domain
-  use chem_comm_mod
+  use chem_comm_mod,  only : chem_comm_isroot, chem_comm_rootpe, &
+                             chem_comm_abort, chem_comm_bcast,   &
+                             RC_COMM_SUCCESS
+! use chem_comm_mod
   use chem_const_mod, only : airmw, RGASUNIV, epsilc, rd, g
   use chem_types_mod, only : CHEM_MAXSTR
   use chem_state_mod
@@ -11,7 +11,7 @@ module chem_shr_mod
   use chem_vars_mod
   use chem_domain_mod
   use chem_species_mod, only : chem_species_setup
-  use chem_io_mod, maybe_write => chem_data_write
+! use chem_io_mod, maybe_write => chem_data_write
 ! use time_mod
 
   implicit none
@@ -1111,7 +1111,8 @@ endif
     deallocate(pm25,p10,tr1_tavg,d1st_ave,d2st_ave,d3st_ave,d4st_ave,d5st_ave)
     deallocate(ebu_oc,oh_bg,h2o2_bg,no3_bg,oh_backgd,h2o2_backgd,no3_backgd,rcav,rnav,ero1)
     deallocate(ero2,ero3,clayfrac,sandfrac,ashfall,aod2d,wet_dep,dry_dep,plumestuff,emiss_ab)
-    deallocate(emiss_ab1,emiss_abu,emiss_ash_mass,emiss_ash_height,emiss_ash_dt,emiss_co2,emiss_ch4,emiss_sf6,emiss_tr_mass,emiss_tr_height)
+    deallocate(emiss_ab1,emiss_abu,emiss_ash_mass,emiss_ash_height,emiss_ash_dt,emiss_co2)
+    deallocate(emiss_ch4,emiss_sf6,emiss_tr_mass,emiss_tr_height)
     deallocate(emiss_tr_dt,trfall,emiss_oc,emiss_bc,emiss_sulf,emiss_pm25,emiss_pm10,dm0,emi_d1,emi_d2)
     deallocate(emi_d3,emi_d4,emi_d5,emid1_ave,emid2_ave,emid3_ave,emid4_ave,emid5_ave,aod2d_ave,chem)
     deallocate(e_bio,emis_ant,emis_vol,relhum,dms_0,erod,emis_dust,srce_dust,emis_seas,backg_oh)
@@ -1154,7 +1155,8 @@ endif
 
     integer, parameter :: max_v = 29
 
-    character(len=*), dimension(max_v), parameter :: &
+#ifdef CHEM_DATA_READ
+    character(len=9), dimension(max_v), parameter :: &
       in_file = (/ 'vash1.in', 'vash2.in', 'vash3.in', 'vash4.in', 'vash5.in',  &
                    'vash6.in', 'vash7.in', 'vash8.in', 'vash9.in', 'vash10.in', &
                    'so2.in', 'sulf.in', 'dms.in', 'msa.in', 'p10.in', &
@@ -1209,138 +1211,138 @@ endif
         (chem_config % chem_opt < 500)) then
       write(6,*)'reading gocart background fields'
       call chem_data_read('oh.dat', oh_backgd, rc, perm=perm, label='oh')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading oh')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading oh')
       call chem_data_read('h2o2.dat', h2o2_backgd, rc, perm=perm, label='h2o2')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading h2o2')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading h2o2')
       call chem_data_read('no3.dat', no3_backgd, rc, perm=perm, label='no3')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading no3')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading no3')
       call chem_data_read_global('p_gocart.dat', p_gocart, rc, label='p_gocart')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading p_gocart')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading p_gocart')
       call chem_data_read('e_bc.dat', emiss_ab(:,p_e_bc), rc, perm=perm, label='e_bc')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_bc')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_bc')
       call chem_data_read('e_oc.dat', emiss_ab(:,p_e_oc), rc, perm=perm, label='e_oc')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_oc')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_oc')
       call chem_data_read('e_sulf.dat', emiss_ab(:,p_e_sulf), rc, perm=perm, label='e_sulf')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_sulf')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_sulf')
       call chem_data_read('e_pm_25.dat', emiss_ab(:,p_e_pm_25), rc, perm=perm, label='pm25')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_pm_25')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_pm_25')
       call chem_data_read('e_pm_10.dat', emiss_ab(:,p_e_pm_10), rc, perm=perm, label='pm10')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_pm_10')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_pm_10')
       call chem_data_read('dm0.dat', dm0, rc, perm=perm, label='dm0')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading dm0')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading dm0')
       call chem_data_read('erod1.dat', ero1, rc, perm=perm, label='erod1')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ero1')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ero1')
       call chem_data_read('erod2.dat', ero2, rc, perm=perm, label='erod2')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ero2')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ero2')
       call chem_data_read('erod3.dat', ero3, rc, perm=perm, label='erod3')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ero3')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ero3')
       if (chem_config % dust_opt == DUST_OPT_AFWA) then
         call chem_data_read('sand.dat', sandfrac, rc, perm=perm, label='sandfrac')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading sandfrac')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading sandfrac')
         call chem_data_read('clay.dat', clayfrac, rc, perm=perm, label='clayfrac')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading clayfrac')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading clayfrac')
       end if
       call chem_data_read('e_so2.dat', emiss_ab(:,p_e_so2), rc, perm=perm, label='so2')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_so2')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_so2')
       if ((chem_config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
           (chem_config % chem_opt == CHEM_OPT_RACM_SOA_VBS)) then
         call chem_data_read('e_ald.dat', emiss_ab(:,p_e_ald), rc, perm=perm, label='e_ald')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_ald')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_ald')
         call chem_data_read('e_co.dat', emiss_ab(:,p_e_co), rc, perm=perm, label='e_co')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_co')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_co')
         call chem_data_read('e_csl.dat', emiss_ab(:,p_e_csl), rc, perm=perm, label='e_csl')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_csl')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_csl')
         call chem_data_read('e_dms.dat', emiss_ab(:,p_e_dms), rc, perm=perm, label='e_dms')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_dms')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_dms')
         call chem_data_read('e_eth.dat', emiss_ab(:,p_e_eth), rc, perm=perm, label='e_eth')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_eth')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_eth')
         call chem_data_read('e_hc3.dat', emiss_ab(:,p_e_hc3), rc, perm=perm, label='e_hc3')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_hc3')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_hc3')
         call chem_data_read('e_hc5.dat', emiss_ab(:,p_e_hc5), rc, perm=perm, label='e_hc5')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_hc5')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_hc5')
         call chem_data_read('e_hc8.dat', emiss_ab(:,p_e_hc8), rc, perm=perm, label='e_hc8')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_hc8')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_hc8')
         call chem_data_read('e_hcho.dat', emiss_ab(:,p_e_hcho), rc, perm=perm, label='e_hcho')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_hcho')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_hcho')
         call chem_data_read('e_iso.dat', emiss_ab(:,p_e_iso), rc, perm=perm, label='e_iso')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_iso')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_iso')
         call chem_data_read('e_ket.dat', emiss_ab(:,p_e_ket), rc, perm=perm, label='e_ket')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_ket')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_ket')
         call chem_data_read('e_nh3.dat', emiss_ab(:,p_e_nh3), rc, perm=perm, label='e_nh3')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_nh3')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_nh3')
         call chem_data_read('e_no2.dat', emiss_ab(:,p_e_no2), rc, perm=perm, label='e_no2')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_no2')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_no2')
         call chem_data_read('e_no.dat', emiss_ab(:,p_e_no), rc, perm=perm, label='e_no')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_no')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_no')
         call chem_data_read('e_oli.dat', emiss_ab(:,p_e_oli), rc, perm=perm, label='e_oli')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_oli')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_oli')
         call chem_data_read('e_olt.dat', emiss_ab(:,p_e_oli), rc, perm=perm, label='e_olt')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_olt')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_olt')
         call chem_data_read('e_ora2.dat', emiss_ab(:,p_e_ora2), rc, perm=perm, label='e_ora2')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_ora2')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_ora2')
         call chem_data_read('e_tol.dat', emiss_ab(:,p_e_tol), rc, perm=perm, label='e_tol')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_tol')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_tol')
         call chem_data_read('e_xyl.dat', emiss_ab(:,p_e_xyl), rc, perm=perm, label='e_xyl')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading e_xyl')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading e_xyl')
       end if
     end if
 
     if (chem_config % biomass_burn_opt > 0) then
       call chem_data_read('ebu_oc.dat', emiss_abu(:,p_e_oc), rc, perm=perm, label='ebu_oc')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_oc')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_oc')
       call chem_data_read('ebu_bc.dat', emiss_abu(:,p_e_bc), rc, perm=perm, label='ebu_bc')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_bc')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_bc')
       call chem_data_read('ebu_so2.dat', emiss_abu(:,p_e_so2), rc, perm=perm, label='ebu_so2')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_so2')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_so2')
       call chem_data_read('ebu_sulf.dat', emiss_abu(:,p_e_sulf), rc, perm=perm, label='ebu_sulf')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_sulf')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_sulf')
       call chem_data_read('ebu_pm25.dat', emiss_abu(:,p_e_pm_25), rc, perm=perm, label='ebu_pm25')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_pm25')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_pm25')
       call chem_data_read('ebu_pm10.dat', emiss_abu(:,p_e_pm_10), rc, perm=perm, label='ebu_pm10')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_pm10')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_pm10')
       call chem_data_read('plumestuff.dat', plumestuff, 1, 8, rc, perm=perm, label='plumestuff')
-      if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading plumestuff')
+      if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading plumestuff')
 
       if ((chem_config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
           (chem_config % chem_opt == CHEM_OPT_RACM_SOA_VBS)) then
         call chem_data_read('ebu_ald.dat', emiss_abu(:,p_e_ald), rc, perm=perm, label='ebu_ald')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_ald')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_ald')
         call chem_data_read('ebu_co.dat', emiss_abu(:,p_e_co), rc, perm=perm, label='ebu_co')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_co')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_co')
         call chem_data_read('ebu_csl.dat', emiss_abu(:,p_e_csl), rc, perm=perm, label='ebu_csl')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_csl')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_csl')
         call chem_data_read('ebu_dms.dat', emiss_abu(:,p_e_dms), rc, perm=perm, label='ebu_dms')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_dms')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_dms')
         call chem_data_read('ebu_eth.dat', emiss_abu(:,p_e_eth), rc, perm=perm, label='ebu_eth')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_eth')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_eth')
         call chem_data_read('ebu_hc3.dat', emiss_abu(:,p_e_hc3), rc, perm=perm, label='ebu_hc3')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_hc3')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_hc3')
         call chem_data_read('ebu_hc5.dat', emiss_abu(:,p_e_hc5), rc, perm=perm, label='ebu_hc5')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_hc5')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_hc5')
         call chem_data_read('ebu_hc8.dat', emiss_abu(:,p_e_hc8), rc, perm=perm, label='ebu_hc8')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_hc8')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_hc8')
         call chem_data_read('ebu_hcho.dat', emiss_abu(:,p_e_hcho), rc, perm=perm, label='ebu_hcho')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_hcho')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_hcho')
         call chem_data_read('ebu_iso.dat', emiss_abu(:,p_e_iso), rc, perm=perm, label='ebu_iso')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_iso')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_iso')
         call chem_data_read('ebu_ket.dat', emiss_abu(:,p_e_ket), rc, perm=perm, label='ebu_ket')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_ket')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_ket')
         call chem_data_read('ebu_nh3.dat', emiss_abu(:,p_e_nh3), rc, perm=perm, label='ebu_nh3')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_nh3')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_nh3')
         call chem_data_read('ebu_no2.dat', emiss_abu(:,p_e_no2), rc, perm=perm, label='ebu+no2')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_no2')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_no2')
         call chem_data_read('ebu_no.dat', emiss_abu(:,p_e_no), rc, perm=perm, label='ebu_no')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_no')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_no')
         call chem_data_read('ebu_oli.dat', emiss_abu(:,p_e_oli), rc, perm=perm, label='ebu_oli')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_oli')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_oli')
         call chem_data_read('ebu_olt.dat', emiss_abu(:,p_e_olt), rc, perm=perm, label='ebu_olt')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_olt')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_olt')
         call chem_data_read('ebu_ora2.dat', emiss_abu(:,p_e_ora2), rc, perm=perm, label='ebu_ora2')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_ora2')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_ora2')
         call chem_data_read('ebu_tol.dat', emiss_abu(:,p_e_tol), rc, perm=perm, label='ebu_tol')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_tol')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_tol')
         call chem_data_read('ebu_xyl.dat', emiss_abu(:,p_e_xyl), rc, perm=perm, label='ebu_xyl')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading ebu_xyl')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading ebu_xyl')
       end if
     end if
 
@@ -1353,13 +1355,13 @@ endif
 
       if (ash_mass >- -900.) then
         call chem_data_read('volcanic.dat', nv_g, rc, label='nv_g')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading nv_g')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading nv_g')
         call chem_data_read('volcanic.dat', emiss_ash_mass, 4, rc, perm=perm, label='emiss_ash_mass')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_mass')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading emiss_ash_mass')
         call chem_data_read('volcanic.dat', emiss_ash_height, 5, rc, perm=perm, label='emiss_ash_height')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_height')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading emiss_ash_height')
         call chem_data_read('volcanic.dat', emiss_ash_dt, 6, rc, perm=perm, label='emiss_ash_dt')
-        if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_dt')
+        if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading emiss_ash_dt')
 
       end if
       ! -- overwrite ash_mass if nameist value exists
@@ -1403,7 +1405,7 @@ endif
           do p = 1, 4
             pos = nbegin + p_v(p)
             call chem_data_read(trim(in_file(p)), tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-            if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+            if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
             trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
           end do
         end if
@@ -1412,7 +1414,7 @@ endif
         do p = 5, 10
           pos = nbegin + p_v(p)
           call chem_data_read(trim(in_file(p)), tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-          if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+          if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
           trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
         end do
       end if
@@ -1422,21 +1424,21 @@ endif
         do p = 11, 12
           pos = nbegin + p_v(p)
           call chem_data_read(trim(in_file(p)), tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-          if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+          if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
           trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
         end do
         if ((chem_config % chem_opt >= 300 ) .and. (chem_config % chem_opt < 500)) then
           do p = 13, 25
             pos = nbegin + p_v(p)
             call chem_data_read(trim(in_file(p)), tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-            if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+            if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
             trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
           end do
           if (chem_config % seas_opt == 1) then
             do p = 26, 29
               pos = nbegin + p_v(p)
               call chem_data_read(trim(in_file(p)), tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-              if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+              if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
               trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
             end do
           end if
@@ -1445,7 +1447,7 @@ endif
             do p = 1, 49
               pos = nbegin + p
               call chem_data_read(trim(chem_301(p))//'.in', tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-              if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+              if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
               trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
             end do
           end if
@@ -1454,12 +1456,14 @@ endif
           do p = 1, 103
             pos = nbegin + p
             call chem_data_read(trim(chem_108(p))//'.in', tr3d(:,:,pos), 2, rc, label=trim(in_file(p)))
-            if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading '//trim(in_file(p)))
+            if (rc /= 0) call chem_comm_abort(msg='chem_fields_read: error reading '//trim(in_file(p)))
             trdp(:,:,pos) = tr3d(:,:,pos) * dp3d
           end do
         end if
       end if
     end if
+
+#endif
 
   end subroutine chem_background_init
 
@@ -1587,6 +1591,7 @@ endif
 
     ! -- begin
     print *,'--- chem_history_write: entering ...'
+#ifdef CHEM_DATA_WRITE
 
     ichem_start = ntra
 
@@ -1968,6 +1973,7 @@ endif
     call maybe_write(its,'qw3D',tr3d(:,:,3),nvl, scalefactor=1000.)
     call maybe_write(its,'oz3D',tr3d(:,:,4),nvl, scalefactor=1000.)
 
+#endif
     print *,'--- chem_history_write: exiting ...'
     
   contains
@@ -2260,8 +2266,8 @@ endif
     INTRINSIC max, min, float
 
     ! -- begin
-    clockId = mpp_clock_id('chem_prep')
-    call mpp_clock_begin(clockId)
+!   clockId = mpp_clock_id('chem_prep')
+!   call mpp_clock_begin(clockId)
 
     print *,'chem_prep: begin...'
 
@@ -2429,7 +2435,7 @@ endif
 
     else if ((p_tr2 > 1) .and. (p_bc2 > 1)) then
 
-      call mpp_error(FATAL, 'in chem_prep_fim, 111')
+      call chem_comm_abort(msg='in chem_prep_fim, 111')
 
     endif
 
@@ -2713,7 +2719,7 @@ endif
         enddo
       enddo   
     else if ((p_tr2 > 1) .and. (p_bc2 > 1))then
-      call mpp_error(FATAL, 'in chem_prep_fim, 112')
+      call chem_comm_abort(msg='in chem_prep_fim, 112')
     endif
     print *,'chem_prep: chem + emiss: done ...'
 
@@ -3025,7 +3031,7 @@ endif
       endif       
       print *,'chem_prep: stage end'
 
-      call mpp_clock_end(clockId)
+!     call mpp_clock_end(clockId)
 
   end subroutine chem_prep
 

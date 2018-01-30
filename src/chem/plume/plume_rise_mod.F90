@@ -1,9 +1,8 @@
 module plume_rise_mod
 
-  use mpp_mod, only : mpp_error, FATAL
-
   use chem_const_mod, only : g => grvity, cp, &
                              r_d => rd, r_v => rv, p1000mb => p1000
+  use chem_comm_mod,  only : chem_comm_abort
   use chem_state_mod
 
   use plume_zero_mod
@@ -109,7 +108,7 @@ contains
         if( chem_opt /= 'MOZCART_KPP' .and. &
             chem_opt /= 'MOZART_KPP' .and. &
             chem_opt /= 'MOZART_MOSAIC_4BIN_VBS0_KPP' ) then
-          call mpp_error(FATAL, "Fire emission scaling only supported for MOZART_KPP, MOZCART_KPP chem chem_opts")
+          call chem_comm_abort(msg="Fire emission scaling only supported for MOZART_KPP, MOZCART_KPP chem chem_opts")
         endif
       endif
 

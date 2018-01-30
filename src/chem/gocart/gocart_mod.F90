@@ -1,6 +1,5 @@
 module gocart_mod
 
-! use mpp
   use chem_const_mod
   use chem_shr_mod,    only : chem_config_type, chem_prep
   use chem_config_mod, config => chem_config

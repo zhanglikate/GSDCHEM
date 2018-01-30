@@ -2,6 +2,8 @@ module chem_comm_mod
 
   use mpi
 
+  implicit none
+
   integer :: mpi_comm_chem
   integer :: chem_comm_rootpe = 0
 
@@ -30,6 +32,7 @@ module chem_comm_mod
   public :: chem_comm_get
   public :: chem_comm_bcast
   public :: chem_comm_abort
+  public :: chem_comm_log
 
 contains
 
@@ -69,7 +72,7 @@ contains
    
   end subroutine chem_comm_init
 
-  logical function chem_comm_isroot
+  logical function chem_comm_isroot()
     ! -- local variables
     integer :: ierr, rank
     ! -- begin
@@ -88,6 +91,9 @@ contains
     integer, optional, intent(out) :: rc
 
     ! -- local variables
+    integer :: ierr
+
+    ! -- begin
     if (present(localpe)) then
       localpe = -1
       call mpi_comm_rank(mpi_comm_chem, localpe, ierr) 
@@ -102,17 +108,32 @@ contains
 
   end subroutine chem_comm_get
 
+  subroutine chem_comm_log(msg, sync)
+    character(len=*),  intent(in) :: msg
+    logical, optional, intent(in) :: sync
+
+    write(0,'("chem_comm_log:",a)') trim(msg)
+    if (present(sync)) then
+      if (sync) call flush(0)
+    end if
+
+  end subroutine chem_comm_log
+
   subroutine chem_comm_abort(errcode, msg)
     integer,          optional, intent(in) :: errcode
     character(len=*), optional, intent(in) :: msg
 
     ! -- local variables
-    integer :: localerrcode = -1
+    integer :: ierr, localerrcode
+
+    ! -- begin
+    localerrcode = RC_COMM_FAILURE
     if (present(msg)) write(0,'("chem_comm_abort:",a)') trim(msg)
     if (present(errcode)) localerrcode = errcode
     call mpi_abort(mpi_comm_chem, localerrcode, ierr)
 
   end subroutine chem_comm_abort
+
   ! -- broadcast
 
   subroutine chem_comm_bcast_i0(data, rootpe, rc)
@@ -121,7 +142,6 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-    integer :: ierr
     integer :: buffer(1)
 
     ! -- begin
@@ -138,10 +158,10 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     if (count > size(buffer)) return
     call mpi_bcast(buffer, count, MPI_INTEGER, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
@@ -154,10 +174,10 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     call mpi_bcast(buffer, size(buffer), MPI_INTEGER, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
     
@@ -169,7 +189,6 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-    integer :: ierr
     real    :: buffer(1)
 
     ! -- begin
@@ -186,10 +205,10 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     if (count > size(buffer)) return
     call mpi_bcast(buffer, count, MPI_REAL, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
@@ -202,10 +221,10 @@ contains
     integer, intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     call mpi_bcast(buffer, size(buffer), MPI_REAL, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
     
@@ -233,10 +252,10 @@ contains
     integer,          intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     if (count > size(buffer)) return
     call mpi_bcast(buffer, count*len(buffer(1)), MPI_CHARACTER, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
@@ -249,10 +268,10 @@ contains
     integer,          intent(out)   :: rc
 
     ! -- local variables
-
-    rc = RC_COMM_FAILURE
+    integer :: ierr
 
     ! -- begin
+    rc = RC_COMM_FAILURE
     call mpi_bcast(buffer, size(buffer)*len(buffer(1)), MPI_CHARACTER, rootpe, mpi_comm_chem, ierr)
     if (ierr == MPI_SUCCESS) rc = RC_COMM_SUCCESS
     

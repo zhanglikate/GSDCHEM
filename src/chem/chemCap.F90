@@ -12,19 +12,30 @@ module CHM
   
   implicit none
 
-  integer, parameter :: importFieldCount = 9
+#if 1
+  integer, parameter :: importFieldCount = 11
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
-      "air_pressure",     &
-      "air_pressure_in_model_layers",     &
-      "geopotential",     &
-      "geopotential_in_model_layers",     &
-      "air_temperature",  &
-      "x_wind",           &
-      "y_wind",           &
-      "omega" ,           &
-      "mass_fraction_of_tracers_in_air"   &
+      "air_pressure                   ",  &
+      "air_pressure_in_model_layers   ",  &
+      "geopotential                   ",  &
+      "geopotential_in_model_layers   ",  &
+      "air_temperature                ",  &
+      "x_wind                         ",  &
+      "y_wind                         ",  &
+      "omega                          ",  &
+      "mass_fraction_of_tracers_in_air",  &
+      "inst_zonal_wind_height10m      ",  &
+      "inst_merid_wind_height10m      "   &
     /)
+#else
+  integer, parameter :: importFieldCount = 2
+  character(len=*), dimension(importFieldCount), parameter :: &
+    importFieldNames = (/ &
+      "inst_zonal_wind_height10m      ",  &
+      "inst_merid_wind_height10m      "   &
+    /)
+#endif
 
 #if 0
 #ifdef ORIG_COORD
@@ -116,12 +127,12 @@ module CHM
       file=__FILE__)) &
       return  ! bail out
 
-    call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
-      phaseLabelList=(/"IPDv03p3"/), userRoutine=InitializeP3, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+!   call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
+!     phaseLabelList=(/"IPDv03p3"/), userRoutine=InitializeP3, rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     line=__LINE__, &
+!     file=__FILE__)) &
+!     return  ! bail out
 
 !   call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
 !     phaseLabelList=(/"IPDv03p4"/), userRoutine=InitializeP4, rc=rc)
@@ -130,12 +141,12 @@ module CHM
 !     file=__FILE__)) &
 !     return  ! bail out
 
-    call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
-      phaseLabelList=(/"IPDv03p5"/), userRoutine=InitializeP5, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+!   call NUOPC_CompSetEntryPoint(model, ESMF_METHOD_INITIALIZE, &
+!     phaseLabelList=(/"IPDv03p5"/), userRoutine=InitializeP5, rc=rc)
+!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!     line=__LINE__, &
+!     file=__FILE__)) &
+!     return  ! bail out
     
     ! attach specializing method(s)
     call NUOPC_CompSpecialize(model, specLabel=label_DataInitialize, &
@@ -208,6 +219,8 @@ module CHM
     if (importFieldCount > 0) then
       call NUOPC_Advertise(importState, importFieldNames, &
         TransferOfferGeomObject="cannot provide", &
+        TransferOfferField="cannot provide", &
+        SharePolicyField="share", &
         rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
@@ -285,8 +298,10 @@ module CHM
     type(ESMF_Field)               :: field
     type(ESMF_FieldStatus_flag)    :: fieldStatus
     type(ESMF_GeomType_flag)       :: geomtype
-    integer                        :: item, itemCount
+    integer                        :: item, itemCount, localDeCount
     integer, dimension(:), pointer :: ugLBound, ugUBound, gridToFieldMap
+    character(len=ESMF_MAXSTR)     :: value
+    type(ESMF_Array) :: array
 
     rc = ESMF_SUCCESS
 
@@ -299,11 +314,73 @@ module CHM
         file=__FILE__)) &
         return  ! bail out
       ! -- check field status
-      call ESMF_FieldGet(field, status=fieldStatus, rc=rc)
+      call ESMF_FieldGet(field, status=fieldStatus, localDeCount=localDeCount, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
+
+!     if (localDeCount < 1) then
+!       call ESMF_StateRemove(importState, (/trim(importFieldNames(item))/), rc=rc)
+!       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+!         line=__LINE__, &
+!         file=__FILE__)) &
+!         return  ! bail out
+!     end if
+
+      if (fieldStatus == ESMF_FIELDSTATUS_GRIDSET) then
+        write(6,'("InitializeP5: ",a," status is GRIDSET")') trim(importFieldNames(item))
+      else if (fieldStatus == ESMF_FIELDSTATUS_COMPLETE) then
+        write(6,'("InitializeP5: ",a," status is COMPLETE - localDeCount=",i0)') trim(importFieldNames(item)), localDeCount
+        call ESMF_FieldGet(field, array=array, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+        write(6,'("InitializeP5: ",a," status is COMPLETE - got Array")') trim(importFieldNames(item))
+        write(6,'("InitializeP5: ",a," status is COMPLETE - is Array created?",l8)') trim(importFieldNames(item)), ESMF_ArrayIsCreated(array)
+      else if (fieldStatus == ESMF_FIELDSTATUS_EMPTY) then
+        write(6,'("InitializeP5: ",a," status is EMPTY")') trim(importFieldNames(item))
+        cycle
+      else
+        write(6,'("InitializeP5: ",a," status is UNKNOWN")') trim(importFieldNames(item))
+      end if
+
+      value=""
+      call NUOPC_GetAttribute(field, name="SharePolicyGeomObject", &
+        value=value, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(6,'("InitializeP5: ",a," SharePolicy is ",a)') trim(importFieldNames(item)), trim(value)
+
+      value=""
+      call NUOPC_GetAttribute(field, name="ShareStatusGeomObject", &
+        value=value, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(6,'("InitializeP5: ",a," ShareStatus is ",a)') trim(importFieldNames(item)), trim(value)
+
+      value=""
+      call NUOPC_GetAttribute(field, name="TransferActionField", &
+        value=value, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(6,'("InitializeP5: ",a," TransferActionField is ",a)') trim(importFieldNames(item)), trim(value)
+
+      value=""
+      call NUOPC_GetAttribute(field, name="TransferActionGeomObject", &
+        value=value, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(6,'("InitializeP5: ",a," TransferActionGeomObject is ",a)') trim(importFieldNames(item)), trim(value)
 
       call ESMF_FieldGet(field, geomtype=geomtype, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -373,7 +450,7 @@ module CHM
 
         if (associated(ugLBound) .and. associated(ugUBound)) then
           if (associated(gridToFieldMap)) then
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R4, &
+            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
               ungriddedLBound=ugLBound, ungriddedUBound=ugUBound, &
               gridToFieldMap=gridToFieldMap, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -381,7 +458,7 @@ module CHM
               file=__FILE__)) &
               return  ! bail out
           else
-            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R4, &
+            call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, &
               ungriddedLBound=ugLBound, ungriddedUBound=ugUBound, &
               rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -390,7 +467,7 @@ module CHM
               return  ! bail out
           end if
         else
-          call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R4, rc=rc)
+          call ESMF_FieldEmptyComplete(field, typekind=ESMF_TYPEKIND_R8, rc=rc)
           if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
             file=__FILE__)) &
@@ -418,7 +495,7 @@ module CHM
     type(ESMF_CoordSys_Flag)      :: coordSys
     type(ESMF_DistGrid)           :: distgrid
     type(ESMF_Array)              :: array
-    integer                       :: de, item, localrc, localDe, numOwnedNodes, spatialDim
+    integer                       :: de, item, localrc, localDe, numOwnedNodes, spatialDim, tile
     integer                       :: comm, localPet
     integer                       :: recvData(1)
     real, allocatable :: fperm(:)
@@ -427,18 +504,17 @@ module CHM
     integer :: dimCount, tileCount, deCount, elementCount
     integer, dimension(:),   allocatable :: seqIndexList
     integer, dimension(:),   allocatable :: deToTileMap, localDeToDeMap
-    integer, dimension(:,:), allocatable :: minIndexPDe, maxIndexPDe
+    integer, dimension(:,:), allocatable :: minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile
+    integer, dimension(:,:), allocatable :: computationalLBound, computationalUBound
 
-    ! query the Component for its clock, importState and exportState
+    ! -- query the Component for its clock, importState and exportState
     call NUOPC_ModelGet(model, importState=importState, modelClock=clock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
 
-    ! initialize chemistry model
-    is_nuopc = .true.
-
+    ! -- initialize chemistry model
     call ESMF_GridCompGet(model, vm=vm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
@@ -450,6 +526,7 @@ module CHM
       file=__FILE__)) &
       return  ! bail out
 
+    ! -- perform first phase of initialization
     call chemInitialize(clock, phase=0, comm=comm, rc=rc)
     if (rc /= CHEM_RC_SUCCESS) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
@@ -467,21 +544,6 @@ module CHM
         rcToReturn=rc)
       return  ! bail out
     end if
-
-    ! -- mark import fields as updated
-!   do item = 1, importFieldCount
-!     call ESMF_StateGet(importState, field=field, &
-!       itemName=trim(importFieldNames(item)), rc=rc)
-!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!       line=__LINE__, &
-!       file=__FILE__)) &
-!       return  ! bail out
-!     call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
-!     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!       line=__LINE__, &
-!       file=__FILE__)) &
-!       return  ! bail out
-!   end do
 
     ! get coordinates from Grid object
     ! assume all fields on same grid
@@ -510,7 +572,9 @@ module CHM
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      allocate(minIndexPDe(dimCount, deCount), maxIndexPDe(dimCount, deCount), &
+      allocate(minIndexPDe(dimCount, deCount), maxIndexPDe(dimCount, deCount),  &
+        minIndexPTile(dimCount, tileCount), maxIndexPTile(dimCount, tileCount), &
+        computationalLBound(dimCount, localDeCount), computationalUBound(dimCount, localDeCount), &
         deToTileMap(deCount), localDeToDeMap(localDeCount), stat=localrc)
       if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__,  &
@@ -518,20 +582,24 @@ module CHM
         rcToReturn=rc)) &
         return  ! bail out
       call ESMF_ArrayGet(array, distgrid=distgrid, &
-        deToTileMap=deToTileMap, localDeToDeMap=localDeToDeMap, rc=rc)
+        deToTileMap=deToTileMap, localDeToDeMap=localDeToDeMap, &
+        computationalLBound=computationalLBound, &
+        computationalUBound=computationalUBound, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      call ESMF_DistGridGet(distgrid, minIndexPDe=minIndexPDe, &
-        maxIndexPDe=maxIndexPDe, rc=rc)
+      call ESMF_DistGridGet(distgrid, &
+        minIndexPDe=minIndexPDe, maxIndexPDe=maxIndexPDe, &
+        minIndexPTile=minIndexPTile, maxIndexPTile=maxIndexPTile, &
+        rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
 
       ! -- init chemistry model on local DEs
-      call chem_model_init(deCount=localDeCount, rc=rc)
+      call chem_model_create(deCount=localDeCount, rc=rc)
       if (rc /= CHEM_RC_SUCCESS) then
         call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
           msg="Failed to initialize chemistry model for localDeCount", &
@@ -541,14 +609,20 @@ module CHM
       end if
 
       do localDe = 0, localDeCount-1
-        de = localDeToDeMap(localDe+1) + 1
+        de   = localDeToDeMap(localDe+1) + 1
+        tile = deToTileMap(de)
 
-        write(6,'("CHEM on localDe: ",i0," DE: ",i0)') localDe, de-1
-        write(6,'(4x,"minIndexPDe=",2i8,2x,"maxIndexPDe=",2i8)') minIndexPDe(:,de), maxIndexPDe(:,de)
-        write(6,'(4x,"tile=",i0)') deToTileMap(de)
+!       write(6,'("CHEM on localDe: ",i0," DE: ",i0)') localDe, de-1
+        write(6,'("CHEM: localDe: ",i2," DE: ",i2, " tile=",i2," minIndexPDe=",2i4,2x," maxIndexPDe=",2i4," minIndexPTile=",2i4,"maxIndexPTile=",2i4,4i4)') &
+          localDe, de-1, tile, minIndexPDe(:,de), maxIndexPDe(:,de), minIndexPTile(:,tile), maxIndexPTile(:,tile), &
+          computationalLBound(:,localDe+1), computationalUBound(:,localDe+1)
+        flush(6)
+!       write(6,'(4x,"minIndexPDe=",2i8,2x,"maxIndexPDe=",2i8)') minIndexPDe(:,de), maxIndexPDe(:,de)
+!       write(6,'(4x,"tile=",i0)') deToTileMap(de)
 
         ! -- set model domains for local DEs
         call chem_model_domain_set(minIndexPDe(:,de), maxIndexPDe(:,de), &
+          minIndexPTile=minIndexPTile(:,tile), maxIndexPTile=maxIndexPTile(:,tile), &
           tile=deToTileMap(de), de=localDe, rc=rc)
         if (rc /= CHEM_RC_SUCCESS) then
           call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
@@ -559,6 +633,14 @@ module CHM
         end if
 
       end do
+      deallocate(minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile, &
+        computationalLBound, computationalUBound, &
+        deToTileMap, localDeToDeMap, stat=localrc)
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
 
     else
       call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
@@ -569,15 +651,19 @@ module CHM
     end if
 
     ! -- connect import fields to model
-!   call importFieldSet(importState, importFieldNames, rc)
-!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!     line=__LINE__, &
-!     file=__FILE__)) &
-!     return  ! bail out
+    ! -- this can be done only once since remote fields are accessed by reference
+    call chemFieldsConnect(importState, importFieldNames, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
 
     ! initialize model (phase 2)
     ! prepare additional arrays
     ! call chem_data_prep()
+
+    ! 1. allocate work arrays
+    ! 2. read in background fields
 
     ! indicate that data initialization is complete (breaking out of init-loop)
     call NUOPC_CompAttributeSet(model, &
@@ -650,13 +736,7 @@ module CHM
       file=__FILE__)) &
       return  ! bail out
 
-    ! -- connect import fields to model
-    call importFieldSet(importState, importFieldNames, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
+    ! -- print field diagnostics
     do item = 1, importFieldCount
       call ESMF_StateGet(importState, field=field, &
         itemName=trim(importFieldNames(item)), rc=rc)
@@ -671,16 +751,6 @@ module CHM
         return  ! bail out
     end do
 
-    ! -- prepare additional arrays
-!   call chem_data_prep()
-
-    ! -- advance model
-!   call chemAdvance(clock, rc)
-!   if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-!     line=__LINE__, &
-!     file=__FILE__)) &
-!     return  ! bail out
-
   end subroutine
 
   subroutine ModelFinalize(model, rc)
@@ -689,7 +759,7 @@ module CHM
 
     rc = ESMF_SUCCESS
 
-!   call chemFinalize(rc)
+    call chemFinalize(rc)
 
   end subroutine ModelFinalize
 
@@ -786,230 +856,5 @@ module CHM
     enddo
     
   end subroutine
-
-  !-----------------------------------------------------------------------------
-
-  subroutine fieldPrintMinMax(field, vm, rc)
-    type(ESMF_Field), intent(in) :: field
-    type(ESMF_VM),    intent(in) :: vm
-    integer, intent(out) :: rc
-
-    ! local variables
-    real(ESMF_KIND_R4), pointer :: fp1d(:), fp2d(:,:), fp3d(:,:,:), fp4d(:,:,:,:)
-    real(ESMF_KIND_R4)          :: fieldMaxValue, fieldMinValue, maxValue, minValue
-    real(ESMF_KIND_R4)          :: globalMaxValue(1), globalMinValue(1)
-    integer                     :: localDe, localDeCount, localPet, rank
-    integer                     :: i, j
-    integer, dimension(2)       :: clb, cub
-    character(len=ESMF_MAXSTR)  :: fieldName
-
-    rc = ESMF_SUCCESS
-
-    call ESMF_FieldGet(field, rank=rank, localDeCount=localDeCount, &
-      name=fieldName, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
-    call ESMF_VMGet(vm, localPet=localPet, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail
-
-    fieldMinValue = huge(1.0)
-    fieldMaxValue = -fieldMinValue
-    do localDe = 0, localDeCount - 1
-      select case(rank)
-        case(1)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp1d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          minValue = minval(fp1d)
-          maxValue = maxval(fp1d)
-#if 0
-        case(2)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          minValue = minval(fp2d)
-          maxValue = maxval(fp2d)
-#else
-        case(2)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp2d, &
-            computationalLBound=clb, computationalUBound=cub, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          do j = clb(2), cub(2)
-            do i = clb(1), cub(1)
-              write(6,'("-- data",2i8,4x,g16.6)') i,j,fp2d(i,j)
-            end do
-          end do
-          minValue = minval(fp2d(clb(1):cub(1),clb(2):cub(2)))
-          maxValue = maxval(fp2d(clb(1):cub(1),clb(2):cub(2)))
-          write(6,'("-- dataend Min/Max = ",2g16.6)') minValue, maxValue
-#endif
-        case(3)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          minValue = minval(fp3d)
-          maxValue = maxval(fp3d)
-        case(4)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp4d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-            line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
-          minValue = minval(fp4d)
-          maxValue = maxval(fp4d)
-        case default
-          call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
-            msg="Field rank not implemented.", &
-            line=__LINE__, &
-            file=__FILE__, &
-            rcToReturn=rc)
-          return ! bail out
-      end select
-      fieldMinValue = min(fieldMinValue, minValue)
-      fieldMaxValue = max(fieldMaxValue, maxValue)
-      write(6,'(a,":",i0,2x,"DE: ",i0,2x,a," - checking  - min/max = ",2g16.6)') 'PET', &
-         localPet, localDe, trim(fieldName), fieldMinValue, fieldMaxValue
-    end do
-
-    globalMinValue(1) = 0.
-    globalMaxValue(1) = 0.
-
-    call ESMF_VMReduce(vm, (/ fieldMinValue /), globalMinValue, 1, &
-      reduceflag=ESMF_REDUCE_MIN, rootPet=0, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-    call ESMF_VMReduce(vm, (/ fieldMaxValue /), globalMaxValue, 1, &
-      reduceflag=ESMF_REDUCE_MAX, rootPet=0, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail
-
-    if (localPet == 0) then
-       write(6,'(a,":",a," - checking  - min/max = ",2g16.6)') 'Field', &
-         trim(fieldName), globalMinValue, globalMaxValue
-    end if
-
-  end subroutine fieldPrintMinMax
-
-  !-----------------------------------------------------------------------------
-
-  subroutine importFieldSet(importState, fieldNames, rc)
-    type(ESMF_State),               intent(in) :: importState
-    character(len=*), dimension(:), intent(in) :: fieldNames
-    integer, intent(out) :: rc
-
-    ! local variables
-    type(chem_state_type), pointer :: state
-    type(ESMF_Field)      :: field
-    integer               :: item, localDe, localDeCount
-
-    rc = ESMF_SUCCESS
-
-    do item = 1, size(fieldNames)
-      call ESMF_StateGet(importState, field=field, &
-        itemName=trim(fieldNames(item)), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-      call ESMF_FieldGet(field, localDeCount=localDeCount, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-      do localDe = 0, localDeCount-1
-        call chem_model_get(stateIn=state, de=localDe, rc=rc)
-        if (rc /= CHEM_RC_SUCCESS) then
-          call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-            msg="Failed to initialize chemistry component", &
-            line=__LINE__, &
-            file=__FILE__) 
-          return  ! bail out
-        end if
-        select case (trim(fieldNames(item)))
-          case ("air_pressure")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % pr3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("air_pressure_in_model_layers")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % prl3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("geopotential")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % ph3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("geopotential_in_model_layers")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % phl3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("air_temperature")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % tk3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("x_wind")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % us3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("y_wind")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % vs3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("omega")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % ws3d, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-          case ("mass_fraction_of_tracers_in_air")
-            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=state % q, rc=rc)
-            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-              line=__LINE__, &
-              file=__FILE__)) &
-              return  ! bail
-        end select
-      end do
-      call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-    end do
-
-  end subroutine importFieldSet
-
-  !-----------------------------------------------------------------------------
 
 end module CHM

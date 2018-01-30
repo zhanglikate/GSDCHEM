@@ -1,6 +1,6 @@
 module chem_species_mod
 
-  use mpp_mod, only : mpp_error, FATAL
+  use chem_comm_mod, only : chem_comm_abort
   use chem_config_mod
   use chem_state_mod
 
@@ -35,9 +35,9 @@ contains
     select case (config % chem_opt)
       case (CHEM_OPT_GOCART)
         ! -- gocart simple
-        if (num_chem    /= 19) call mpp_error(FATAL, 'num_chem is not equal to 19')
-        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call mpp_error(FATAL, 'num_emis_ant smaller than 6')
-        if (num_emis_ant  < 4) call mpp_error(FATAL, 'num_emis_ant smaller than 4')
+        if (num_chem    /= 19) call chem_comm_abort(msg='num_chem is not equal to 19')
+        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call chem_comm_abort(msg='num_emis_ant smaller than 6')
+        if (num_emis_ant  < 4) call chem_comm_abort(msg='num_emis_ant smaller than 4')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -98,8 +98,8 @@ contains
 
       case (CHEM_OPT_GOCART_RACM)
         ! -- gocart + racm
-        if (num_chem    /= 66) call mpp_error(FATAL, 'num_chem is not equal to 66')
-        if (num_emis_ant < 25) call mpp_error(FATAL, 'num_emis_ant smaller than 25')
+        if (num_chem    /= 66) call chem_comm_abort(msg='num_chem is not equal to 66')
+        if (num_emis_ant < 25) call chem_comm_abort(msg='num_emis_ant smaller than 25')
         conv_tr_aqchem = 1
         ! -- initialize pointers for gas phase and aerosol stuff
         call gocartracm_pointers
@@ -111,8 +111,8 @@ contains
 
       case (CHEM_OPT_RACM_SOA_VBS)
         ! -- racm + soa
-        if (num_chem    /= 103) call mpp_error(FATAL, 'num_chem is not equal to 103')
-        if (num_emis_ant <  25) call mpp_error(FATAL, 'num_emis_ant smaller than 25')
+        if (num_chem    /= 103) call chem_comm_abort(msg='num_chem is not equal to 103')
+        if (num_emis_ant <  25) call chem_comm_abort(msg='num_emis_ant smaller than 25')
         ! -- initialize pointers for gas phase and aerosol stuff
         conv_tr_aqchem = 1
         call racmsoavbs_pointers
@@ -124,9 +124,9 @@ contains
 #if 0
       case (304)
         ! -- gocart fim light
-        if (num_chem /= 13) call mpp_error(FATAL, ' num_chem is not equal 13 for gocart fimlight ')
-        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call mpp_error(FATAL, ' num_emis_ant smaller than 6 ')
-        if (num_emis_ant < 4) call mpp_error(FATAL, ' num_emis_ant smaller than 4 ')
+        if (num_chem /= 13) call chem_comm_abort(msg=' num_chem is not equal 13 for gocart fimlight ')
+        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call chem_comm_abort(msg=' num_emis_ant smaller than 6 ')
+        if (num_emis_ant < 4) call chem_comm_abort(msg=' num_emis_ant smaller than 4 ')
 
         ! -- set species
         p_qv=1
@@ -166,8 +166,8 @@ contains
       case (500)
         ! -- 2 tracers
 
-        if (num_chem    /= 5) call mpp_error(FATAL, 'num_chem is not equal to 5')
-        if (num_emis_ant < 5) call mpp_error(FATAL, 'num_emis_ant smaller than 5')
+        if (num_chem    /= 5) call chem_comm_abort(msg='num_chem is not equal to 5')
+        if (num_emis_ant < 5) call chem_comm_abort(msg='num_emis_ant smaller than 5')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -185,8 +185,8 @@ contains
         p_e_tr5=5
       case (16)
         ! -- volcanic ash
-        if (num_chem    /= 10) call mpp_error(FATAL, 'num_chem is not equal to 10 for Volcano run')
-        if (num_emis_vol < 10) call mpp_error(FATAL, 'num_emis_vol smaller than 10')
+        if (num_chem    /= 10) call chem_comm_abort(msg='num_chem is not equal to 10 for Volcano run')
+        if (num_emis_vol < 10) call chem_comm_abort(msg='num_emis_vol smaller than 10')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -214,8 +214,8 @@ contains
         numgas=0
       case (502)
         ! -- volcanoc ash (4 bins) only
-        if (num_chem    /= 4) call mpp_error(FATAL, 'num_chem is not equal to 4')
-        if (num_emis_vol < 4) call mpp_error(FATAL, 'num_emis_vol smaller than 4')
+        if (num_chem    /= 4) call chem_comm_abort(msg='num_chem is not equal to 4')
+        if (num_emis_vol < 4) call chem_comm_abort(msg='num_emis_vol smaller than 4')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -230,10 +230,10 @@ contains
         p_e_vash4 = 4
       case (317)
         ! -- gocart simple +volcanic ash simple
-        if (num_chem    /= 17) call mpp_error(FATAL, 'num_chem is not equal to 17')
-        if (num_emis_vol <  4) call mpp_error(FATAL, 'num_emis_vol smaller than 4')
-        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call mpp_error(FATAL, ' num_emis_ant smaller than 6 ')
-        if (num_emis_ant < 4) call mpp_error(FATAL, ' num_emis_ant smaller than 4 ')
+        if (num_chem    /= 17) call chem_comm_abort(msg='num_chem is not equal to 17')
+        if (num_emis_vol <  4) call chem_comm_abort(msg='num_emis_vol smaller than 4')
+        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call chem_comm_abort(msg=' num_emis_ant smaller than 6 ')
+        if (num_emis_ant < 4) call chem_comm_abort(msg=' num_emis_ant smaller than 4 ')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -277,10 +277,10 @@ contains
         p_e_vash4 = 4
       case (316)
         ! -- gocart simple +volcanic ash
-        if (num_chem    /= 23) call mpp_error(FATAL, 'num_chem is not equal to 23')
-        if (num_emis_vol < 10) call mpp_error(FATAL, 'num_emis_vol smaller than 10')
-        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call mpp_error(FATAL, 'num_emis_ant smaller than 6')
-        if (num_emis_ant  < 4) call mpp_error(FATAL, 'num_emis_ant smaller than 4')
+        if (num_chem    /= 23) call chem_comm_abort(msg='num_chem is not equal to 23')
+        if (num_emis_vol < 10) call chem_comm_abort(msg='num_emis_vol smaller than 10')
+        if ((num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) call chem_comm_abort(msg='num_emis_ant smaller than 6')
+        if (num_emis_ant  < 4) call chem_comm_abort(msg='num_emis_ant smaller than 4')
         p_qv=1
         p_qc=2
         p_qi=3
@@ -336,7 +336,7 @@ contains
         p_e_vash10 = 10
 #endif
       case default
-        call mpp_error(FATAL, 'chem_opt not implemented')
+        call chem_comm_abort(msg='chem_opt not implemented')
     end select
 
   end subroutine chem_species_setup

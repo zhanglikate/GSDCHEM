@@ -1,1 +1,1 @@
-SUBDIRS = mpp util chem 
+SUBDIRS = chem 

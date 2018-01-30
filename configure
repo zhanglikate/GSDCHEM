@@ -5120,7 +5120,7 @@ done
 
 ac_config_headers="$ac_config_headers config.h"
 
-ac_config_files="$ac_config_files Makefile src/Makefile src/mpp/Makefile src/util/Makefile src/chem/Makefile src/chem/shr/Makefile src/chem/gocart/Makefile src/chem/plume/Makefile src/chem/vash/Makefile src/chem/seas/Makefile src/chem/dust/Makefile src/chem/aero/Makefile src/chem/dep/Makefile src/chem/opt/Makefile"
+ac_config_files="$ac_config_files Makefile src/Makefile src/chem/Makefile src/chem/shr/Makefile src/chem/gocart/Makefile src/chem/plume/Makefile src/chem/vash/Makefile src/chem/seas/Makefile src/chem/dust/Makefile src/chem/aero/Makefile src/chem/dep/Makefile src/chem/opt/Makefile"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -5851,8 +5851,6 @@ do
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "src/Makefile") CONFIG_FILES="$CONFIG_FILES src/Makefile" ;;
-    "src/mpp/Makefile") CONFIG_FILES="$CONFIG_FILES src/mpp/Makefile" ;;
-    "src/util/Makefile") CONFIG_FILES="$CONFIG_FILES src/util/Makefile" ;;
     "src/chem/Makefile") CONFIG_FILES="$CONFIG_FILES src/chem/Makefile" ;;
     "src/chem/shr/Makefile") CONFIG_FILES="$CONFIG_FILES src/chem/shr/Makefile" ;;
     "src/chem/gocart/Makefile") CONFIG_FILES="$CONFIG_FILES src/chem/gocart/Makefile" ;;
