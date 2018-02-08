@@ -1,13 +1,13 @@
 module dep_dry_mod
 
   use chem_const_mod, only : epsilc
-  use chem_config_mod, only : config_flags => chem_config, &
-                              GOCART_SIMPLE => CHEM_OPT_GOCART
-  use chem_state_mod, only : p_o3,p_dust_1,p_vash_1,p_vash_4,p_vash_10,p_dms, &
+  use chem_config_mod, only : GOCART_SIMPLE => CHEM_OPT_GOCART
+  use chem_tracers_mod, only : p_o3,p_dust_1,p_vash_1,p_vash_4,p_vash_10,p_dms, &
             GOCARTRACM_KPP, &
             RADM2SORG_AQ,RACMSORG_AQ, &
             CBMZ_MOSAIC_4BIN, CBMZ_MOSAIC_8BIN, CBMZ_MOSAIC_4BIN_AQ,      &
-            CBMZ_MOSAIC_8BIN_AQ,RACMSOAVBS_KPP
+            CBMZ_MOSAIC_8BIN_AQ,RACMSOAVBS_KPP, &
+            config_flags => chem_config
 ! USE module_initial_chem_namelists,only: chem_opt,drydep_opt,wesely,     &
 !           chem_tracer,gocart_simple,GOCARTRACM_KPP,RADM2SORG,RADM2SORG, &
 !           RADM2SORG_AQ,RADM2SORG_KPP,RACMSORG_AQ,RACMSORG_KPP, &

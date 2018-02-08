@@ -1,9 +1,11 @@
 module dep_simple_mod
 
-  use chem_config_mod, only : config_flags  => chem_config,     &
-                              GOCART_SIMPLE => CHEM_OPT_GOCART, &
-                              num_moist, num_chem
-  use chem_state_mod
+! use chem_config_mod, only : config_flags  => chem_config,     &
+!                             GOCART_SIMPLE => CHEM_OPT_GOCART, &
+!                             num_moist, num_chem
+
+  use chem_config_mod, only : GOCART_SIMPLE => CHEM_OPT_GOCART
+  use chem_tracers_mod, config_flags => chem_config
 
 ! USE module_data_sorgam
 
@@ -106,17 +108,17 @@ SUBROUTINE wesely_driver(  ktau, dtstep, current_month,  &
 !--------------------------------------------------
 ! advected moisture variables
 !--------------------------------------------------
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ), INTENT(IN ) :: &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config_flags % num_moist ), INTENT(IN ) :: &
                                                       moist  
 !--------------------------------------------------
 ! advected chemical species
 !--------------------------------------------------
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ), INTENT(INOUT ) :: &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config_flags % num_chem ), INTENT(INOUT ) :: &
                                                       chem
 !--------------------------------------------------
 ! deposition velocities
 !--------------------------------------------------
-   REAL, DIMENSION( its:ite, jts:jte, num_chem ), INTENT(INOUT ) ::      &
+   REAL, DIMENSION( its:ite, jts:jte, config_flags % num_chem ), INTENT(INOUT ) ::      &
                                                       ddvel                     
 !--------------------------------------------------
 ! input from met model

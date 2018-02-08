@@ -1,8 +1,8 @@
 module dust_data_mod
 
-  use chem_types_mod,  only : CHEM_KIND_R8
-  use chem_state_mod,  only : p_dust_1, p_dust_2, p_dust_3, p_dust_4, p_dust_5, &
-                              p_edust1, p_edust2, p_edust3, p_edust4, p_edust5
+  use chem_types_mod,   only : CHEM_KIND_R8
+  use chem_tracers_mod, only : p_dust_1, p_dust_2, p_dust_3, p_dust_4, p_dust_5, &
+                               p_edust1, p_edust2, p_edust3, p_edust4, p_edust5
 
 
   implicit none
@@ -23,9 +23,12 @@ module dust_data_mod
   real(CHEM_KIND_R8), dimension(ndust), parameter :: up_dust   = (/  1.0D-6, 1.8D-6, 3.0D-6, 6.0D-6,10.0D-6 /)
 
   integer,            dimension(nsalt), parameter :: spoint    = (/ 1, 2, 2, 2, 2, 2, 3, 3, 3 /)  ! 1 Clay, 2 Silt, 3 Sand
-  real(CHEM_KIND_R8), dimension(nsalt), parameter :: reff_salt = (/ 0.71D-6, 1.37D-6, 2.63D-6, 5.00D-6, 9.50D-6, 18.1D-6, 34.5D-6, 65.5D-6, 125.D-6 /)
-  real(CHEM_KIND_R8), dimension(nsalt), parameter :: den_salt  = (/   2500.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650. /)
-  real(CHEM_KIND_R8), dimension(nsalt), parameter :: frac_salt = (/      1.,     0.2,     0.2,     0.2,     0.2,     0.2,   0.333,   0.333,   0.333 /)
+  real(CHEM_KIND_R8), dimension(nsalt), parameter :: reff_salt = &
+    (/ 0.71D-6, 1.37D-6, 2.63D-6, 5.00D-6, 9.50D-6, 18.1D-6, 34.5D-6, 65.5D-6, 125.D-6 /)
+  real(CHEM_KIND_R8), dimension(nsalt), parameter :: den_salt  = &
+    (/   2500.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650.,   2650. /)
+  real(CHEM_KIND_R8), dimension(nsalt), parameter :: frac_salt = &
+    (/      1.,     0.2,     0.2,     0.2,     0.2,     0.2,   0.333,   0.333,   0.333 /)
 
   real,               dimension(maxstypes) :: porosity
   real(CHEM_KIND_R8), dimension(ndust, 12) :: ch_dust = 0.8e-09_CHEM_KIND_R8

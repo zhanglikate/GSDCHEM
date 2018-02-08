@@ -1,9 +1,6 @@
 module dust_gocart_mod
 
-  use chem_types_mod, only : CHEM_KIND_R8
-
-  use chem_config_mod, only : config => chem_config
-
+  use chem_types_mod,  only : CHEM_KIND_R8
   use dust_data_mod
 
   implicit none
@@ -14,7 +11,7 @@ module dust_gocart_mod
 
 contains
 
-  subroutine gocart_dust_driver(ktau,dt,alt,t_phy,moist,u_phy,  &
+  subroutine gocart_dust_driver(chem_opt,ktau,dt,alt,t_phy,moist,u_phy,  &
          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,                  &
          ivgtyp,isltyp,vegfra,xland,xlat,xlong,gsw,area,g,emis_dust,srce_dust,  & 
          dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,           &
@@ -25,7 +22,7 @@ contains
 
     IMPLICIT NONE
 
-     INTEGER,      INTENT(IN   ) :: ktau,start_month,                  &
+     INTEGER,      INTENT(IN   ) :: chem_opt,ktau,start_month,               &
            num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
                                ids,ide, jds,jde, kds,kde,               &
                                     ims,ime, jms,jme, kms,kme,               &
@@ -93,7 +90,7 @@ contains
     nmx=5 
     k=kts
 
-    select case (config % chem_opt)
+    select case (chem_opt)
     case (304, 316, 317)
 
       dusthelp(:,:)=0.

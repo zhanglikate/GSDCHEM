@@ -1,9 +1,9 @@
 MODULE opt_aer_out_mod
 
-   USE chem_state_mod,only:p_extcof3,p_extcof55,p_extcof106, &
-                                                  p_extcof3_5,p_extcof8_12, &
-                                          p_bscof3,p_bscof55,p_bscof106,    &
-                                          p_asympar3,p_asympar55,p_asympar106
+   USE chem_tracers_mod, only : p_extcof3,p_extcof55,p_extcof106, &
+                                p_extcof3_5,p_extcof8_12, &
+                                p_bscof3,p_bscof55,p_bscof106,    &
+                                p_asympar3,p_asympar55,p_asympar106
 ! SAM lower and upper wavelength limits (microns) for AFWA band averaging - 2 averaging bins considered here
    REAL,    PARAMETER, PRIVATE ::   afwalowv1   = 3.  ! lower wavelength for first AFWA band average extinction coefficent
    REAL,    PARAMETER, PRIVATE ::   afwahiwv1   = 5.  ! upper wavelength for first AFWA band average extinction coefficent

@@ -1,7 +1,7 @@
 module vash_settling_mod
 
   use chem_types_mod, only : CHEM_KIND_R8
-  use chem_state_mod
+  use chem_tracers_mod
 
   implicit none
  
@@ -48,14 +48,14 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
                                                      2500.,2500.,2500.,2500.,2500. /)
   real(CHEM_KIND_R8), DIMENSION (10), PARAMETER :: reff_ash(10)=(/0.5000D-3,&! 1.00 mm diameter 
                                                       0.3750D-3,&! 0.75 mm
-						      0.1875D-3,&!
-						      93.750D-6,&!
-						      46.875D-6,&!
-						      23.437D-6,&!
-						      11.719D-6,&!
-						      05.859D-6,&!
-						      02.930D-6,&!
-						      00.975D-6 /)! 3.9 um
+                              0.1875D-3,&!
+                              93.750D-6,&!
+                              46.875D-6,&!
+                              23.437D-6,&!
+                              11.719D-6,&!
+                              05.859D-6,&!
+                              02.930D-6,&!
+                              00.975D-6 /)! 3.9 um
   real(CHEM_KIND_R8), DIMENSION (10) :: bstl_ash
   real(CHEM_KIND_R8) :: maxash(10)
   real :: are
@@ -75,7 +75,7 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
        do i=its,ite
           kk=0
           are=area(i,j)
-	  bstl_ash(:)=0.
+      bstl_ash(:)=0.
           do k=kts,kte-1
           kk=kk+1
           p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
@@ -105,8 +105,8 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
 
           iseas=0
           idust=0
-	  iash =1
-	  
+      iash =1
+
           kk=0
 !         write(0,*)'1',chem(i,1,j,p_dust_4)
           do k=kts,kte-1
@@ -214,9 +214,9 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,10) :: ash
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_ash(4)=(/2500.,2500.,2500.,2500. /)
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_ash(4)=(/ 11.719D-6,&!
-						      05.859D-6,&!
-						      02.930D-6,&!
-						      00.975D-6 /)! 3.9 um
+                              05.859D-6,&!
+                              02.930D-6,&!
+                              00.975D-6 /)! 3.9 um
   real(CHEM_KIND_R8), DIMENSION (4) :: bstl_ash
   real(CHEM_KIND_R8) :: maxash(4)
   real :: are
@@ -236,7 +236,7 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
        do i=its,ite
           kk=0
           are=area(i,j)
-	  bstl_ash(:)=0.
+      bstl_ash(:)=0.
           do k=kts,kte-1
           kk=kk+1
           p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
@@ -281,8 +281,8 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
 
           iseas=0
           idust=0
-	  iash =1
-	  
+      iash =1
+
           if(p_vash_4.gt.1)then
           kk=0
 !         write(0,*)'1',chem(i,1,j,p_dust_4)

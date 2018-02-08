@@ -8557,7 +8557,7 @@
                    ,num_chem,ids,ide, jds,jde, kds,kde                     &
                    ,ims,ime, jms,jme, kms,kme                     &
                    ,its,ite, jts,jte, kts,kte )
-        USE chem_state_mod
+        USE chem_tracers_mod
 !       USE module_initial_chem_namelists 
    USE chem_const_mod, only: oc_mfac,nh4_mfac
 !  USE module_data_gocart_chem, only: oc_mfac,nh4_mfac

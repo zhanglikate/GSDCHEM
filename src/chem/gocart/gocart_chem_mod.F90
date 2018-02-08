@@ -4,9 +4,9 @@ module gocart_chem_mod
 
   use chem_const_mod, only : airmw, smw
 
-  use chem_state_mod, only : p_o3,p_qi,p_qc,p_qv,p_dms,p_so2, &
-                             p_sulf,p_msa,p_ho,p_h2o2,p_no3, &
-                             ndms, nso2, nso4, nmsa
+  use chem_tracers_mod, only : p_o3,p_qi,p_qc,p_qv,p_dms,p_so2, &
+                               p_sulf,p_msa,p_ho,p_h2o2,p_no3, &
+                               ndms, nso2, nso4, nmsa
 
   implicit none
 

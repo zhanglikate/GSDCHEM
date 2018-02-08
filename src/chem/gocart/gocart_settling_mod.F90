@@ -1,10 +1,10 @@
 module gocart_settling_mod
 
-  use chem_types_mod,  only : CHEM_KIND_R8
-  use chem_config_mod, only : config => chem_config
-  use chem_state_mod,  only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, &
-                              p_dust_1, p_dust_2, p_dust_3, p_dust_4, p_dust_5, &
-                              p_qv
+  use chem_types_mod,   only : CHEM_KIND_R8
+  use chem_tracers_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, &
+                               p_dust_1, p_dust_2, p_dust_3, p_dust_4, p_dust_5, &
+                               p_qv, &
+                               config => chem_config
 
 
   use dust_data_mod, only : den_dust, reff_dust, dyn_visc

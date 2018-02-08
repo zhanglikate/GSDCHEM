@@ -31,10 +31,9 @@ MODULE aero_soa_vbs_mod
 ! 30/06/2014: Modified by Paolo Tuccella
 !             The module has been modified in order to include the aqueous phase
 !
+  USE chem_comm_mod, ONLY : chem_comm_abort
 
-  USE chem_state_mod
-  USE chem_config_mod, ONLY : num_moist, num_chem, chem_config_type
-  USE chem_comm_mod,   ONLY : chem_comm_abort
+  USE chem_tracers_mod, config => chem_config
 
   USE aero_soa_vbs_data_mod
  
@@ -76,10 +75,10 @@ CONTAINS
                                       its,ite, jts,jte, kts,kte, &
                                       kemit,    ktau
 
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),        &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_moist ),        &
          INTENT(IN ) ::                                      moist
 
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),         &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),         &
          INTENT(INOUT ) ::                                   chem
 !
 ! following are aerosol arrays that are not advected
@@ -227,7 +226,7 @@ INTEGER :: i,j,k,l,debug_level
 !
 
 
-   do l=p_so4aj,num_chem
+   do l=p_so4aj,config % num_chem
       do j=jts,jte
          do k=kts,kte
             do i=its,ite
@@ -494,7 +493,7 @@ INTEGER :: i,j,k,l,debug_level
 100  continue ! i,j-loop ends
 
 ! convert aerosol variables back to mixing ratio from ug/m3
-  do l=p_so4aj,num_chem
+  do l=p_so4aj,config % num_chem
      do j=jts,jte
         do k=kts,kte
            do i=its,ite
@@ -519,7 +518,7 @@ SUBROUTINE sum_pm_soa_vbs (                                         &
                                  ims,ime, jms,jme, kms,kme,       &
                                  its,ite, jts,jte, kts,kte
 
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),             &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),             &
          INTENT(IN ) :: chem
 
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                       &
@@ -608,9 +607,9 @@ SUBROUTINE     soa_vbs_depdriver ( & !id,config_flags,ktau,dtstep,              
                                       its,ite, jts,jte, kts,kte!, &
                                       !ktau
 
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),        &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_moist ),        &
          INTENT(IN ) ::                                   moist
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),         &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),         &
          INTENT(INOUT ) ::                                   chem
 !
 ! following are aerosol arrays that are not advected
@@ -6278,7 +6277,7 @@ SUBROUTINE         aerosols_soa_vbs_init(config, chem,convfac,z_at_w,          &
                                    ims,ime, jms,jme, kms,kme,    &
                                    its,ite, jts,jte, kts,kte
 !   LOGICAL, INTENT(OUT) :: is_aerosol(num_chem)
-   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme, num_chem ) ,     &
+   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme, config % num_chem ) ,     &
           INTENT(INOUT   ) ::                                      &
                               chem
    REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ) ,               &
@@ -6441,7 +6440,7 @@ SUBROUTINE         aerosols_soa_vbs_init(config, chem,convfac,z_at_w,          &
 !
         if(config % chem_in_opt == 1 .or. config % readrestart ) return
 
-        do l=p_so4aj,num_chem
+        do l=p_so4aj,config % num_chem
            chem(ims:ime,kms:kme,jms:jme,l)=epsilc
         enddo
 
@@ -7876,7 +7875,7 @@ SUBROUTINE soa_vbs_seasalt_emiss(                                        &
           INTENT(IN   ) ::   u10, v10, xland
 
 ! trace species mixing ratios (aerosol mass = ug/kg; number = #/kg)
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),              &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),              &
          INTENT(INOUT ) ::   chem
 
 ! alt  = 1.0/(dry air density) in (m3/kg)
@@ -8030,7 +8029,7 @@ END SUBROUTINE soa_vbs_seasalt_emiss
           INTENT(IN   ) ::   ivgtyp, isltyp
 
 ! trace species mixing ratios (aerosol mass = ug/kg; number = #/kg)
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),                 &
          INTENT(INOUT ) ::   chem
 
 ! alt  = 1.0/(dry air density) in (m3/kg)
@@ -8325,7 +8324,7 @@ END SUBROUTINE soa_vbs_seasalt_emiss
           INTENT(IN   ) ::                                                 &
                                                      ivgtyp,               &
                                                      isltyp
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
+   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, config % num_chem ),                 &
          INTENT(INOUT ) ::                                   chem
   REAL, DIMENSION( ims:ime, num_soil_layers, jms:jme ) ,      &
       INTENT(INOUT) ::                               smois

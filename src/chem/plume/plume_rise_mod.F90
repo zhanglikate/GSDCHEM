@@ -3,7 +3,7 @@ module plume_rise_mod
   use chem_const_mod, only : g => grvity, cp, &
                              r_d => rd, r_v => rv, p1000mb => p1000
   use chem_comm_mod,  only : chem_comm_abort
-  use chem_state_mod
+  use chem_tracers_mod
 
   use plume_zero_mod
   use plume_scalar_mod

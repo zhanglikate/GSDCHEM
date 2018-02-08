@@ -1,0 +1,596 @@
+module chem_io_mod
+
+  use mpi
+  use chem_rc_mod
+  use chem_types_mod
+  use chem_comm_mod
+  use chem_model_mod
+
+  implicit none
+
+  integer, parameter :: ioUnit = 100
+
+  interface chem_io_read
+    module procedure chem_io_read_2DR4
+    module procedure chem_io_read_3DR4
+  end interface chem_io_read
+
+  interface chem_io_write
+    module procedure chem_io_write_2DR4
+    module procedure chem_io_write_3DR4
+  end interface chem_io_write
+
+  private
+
+  public :: chem_io_init
+  public :: chem_io_read
+  public :: chem_io_write
+
+contains
+
+  subroutine chem_io_init(rc)
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, tile, tileCount
+    integer :: pe, peCount
+    integer :: i, localpe, npe
+    integer :: comm, tileComm
+!   integer :: commGroup, tileGroup
+    integer, dimension(:), allocatable :: localTile, tileToPet, pes
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(deCount=deCount, tileCount=tileCount, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- if no model on this PET, bail out
+    if (deCount < 1) return
+
+    call chem_comm_get(comm=comm, localpe=localpe, pecount=peCount, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(localTile(tileCount), tileToPet(tileCount*peCount), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to allocate memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- store which tiles are assigned to this PET
+    localTile = -1
+    do de = 0, deCount-1
+      call chem_model_get(de=de, tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      localTile(tile) = localpe
+    end do
+
+    ! -- build a global tile-to-PET map
+!   call mpi_allgather(localTile, tileCount, MPI_INTEGER, tileToPet, tileCount, MPI_INTEGER, comm, localrc)
+!   if (localrc /= MPI_SUCCESS) then
+!     call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+!     return
+!   end if
+
+    call chem_comm_allgather(localTile, tileToPet, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    deallocate(localTile, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to free memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- extract the list of PETs assigned to each tile and create MPI groups
+    allocate(pes(peCount), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to allocate memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- get handle for global PET group
+    ! -- handle is available by default in chem_comm_ APIs
+!   call mpi_comm_group(comm, commGroup, localrc)
+!   if (localrc /= MPI_SUCCESS) then
+!     call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+!     return
+!   end if
+
+    ! -- gather PET list for each tile and create tile-specific communicator
+    pes = -1
+    do tile = 1, tileCount
+      npe = 0
+      do i = tile, tileCount*peCount, tileCount
+        if (tileToPet(i) > -1) then
+          npe = npe + 1
+          pes(npe) = tileToPet(i)
+        end if
+      end do
+
+!     call mpi_group_incl(commGroup, npe, pes(1:npe), tileGroup, localrc)
+!     if (localrc /= MPI_SUCCESS) then
+!       call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+!       return
+!     end if
+!     call mpi_comm_create_group(comm, tileGroup, 0, tileComm, localrc)
+!     if (localrc /= MPI_SUCCESS) then
+!       call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+!       return
+!     end if
+
+!     ! -- create new communicator
+      call chem_comm_create(tileComm, pes(1:npe), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      do de = 0, deCount-1
+        call chem_model_get(de=de, tile=i, rc=localrc)
+        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        if (tile == i) then
+          call chem_model_set(de=de, tileComm=tileComm, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        end if
+      end do
+    end do
+
+    deallocate(pes, tileToPet, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Unable to free memory", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- store I/O layout into model
+    do de = 0, deCount-1
+      call chem_model_get(de=de, tile=tile, tileComm=tileComm, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      ! -- get local PET for tile 
+      call chem_comm_inquire(tileComm, localpe=pe, pecount=npe, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!     call mpi_comm_rank(tileComm, pe, localrc)
+      ! -- mark local root PET as I/O PET
+      call chem_model_set(de=de, localIOflag=(pe == 0), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+!     call mpi_comm_size(tileComm, npe, localrc)
+      write(6,'("chem_io_init: PET:",i2," DE:",i02," tile=",i0," - comm=",i0," PE:",i0,"/",i0)') &
+        localpe, de, tile, tileComm, pe, npe
+      flush(6)
+    end do
+
+  end subroutine chem_io_init
+
+
+  subroutine chem_io_file_name(fullname, filename, tile, pathname)
+    character(len=*),           intent(out) :: fullname
+    character(len=*),           intent(in)  :: filename
+    integer,                    intent(in)  :: tile
+    character(len=*), optional, intent(in)  :: pathname
+
+    ! -- local variables
+    integer :: lenpath
+
+    ! -- begin
+    if (present(pathname)) then
+      lenpath = len_trim(pathname)
+      if (pathname(lenpath:lenpath) == "/") then 
+        write(fullname,'(a,"tile",i0,"/",a)') trim(pathname), tile, filename
+      else
+        write(fullname,'(a,"/tile",i0,"/",a)') trim(pathname), tile, filename
+      end if
+    else
+      write(fullname,'("tile",i0,"/",a)') tile, filename
+    end if
+
+  end subroutine chem_io_file_name
+  
+
+
+  subroutine chem_io_file_read(datafile, buffer, recrange, recsize, recstride, rc)
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(out) :: buffer(:)
+    integer, optional,  intent(in)  :: recrange(2)
+    integer, optional,  intent(in)  :: recsize
+    integer, optional,  intent(in)  :: recstride
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: irec, is, ie
+    integer :: rcount, rsize, rstride
+    integer :: rrange(2)
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    buffer = 0._CHEM_KIND_R4
+
+    if (present(recrange)) then
+      rrange = recrange
+    else
+      rrange = 1
+    end if
+    rcount = rrange(2) - rrange(1) + 1
+
+    if (present(recsize)) then
+      rsize = recsize
+    else
+      rsize = size(buffer) / rcount
+    end if
+
+    if (present(recstride)) then
+      rstride = recstride
+    else
+      rstride = rsize
+    end if
+
+    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+        msg="insufficient buffer size", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- open file
+    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='read', position='rewind', iostat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- advance to first record
+    do irec = 2, rrange(1)
+      read(unit=ioUnit, iostat=localrc)
+      if (chem_rc_test((localrc /= 0), msg="Unable to locate record in file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+    end do
+
+    ! -- read records
+    is = 1
+    ie = rsize
+    do irec = 1, rcount
+      read(unit=iounit, iostat=localrc) buffer(is:ie)
+      if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+          file=__FILE__, line=__LINE__, rc=rc)) then
+        close(unit=iounit)
+        return
+      end if
+      is = is + rstride
+      ie = ie + rstride
+    end do
+
+    ! -- close file
+    close(unit=ioUnit)
+
+  end subroutine chem_io_file_read
+
+
+  subroutine chem_io_file_write(datafile, buffer, rc)
+    character(len=*),   intent(in)  :: datafile
+    real(CHEM_KIND_R4), intent(in)  :: buffer(:)
+    integer, optional,  intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='write', position='rewind', iostat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    write(unit=ioUnit, iostat=localrc) buffer
+    if (chem_rc_test((localrc /= 0), msg="Failure reading data from file: "//trim(datafile), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+    close(unit=ioUnit)
+
+  end subroutine chem_io_file_write
+
+
+  subroutine chem_io_read_2DR4(filename, farray, path, recrange, recsize, recstride, de, rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(out) :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: recrange(2)
+    integer,          optional, intent(in)  :: recsize
+    integer,          optional, intent(in)  :: recstride
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    integer :: bsize(2)
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:), allocatable :: buffer
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (size(farray) /= (ide-ids+1)*(jde-jds+1)) then
+      call chem_rc_set(CHEM_RC_FAILURE, &
+        msg="size of input array inconsistent with domain decomposition", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    bsize = (/ ite-its+1, jte-jts+1 /)
+    allocate(buffer(bsize(1)*bsize(2)), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+    buffer = 0._CHEM_KIND_R4
+
+    if (localIOflag) then
+
+      call chem_io_file_name(datafile, filename, tile, pathname=path)
+
+      call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      write(6,'("chem_data_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+        trim(datafile), minval(buffer), maxval(buffer)
+    end if
+
+    call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    buf2d = reshape(buffer, bsize)
+
+    farray = buf2d(ids:ide, jds:jde) 
+     
+    deallocate(buffer, buf2d, stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+  end subroutine chem_io_read_2DR4
+
+
+  subroutine chem_io_read_3DR4(filename, farray, path, recrange, recsize, recstride, de, rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(out) :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: recrange(2)
+    integer,          optional, intent(in)  :: recsize
+    integer,          optional, intent(in)  :: recstride
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    integer :: bsize(3)
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: buffer
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable, target :: buf3d
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    bsize = (/ ite-its+1, jte-jts+1, size(farray, dim=3) /)
+
+    ! -- check size consistency
+    if (size(farray) /= (ide-ids+1)*(jde-jds+1)*bsize(3)) then
+      call chem_rc_set(CHEM_RC_FAILURE, &
+        msg="size of input array inconsistent with domain decomposition", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    allocate(buffer(bsize(1)*bsize(2)*bsize(3)), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+    buffer = 0._CHEM_KIND_R4
+
+    if (localIOflag) then
+
+      call chem_io_file_name(datafile, filename, tile, pathname=path)
+
+      call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      write(6,'("chem_data_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+        trim(datafile), minval(buffer), maxval(buffer)
+    end if
+
+    call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,bsize(3)), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    buf3d = reshape(buffer, bsize)
+
+    farray = buf3d(ids:ide, jds:jde, :)
+     
+    deallocate(buffer, buf3d, stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+  end subroutine chem_io_read_3DR4
+
+
+  subroutine chem_io_write_2DR4(filename, farray, path, de, rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:,:), allocatable, target :: buf2d, recvbuf
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    ! -- check size consistency
+    if (size(farray) /= (ide-ids+1)*(jde-jds+1)) then
+      call chem_rc_set(CHEM_RC_FAILURE, &
+        msg="size of input array inconsistent with domain decomposition", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    allocate(buf2d(its:ite,jts:jte), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+    buf2d = 0._CHEM_KIND_R4
+
+    buf2d(ids:ide, jds:jde) = farray
+
+    allocate(recvbuf(its:ite,jts:jte), stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+    recvbuf = 0._CHEM_KIND_R4
+
+!   call mpi_reduce(buf2d, recvbuf, bufSize, MPI_REAL, MPI_SUM, 0, tileComm, localrc)
+!   if (localrc /= MPI_SUCCESS) then
+!     call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
+!       file=__FILE__, line=__LINE__, rc=localrc)
+!     return
+!   end if
+
+    call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+
+      call chem_io_file_name(datafile, filename, tile, pathname=path)
+
+      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf2d)/)), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+        trim(datafile), minval(recvbuf), maxval(recvbuf)
+    end if
+
+    deallocate(buf2d, recvbuf, stat=localrc)
+    if (localrc /= 0) then
+      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=localrc)
+      return
+    end if
+
+  end subroutine chem_io_write_2DR4
+
+
+  subroutine chem_io_write_3DR4(filename, farray, path, de, rc)
+    character(len=*),           intent(in)  :: filename
+    real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: path
+    integer,          optional, intent(in)  :: de
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: tile, tileComm
+    integer :: ids, ide, jds, jde, its, ite, jts, jte, nk
+    logical :: localIOflag
+    character(len=CHEM_MAXSTR) :: datafile
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable, target :: buf3d, recvbuf
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(de=de, tile=tile, tileComm=tileComm, &
+      localIOflag=localIOflag, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, &
+      its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    nk = size(farray,dim=3)
+
+    ! -- check size consistency
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+        msg="size of input array inconsistent with domain decomposition", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    buf3d = 0._CHEM_KIND_R4
+
+    buf3d(ids:ide, jds:jde, :) = farray
+
+    allocate(recvbuf(its:ite,jts:jte,nk), stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+    recvbuf = 0._CHEM_KIND_R4
+
+    call chem_comm_reduce(buf3d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (localIOflag) then
+
+      call chem_io_file_name(datafile, filename, tile, pathname=path)
+
+      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf3d)/)), rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+        trim(datafile), minval(recvbuf), maxval(recvbuf)
+    end if
+
+    deallocate(buf3d, recvbuf, stat=localrc)
+    if (chem_rc_test((localrc /= 0), msg="Cannot deallocate read buffer", &
+        file=__FILE__, line=__LINE__, rc=rc)) return
+
+  end subroutine chem_io_write_3DR4
+
+end module chem_io_mod

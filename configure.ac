@@ -70,19 +70,6 @@ AS_IF([test "x$enable_safe_fp" != xno],
      AC_MSG_WARN([-fp-model option not recognized. Please add corresponding option for value-safe floating-point optimization.])])
   AC_LANG_POP()],[])
 
-AC_ARG_ENABLE([original-coordinates],
-  [AS_HELP_STRING([--enable-original-coordinates],
-    [use coordinate values from FIM restart file in native precision.])],
-  [],[])
-
-AC_CHECKING([coordinate precision])
-AS_IF([test "x$enable_original_coordinates" == xyes],
-  [AS_IF([test "x$with_esmfmk" = xyes],
-    [FCFLAGS="${FCFLAGS} -DORIG_COORD"
-     AC_MSG_RESULT([Using native coordinate precision.])],
-    [AC_MSG_WARN([Native coordinate precision selected by default.])])],
-  [AC_MSG_RESULT([Using double precision mesh coordinates.])])
-
 AC_PROG_INSTALL
 AC_PROG_RANLIB
 
@@ -135,4 +122,4 @@ AS_ECHO("=======================")
 AS_IF([test "x$with_esmfmk" != xno],
   [AS_ECHO("NOTE: Settings imported from ESMF Makefile fragment: ${ESMFMKFILE}")],[])
 AS_ECHO("")
-AS_ECHO("Type 'gmake' to build.")
+AS_ECHO("Type 'make' to build.")

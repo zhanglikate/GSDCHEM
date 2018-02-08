@@ -1,14 +1,18 @@
 module seas_mod
 
-  use chem_const_mod, only : pi => pi_r8
-  use chem_types_mod, only : CHEM_KIND_R8
-  use chem_state_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, p_seas_5
-  use chem_config_mod, only : config => chem_config
+  use chem_const_mod,   only : pi => pi_r8
+  use chem_types_mod,   only : CHEM_KIND_R8
+  use chem_tracers_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, p_seas_5, &
+                               config => chem_config
   use seas_data_mod
 
   implicit none
 
+  integer, parameter :: SEAS_OPT_DEFAULT = 1
+
   private
+
+  public :: SEAS_OPT_DEFAULT
 
   public :: gocart_seasalt_driver
 

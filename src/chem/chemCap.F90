@@ -13,7 +13,7 @@ module CHM
   implicit none
 
 #if 1
-  integer, parameter :: importFieldCount = 11
+  integer, parameter :: importFieldCount = 9
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
       "air_pressure                   ",  &
@@ -24,16 +24,37 @@ module CHM
       "x_wind                         ",  &
       "y_wind                         ",  &
       "omega                          ",  &
-      "mass_fraction_of_tracers_in_air",  &
-      "inst_zonal_wind_height10m      ",  &
-      "inst_merid_wind_height10m      "   &
+      "mass_fraction_of_tracers_in_air"   &
     /)
 #else
-  integer, parameter :: importFieldCount = 2
+  integer, parameter :: importFieldCount = 25
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
-      "inst_zonal_wind_height10m      ",  &
-      "inst_merid_wind_height10m      "   &
+      "air_pressure                             ", &
+      "air_pressure_in_model_layers             ", &
+      "geopotential                             ", &
+      "geopotential_in_model_layers             ", &
+      "air_temperature                          ", &
+      "x_wind                                   ", &
+      "y_wind                                   ", &
+      "omega                                    ", &
+      "mass_fraction_of_tracers_in_air          ", &
+      "area_type                                ", &
+      "atmosphere_boundary_layer_thickness      ", &
+      "cell_area                                ", &
+      "convective_rainfall_amount               ", &
+      "exchange                                 ", &
+      "friction_velocity                        ", &
+      "rainfall_amount                          ", &
+      "soil_moisture_content                    ", &
+      "surface_downwelling_shortwave_flux_in_air", &
+      "surface_mask                             ", &
+      "surface_skin_temperature                 ", &
+      "surface_upward_sensible_heat_flux        ", &
+      "thickness_of_snowfall_amount             ", &
+      "vegetation_type                          ", &
+      "vegetation_area_fraction                 ", &
+      "z_over_l                                 "  &
     /)
 #endif
 
@@ -101,7 +122,7 @@ module CHM
   subroutine SetServices(model, rc)
     type(ESMF_GridComp)  :: model
     integer, intent(out) :: rc
-    
+
     rc = ESMF_SUCCESS
     
     ! the NUOPC model component will register the generic methods
@@ -488,31 +509,24 @@ module CHM
     type(ESMF_State)              :: importState
     type(ESMF_Field)              :: field
     type(ESMF_Clock)              :: clock
-    type(ESMF_Mesh)               :: mesh
     type(ESMF_Grid)               :: grid
     type(ESMF_VM)                 :: vm
     type(ESMF_GeomType_flag)      :: geomtype
-    type(ESMF_CoordSys_Flag)      :: coordSys
     type(ESMF_DistGrid)           :: distgrid
     type(ESMF_Array)              :: array
-    integer                       :: de, item, localrc, localDe, numOwnedNodes, spatialDim, tile
+    integer                       :: de, item, localrc, localDe, tile
     integer                       :: comm, localPet
-    integer                       :: recvData(1)
-    real, allocatable :: fperm(:)
-    real(ESMF_KIND_R8), dimension(:), allocatable :: ownedNodeCoords, lon, lat
+    real(ESMF_KIND_R8), dimension(:,:), pointer :: coord
 
-    integer :: dimCount, tileCount, deCount, elementCount
-    integer, dimension(:),   allocatable :: seqIndexList
+    integer :: dimCount, tileCount, deCount
     integer, dimension(:),   allocatable :: deToTileMap, localDeToDeMap
     integer, dimension(:,:), allocatable :: minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile
     integer, dimension(:,:), allocatable :: computationalLBound, computationalUBound
 
-    ! -- query the Component for its clock, importState and exportState
-    call NUOPC_ModelGet(model, importState=importState, modelClock=clock, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
+    integer :: yy, mm, dd, h, m
+    real(ESMF_KIND_R8) :: dts
+    type(ESMF_Time) :: startTime
+    type(ESMF_TimeInterval) :: TimeStep
 
     ! -- initialize chemistry model
     call ESMF_GridCompGet(model, vm=vm, rc=rc)
@@ -520,21 +534,6 @@ module CHM
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    call ESMF_VMGet(vm, mpiCommunicator=comm, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
-    ! -- perform first phase of initialization
-    call chemInitialize(clock, phase=0, comm=comm, rc=rc)
-    if (rc /= CHEM_RC_SUCCESS) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize chemistry component", &
-        line=__LINE__, &
-        file=__FILE__) 
-      return  ! bail out
-    end if
 
     ! -- check if import fields are defined
     if (importFieldCount < 1) then 
@@ -544,6 +543,13 @@ module CHM
         rcToReturn=rc)
       return  ! bail out
     end if
+
+    ! -- query the Component for its clock, importState and exportState
+    call NUOPC_ModelGet(model, importState=importState, modelClock=clock, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
 
     ! get coordinates from Grid object
     ! assume all fields on same grid
@@ -561,7 +567,7 @@ module CHM
       return  ! bail out
     write(6,'("-- localDeCount =",i0)') localDeCount
     if (geomtype == ESMF_GEOMTYPE_GRID) then
-      call ESMF_FieldGet(field, array=array, rc=rc)
+      call ESMF_FieldGet(field, grid=grid, array=array, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
@@ -600,37 +606,65 @@ module CHM
 
       ! -- init chemistry model on local DEs
       call chem_model_create(deCount=localDeCount, rc=rc)
-      if (rc /= CHEM_RC_SUCCESS) then
+      if (chem_rc_check(rc)) then
         call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
           msg="Failed to initialize chemistry model for localDeCount", &
           line=__LINE__, &
-          file=__FILE__) 
+          file=__FILE__, &
+          rcToReturn=rc)
         return  ! bail out
       end if
+
+      call ESMF_VMGet(vm, localPet=localPet, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
 
       do localDe = 0, localDeCount-1
         de   = localDeToDeMap(localDe+1) + 1
         tile = deToTileMap(de)
 
 !       write(6,'("CHEM on localDe: ",i0," DE: ",i0)') localDe, de-1
-        write(6,'("CHEM: localDe: ",i2," DE: ",i2, " tile=",i2," minIndexPDe=",2i4,2x," maxIndexPDe=",2i4," minIndexPTile=",2i4,"maxIndexPTile=",2i4,4i4)') &
-          localDe, de-1, tile, minIndexPDe(:,de), maxIndexPDe(:,de), minIndexPTile(:,tile), maxIndexPTile(:,tile), &
+        write(6,'("CHEM: PET:",i02," localDe: ",i2," DE: ",i2, " tile=",i2," minIndexPDe=",2i4,2x," maxIndexPDe=",2i4," minIndexPTile=",2i4," maxIndexPTile=",2i4,4i4)') &
+          localPet, localDe, de-1, tile, minIndexPDe(:,de), maxIndexPDe(:,de), minIndexPTile(:,tile), maxIndexPTile(:,tile), &
           computationalLBound(:,localDe+1), computationalUBound(:,localDe+1)
         flush(6)
 !       write(6,'(4x,"minIndexPDe=",2i8,2x,"maxIndexPDe=",2i8)') minIndexPDe(:,de), maxIndexPDe(:,de)
 !       write(6,'(4x,"tile=",i0)') deToTileMap(de)
 
         ! -- set model domains for local DEs
-        call chem_model_domain_set(minIndexPDe(:,de), maxIndexPDe(:,de), &
+        call chem_model_domain_set(minIndexPDe=minIndexPDe(:,de), maxIndexPDe=maxIndexPDe(:,de), &
           minIndexPTile=minIndexPTile(:,tile), maxIndexPTile=maxIndexPTile(:,tile), &
-          tile=deToTileMap(de), de=localDe, rc=rc)
-        if (rc /= CHEM_RC_SUCCESS) then
+          minIndexLocal=computationalLBound(:,localDe+1), maxIndexLocal=computationalUBound(:,localDe+1), &
+          tile=deToTileMap(de), tileCount=tileCount, de=localDe, rc=rc)
+        if (chem_rc_check(rc)) then
           call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
             msg="Failed to initialize chemistry model for localDeCount", &
             line=__LINE__, &
-            file=__FILE__) 
+            file=__FILE__, &
+            rcToReturn=rc)
           return  ! bail out
         end if
+
+        ! -- get local coordinate arrays
+        do item = 1, 2
+          call ESMF_GridGetCoord(grid, coordDim=item, staggerloc=ESMF_STAGGERLOC_CENTER, &
+            localDE=localDe, farrayPtr=coord, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          call chem_model_domain_coord_set(item, coord, de=localDe, rc=rc)
+          if (chem_rc_check(rc)) then
+            call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+              msg="Failed to set coordinates for chemistry model", &
+              line=__LINE__, &
+              file=__FILE__, &
+              rcToReturn=rc)
+            return  ! bail out
+          end if
+        end do
 
       end do
       deallocate(minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile, &
@@ -650,20 +684,162 @@ module CHM
       return  ! bail out
     end if
 
-    ! -- connect import fields to model
-    ! -- this can be done only once since remote fields are accessed by reference
-    call chemFieldsConnect(importState, importFieldNames, rc)
+    ! -- init model communication subsystem over ESMF communicator
+    call ESMF_GridCompGet(model, vm=vm, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    call ESMF_VMGet(vm, mpiCommunicator=comm, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
 
-    ! initialize model (phase 2)
-    ! prepare additional arrays
-    ! call chem_data_prep()
+    ! -- initialize model after creation to setup correct communication
+    print *, ' -- chemCap: before chem_model_init() '
+    call chem_model_init(comm=comm, isolate=.true., rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize chemistry model", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_model_init() '
 
-    ! 1. allocate work arrays
-    ! 2. read in background fields
+    ! -- initialize model I/O
+    call chem_io_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model subsystem", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_io_init() '
+
+    ! -- read-in emission and background fields, setup internal parameters
+    call chem_model_config_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize model configuration", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_model_config_init() '
+
+    ! -- initialize internal clock
+    ! -- get clock information
+    call ESMF_ClockGet(clock, startTime=startTime, timeStep=timeStep, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+    ! -- get forecast initial time
+    call ESMF_TimeGet(startTime, yy=yy, mm=mm, dd=dd, h=h, m=m, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+    ! -- get time step
+    call ESMF_TimeIntervalGet(timeStep, s_r8=dts, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+    ! -- set internal clock
+    call chem_model_clock_create(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to create model clock", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    call chem_model_clock_set(yy=yy, mm=mm, dd=dd, h=h, m=m, dts=dts, tz=0, rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize model clock", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_model_clock_init() '
+
+    ! -- allocate memory for internal workspace
+    call chem_backgd_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model subsystem", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_backgd_init() '
+
+    ! -- read-in emission and background fields
+    call chem_backgd_read(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model subsystem", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_backgd_read() '
+
+    ! -- diagnostics: write out emission and background fields
+    call chem_backgd_write(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model subsystem", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_backgd_read() '
+
+    ! -- connect import fields to model
+    ! -- this can be done only once since remote fields are accessed by reference
+    call chem_comp_connect('import', importState, importFieldNames, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    print *, ' -- chemCap: after chem_comp_connect() '
+
+    ! -- initialize internal component (GOCART)
+    call chem_comp_init(rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    print *, ' -- chemCap: after chem_comp_init() '
+
+    ! -- allocate arrays for tracer output
+    call chem_output_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to allocate output arrays", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+    print *, ' -- chemCap: after chem_output_init() '
 
     ! indicate that data initialization is complete (breaking out of init-loop)
     call NUOPC_CompAttributeSet(model, &
@@ -688,7 +864,7 @@ module CHM
     type(ESMF_TimeInterval)       :: timeStep
     type(ESMF_Field)              :: field
     type(ESMF_VM)                 :: vm
-    integer                       :: item, localDe
+    integer                       :: item
 
     rc = ESMF_SUCCESS
     
@@ -751,7 +927,26 @@ module CHM
         return  ! bail out
     end do
 
-  end subroutine
+    ! -- advance model
+    call chem_comp_advance(clock, rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    ! -- write output if time
+    call chem_output_write(rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to allocate output arrays", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+
+  end subroutine ModelAdvance
+
 
   subroutine ModelFinalize(model, rc)
     type(ESMF_GridComp)   :: model
@@ -759,7 +954,7 @@ module CHM
 
     rc = ESMF_SUCCESS
 
-    call chemFinalize(rc)
+    call chem_comp_finalize(rc)
 
   end subroutine ModelFinalize
 

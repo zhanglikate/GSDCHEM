@@ -34,14 +34,14 @@ real :: DT,TIME,TDUR
 integer :: MINTIME,MDUR,MAXTIME
 !
 REAL,    DIMENSION(nkp,2)    :: W_VMD,VMD
-REAL	:: upe   (nkp)
-REAL	:: vpe   (nkp)
-REAL	:: vel_e (nkp)
+REAL :: upe   (nkp)
+REAL :: vpe   (nkp)
+REAL :: vel_e (nkp)
 
-REAL	:: vel_p (nkp)
-REAL	:: rad_p (nkp)
-REAL	:: vel_t (nkp)
-REAL	:: rad_t (nkp)
+REAL :: vel_p (nkp)
+REAL :: rad_p (nkp)
+REAL :: vel_t (nkp)
+REAL :: rad_t (nkp)
 
 real :: ztop_(ntime)
 

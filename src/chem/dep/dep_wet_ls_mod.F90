@@ -1,6 +1,6 @@
 module dep_wet_ls_mod
 
-  use chem_state_mod
+  use chem_tracers_mod
 
   implicit none
 

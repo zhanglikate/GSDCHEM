@@ -1,6 +1,6 @@
 module gocart_aerosols_mod
 
-  use chem_state_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
+  use chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
                              p_dust_1,p_dust_2,p_dust_3,p_dust_4,p_dust_5,&
                              p_seas_1,p_seas_2,p_seas_3,p_seas_4, &
                              p_sulf,p_p25,p_so2,p_vash_1

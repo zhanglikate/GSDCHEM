@@ -50,9 +50,9 @@
 !************************************************************************
 	module opt_averaging_mod
 	
-        USE chem_types_mod, ONLY : CHEM_KIND_I4, CHEM_KIND_R8, CHEM_KIND_C16
+        USE chem_types_mod,   ONLY : CHEM_KIND_I4, CHEM_KIND_R8, CHEM_KIND_C16
 
-        USE chem_state_mod,only: p_bc1,p_bc2,p_oc1,p_oc2,      &
+        USE chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
               p_msa,p_dust_1,p_dust_2,p_dust_3,p_dust_4,p_dust_5,     &
               p_seas_1,p_seas_2,p_seas_3,p_seas_4,p_sulf,p_p25,p_so2, &
               p_vash_1,p_vash_2,p_vash_3,p_vash_4,p_vash_5,p_vash_6,  &
@@ -1193,7 +1193,7 @@
 !   USE module_configure
 !  USE module_state_description
 !   USE module_model_constants
-   USE chem_state_mod, only:  param_first_scalar
+   USE chem_tracers_mod, only:  param_first_scalar
 !  USE module_initial_chem_namelists, only:  param_first_scalar
 !   USE module_data_sorgam
 !  USE module_data_soa_vbs

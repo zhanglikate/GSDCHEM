@@ -12,19 +12,30 @@ module chem_domain_mod
 
   type chem_domain_type
     integer :: tile = 0
-    integer :: is   = 0
-    integer :: ie   = 0
-    integer :: js   = 0
-    integer :: je   = 0
+    integer :: tileCount = 0
+    ! -- DE bounds
+    integer :: ids   = 0
+    integer :: ide   = 0
+    integer :: jds   = 0
+    integer :: jde   = 0
+    ! -- memory bounds
+    integer :: ims  = 0
+    integer :: ime  = 0
+    integer :: jms  = 0
+    integer :: jme  = 0
+    ! -- tile boundaries
     integer :: its  = 0
     integer :: ite  = 0
     integer :: jts  = 0
     integer :: jte  = 0
+    ! -- number of vertical levels (i: interface, l: model)
     integer :: ni   = 0
     integer :: nl   = 0
+    integer :: ns   = 0
     integer :: nt   = 0
-    real(CHEM_KIND_R8), pointer :: lon(:,:) => null()
-    real(CHEM_KIND_R8), pointer :: lat(:,:) => null()
+    real(CHEM_KIND_R8), pointer :: lon(:,:)  => null()
+    real(CHEM_KIND_R8), pointer :: lat(:,:)  => null()
+    real(CHEM_KIND_R8), pointer :: area(:,:) => null()
   end type chem_domain_type
 
 ! private
@@ -55,6 +66,42 @@ module chem_domain_mod
   public
 
 contains
+
+  subroutine chem_domain_get(domain, &
+   ids, ide, jds, jde,  &
+   its, ite, jts, jte,  &
+   ims, ime, jms, jme,  &
+   ni,  nl,  ns, nt,  tile)
+    type(chem_domain_type), intent(in)  :: domain
+    integer, optional,      intent(out) :: ids, ide, jds, jde
+    integer, optional,      intent(out) :: its, ite, jts, jte
+    integer, optional,      intent(out) :: ims, ime, jms, jme
+    integer, optional,      intent(out) :: ni, nl, ns, nt
+    integer, optional,      intent(out) :: tile
+
+    ! -- local variables
+
+    ! -- begin
+    if (present(ids))  ids  = domain % ids
+    if (present(ide))  ide  = domain % ide
+    if (present(jds))  jds  = domain % jds
+    if (present(jde))  jde  = domain % jde
+    if (present(its))  its  = domain % its
+    if (present(ite))  ite  = domain % ite
+    if (present(jts))  jts  = domain % jts
+    if (present(jte))  jte  = domain % jte
+    if (present(ims))  ims  = domain % ims
+    if (present(ime))  ime  = domain % ime
+    if (present(jms))  jms  = domain % jms
+    if (present(jme))  jme  = domain % jme
+    if (present(ni))   ni   = domain % ni
+    if (present(nl))   nl   = domain % nl
+    if (present(ns))   ns   = domain % ns
+    if (present(nt))   nt   = domain % nt
+    if (present(tile)) tile = domain % tile
+
+  end subroutine chem_domain_get
+
 
   subroutine chem_domain_setup()
   end subroutine chem_domain_setup

@@ -1,8 +1,8 @@
 module gocart_dmsemis_mod
 
-  use chem_types_mod, only : CHEM_KIND_R8
-  use chem_const_mod, only : smw
-  use chem_state_mod, only : NDMS
+  use chem_types_mod,   only : CHEM_KIND_R8
+  use chem_const_mod,   only : smw
+  use chem_tracers_mod, only : NDMS
 
   implicit none
 
