@@ -158,23 +158,38 @@ contains
     character(len=*), optional, intent(in)  :: pathname
 
     ! -- local variables
-    integer :: lenpath
+    integer :: lstr
+    character(len=CHEM_MAXSTR) :: fname
 
     ! -- begin
-    if (present(pathname)) then
-      lenpath = len_trim(pathname)
-      if (pathname(lenpath:lenpath) == "/") then 
-        write(fullname,'(a,"tile",i0,"/",a)') trim(pathname), tile, filename
+    fname = ""
+    fullname = ""
+
+    lstr = len_trim(filename)
+    if (lstr > 4) then
+      print *, 'filename = ', filename(lstr-3:lstr)
+      if (filename(lstr-3:lstr) == ".dat") then
+        write(fname, '("tile",i0,"/",a)') tile, trim(filename)
       else
-        write(fullname,'(a,"/tile",i0,"/",a)') trim(pathname), tile, filename
+        write(fname, '(a,".tile",i0,".dat")') filename(:lstr-4), tile
       end if
     else
-      write(fullname,'("tile",i0,"/",a)') tile, filename
+      write(fname, '(a,".tile",i0,".dat")') trim(filename), tile
+    end if
+
+    if (present(pathname)) then
+      lstr = len_trim(pathname)
+      if (pathname(lstr:lstr) == "/") then
+        fullname = trim(pathname) // trim(fname)
+      else
+        fullname = trim(pathname) // "/" // trim(fname)
+      end if
+    else
+      fullname = trim(fname)
     end if
 
   end subroutine chem_io_file_name
   
-
 
   subroutine chem_io_file_read(datafile, buffer, recrange, recsize, recstride, rc)
     character(len=*),   intent(in)  :: datafile
@@ -253,18 +268,31 @@ contains
   end subroutine chem_io_file_read
 
 
-  subroutine chem_io_file_write(datafile, buffer, rc)
-    character(len=*),   intent(in)  :: datafile
-    real(CHEM_KIND_R4), intent(in)  :: buffer(:)
-    integer, optional,  intent(out) :: rc
+  subroutine chem_io_file_write(datafile, buffer, pos, rc)
+    character(len=*),           intent(in)  :: datafile
+    real(CHEM_KIND_R4),         intent(in)  :: buffer(:)
+    character(len=*), optional, intent(in)  :: pos
+    integer,          optional, intent(out) :: rc
 
     ! -- local variables
     integer :: localrc
+    character(len=6) :: filepos
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
-    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='write', position='rewind', iostat=localrc)
+    filepos = 'rewind'
+    if (present(pos)) then
+      select case (trim(pos))
+        case ('a', 'append')
+          filepos = 'append'
+        case default
+          filepos = 'rewind'
+      end select
+    end if
+
+    open(unit=ioUnit, file=trim(datafile), form='unformatted', action='write', &
+      position=trim(filepos), iostat=localrc)
     if (chem_rc_test((localrc /= 0), msg="Failure opening file: "//trim(datafile), &
         file=__FILE__, line=__LINE__, rc=rc)) return
     write(unit=ioUnit, iostat=localrc) buffer
@@ -442,10 +470,11 @@ contains
   end subroutine chem_io_read_3DR4
 
 
-  subroutine chem_io_write_2DR4(filename, farray, path, de, rc)
+  subroutine chem_io_write_2DR4(filename, farray, path, pos, de, rc)
     character(len=*),           intent(in)  :: filename
     real(CHEM_KIND_R4),         intent(in)  :: farray(:,:)
     character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
     integer,          optional, intent(in)  :: de
     integer,          optional, intent(out) :: rc
 
@@ -509,7 +538,8 @@ contains
 
       call chem_io_file_name(datafile, filename, tile, pathname=path)
 
-      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf2d)/)), rc=localrc)
+      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf2d)/)), &
+        pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
       write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
@@ -526,10 +556,11 @@ contains
   end subroutine chem_io_write_2DR4
 
 
-  subroutine chem_io_write_3DR4(filename, farray, path, de, rc)
+  subroutine chem_io_write_3DR4(filename, farray, path, pos, de, rc)
     character(len=*),           intent(in)  :: filename
     real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
     character(len=*), optional, intent(in)  :: path
+    character(len=*), optional, intent(in)  :: pos
     integer,          optional, intent(in)  :: de
     integer,          optional, intent(out) :: rc
 
@@ -580,7 +611,8 @@ contains
 
       call chem_io_file_name(datafile, filename, tile, pathname=path)
 
-      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf3d)/)), rc=localrc)
+      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf3d)/)), &
+        pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
       write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
