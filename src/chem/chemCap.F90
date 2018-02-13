@@ -12,7 +12,7 @@ module CHM
   
   implicit none
 
-#if 1
+#if 0
   integer, parameter :: importFieldCount = 9
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
@@ -800,6 +800,7 @@ module CHM
     end if
     print *, ' -- chemCap: after chem_backgd_read() '
 
+#if 0
     ! -- diagnostics: write out emission and background fields
     call chem_backgd_write(rc=rc)
     if (chem_rc_check(rc)) then
@@ -811,6 +812,7 @@ module CHM
       return  ! bail out
     end if
     print *, ' -- chemCap: after chem_backgd_read() '
+#endif
 
     ! -- connect import fields to model
     ! -- this can be done only once since remote fields are accessed by reference
