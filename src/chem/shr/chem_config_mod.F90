@@ -72,7 +72,8 @@ module chem_config_mod
     real(CHEM_KIND_R4):: ash_mass
     real(CHEM_KIND_R4):: ash_height
     ! -- control variables
-    integer :: ntra                = 4      ! # of tracers advected on small dt: 1=theta 2=qv 3=qw 4=O3
+!   integer :: ntra                = 4      ! # of tracers advected on small dt: 1=theta 2=qv 3=qw 4=O3
+    integer :: ntra                = 3      ! # of tracers advected on small dt: FV3 only has 3 tracers
     integer :: ntrb                = 0      ! # of tracers advected on large dt: will include chemistry
     integer :: num_chem            = 0
     integer :: num_moist           = 0
