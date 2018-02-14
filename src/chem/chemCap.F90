@@ -626,7 +626,7 @@ module CHM
         tile = deToTileMap(de)
 
 !       write(6,'("CHEM on localDe: ",i0," DE: ",i0)') localDe, de-1
-        write(6,'("CHEM: PET:",i02," localDe: ",i2," DE: ",i2, " tile=",i2," minIndexPDe=",2i4,2x," maxIndexPDe=",2i4," minIndexPTile=",2i4," maxIndexPTile=",2i4,4i4)') &
+        write(6,'("CHEM: PET:",i04," localDe: ",i4," DE: ",i4, " tile=",i2," minIndexPDe=",2i4,2x," maxIndexPDe=",2i4," minIndexPTile=",2i4," maxIndexPTile=",2i4,4i4)') &
           localPet, localDe, de-1, tile, minIndexPDe(:,de), maxIndexPDe(:,de), minIndexPTile(:,tile), maxIndexPTile(:,tile), &
           computationalLBound(:,localDe+1), computationalUBound(:,localDe+1)
         flush(6)

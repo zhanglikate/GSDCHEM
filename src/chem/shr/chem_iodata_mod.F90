@@ -205,83 +205,83 @@ contains
         ! -- dust erosion factors
         call chem_io_read('dm0.dat', data % dm0, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," dm0 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," dm0 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % dm0)
 
         ! -- dust erosion factors
         call chem_io_read('erod1.dat', data % ero1, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero1)
         call chem_io_read('erod2.dat', data % ero2, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero2)
         call chem_io_read('erod3.dat', data % ero3, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero3)
 
         ! -- bacground values for chemical species
         call chem_io_read('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % h2o2_backgd)
         call chem_io_read('no3.dat', data % no3_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % no3_backgd)
         call chem_io_read('oh.dat', data % oh_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % oh_backgd)
 
         ! -- emissions
         call chem_io_read('e_bc.dat', data % emiss_ab(:,:,config % species % p_e_bc), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_bc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_bc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_bc)), maxval(data % emiss_ab(:,:,config % species % p_e_bc))
 
         call chem_io_read('e_oc.dat', data % emiss_ab(:,:,config % species % p_e_oc), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_oc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_oc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_oc)), maxval(data % emiss_ab(:,:,config % species % p_e_oc))
 
         call chem_io_read('e_pm_10.dat', data % emiss_ab(:,:,config % species % p_e_pm_10), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_10)), maxval(data % emiss_ab(:,:,config % species % p_e_pm_10))
 
         call chem_io_read('e_pm_25.dat', data % emiss_ab(:,:,config % species % p_e_pm_25), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_pm_25 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_pm_25 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_25)), maxval(data % emiss_ab(:,:,config % species % p_e_pm_25))
 
         call chem_io_read('e_so2.dat', data % emiss_ab(:,:,config % species % p_e_so2), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_so2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_so2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_so2)), maxval(data % emiss_ab(:,:,config % species % p_e_so2))
 
         call chem_io_read('e_sulf.dat', data % emiss_ab(:,:,config % species % p_e_sulf), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
         
         if (config % dust_opt == DUST_OPT_AFWA) then
            ! -- DUST_OPT_AFWA
           call chem_io_read('clay.dat', data % clayfrac, path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % dm0), maxval(data % clayfrac)
           call chem_io_read('sand.dat', data % sandfrac, path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % dm0), maxval(data % sandfrac)
         end if
 
@@ -291,115 +291,115 @@ contains
           call chem_io_read('e_ald.dat', data % emiss_ab(:,:,config % species % p_e_ald), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_ald - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_ald - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ald)), maxval(data % emiss_ab(:,:,config % species % p_e_ald))
 
           call chem_io_read('e_co.dat', data % emiss_ab(:,:,config % species % p_e_co), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_co - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_co - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_co)), maxval(data % emiss_ab(:,:,config % species % p_e_co))
 
           call chem_io_read('e_csl.dat', data % emiss_ab(:,:,config % species % p_e_csl), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_csl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_csl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_csl)), maxval(data % emiss_ab(:,:,config % species % p_e_csl))
 
           call chem_io_read('e_dms.dat', data % emiss_ab(:,:,config % species % p_e_dms), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_dms - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_dms - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_dms)), maxval(data % emiss_ab(:,:,config % species % p_e_dms))
 
           call chem_io_read('e_eth.dat', data % emiss_ab(:,:,config % species % p_e_eth), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_eth - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_eth - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_eth)), maxval(data % emiss_ab(:,:,config % species % p_e_eth))
 
           call chem_io_read('e_hc3.dat', data % emiss_ab(:,:,config % species % p_e_hc3), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_hc3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_hc3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc3)), maxval(data % emiss_ab(:,:,config % species % p_e_hc3))
 
           call chem_io_read('e_hc5.dat', data % emiss_ab(:,:,config % species % p_e_hc5), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_hc5 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_hc5 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc5)), maxval(data % emiss_ab(:,:,config % species % p_e_hc5))
 
           call chem_io_read('e_hc8.dat', data % emiss_ab(:,:,config % species % p_e_hc8), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_hc8 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_hc8 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc8)), maxval(data % emiss_ab(:,:,config % species % p_e_hc8))
 
           call chem_io_read('e_hcho.dat', data % emiss_ab(:,:,config % species % p_e_hcho), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_hcho - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_hcho - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hcho)), maxval(data % emiss_ab(:,:,config % species % p_e_hcho))
 
           call chem_io_read('e_iso.dat', data % emiss_ab(:,:,config % species % p_e_iso), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_iso - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_iso - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_iso)), maxval(data % emiss_ab(:,:,config % species % p_e_iso))
 
           call chem_io_read('e_ket.dat', data % emiss_ab(:,:,config % species % p_e_ket), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_ket - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_ket - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ket)), maxval(data % emiss_ab(:,:,config % species % p_e_ket))
 
           call chem_io_read('e_nh3.dat', data % emiss_ab(:,:,config % species % p_e_nh3), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_nh3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_nh3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_nh3)), maxval(data % emiss_ab(:,:,config % species % p_e_nh3))
 
           call chem_io_read('e_no2.dat', data % emiss_ab(:,:,config % species % p_e_no2), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_no2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_no2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_no2)), maxval(data % emiss_ab(:,:,config % species % p_e_no2))
 
           call chem_io_read('e_no.dat', data % emiss_ab(:,:,config % species % p_e_no), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_no - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_no - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_no)), maxval(data % emiss_ab(:,:,config % species % p_e_no))
 
           call chem_io_read('e_oli.dat', data % emiss_ab(:,:,config % species % p_e_oli), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_oli - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_oli - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_oli)), maxval(data % emiss_ab(:,:,config % species % p_e_oli))
 
           call chem_io_read('e_olt.dat', data % emiss_ab(:,:,config % species % p_e_olt), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_olt - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_olt - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_olt)), maxval(data % emiss_ab(:,:,config % species % p_e_olt))
 
           call chem_io_read('e_ora2.dat', data % emiss_ab(:,:,config % species % p_e_ora2), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_ora2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_ora2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ora2)), maxval(data % emiss_ab(:,:,config % species % p_e_ora2))
 
           call chem_io_read('e_tol.dat', data % emiss_ab(:,:,config % species % p_e_tol), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_tol - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_tol - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_tol)), maxval(data % emiss_ab(:,:,config % species % p_e_tol))
 
           call chem_io_read('e_xyl.dat', data % emiss_ab(:,:,config % species % p_e_xyl), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," e_xyl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_xyl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_xyl)), maxval(data % emiss_ab(:,:,config % species % p_e_xyl))
 
         end if
@@ -411,49 +411,49 @@ contains
         call chem_io_read('ebu_bc.dat', data % emiss_abu(:,:,config % species % p_e_bc), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_bc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_bc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_bc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_bc))
 
         call chem_io_read('ebu_oc.dat', data % emiss_abu(:,:,config % species % p_e_oc), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_oc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_oc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_oc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_oc))
 
         call chem_io_read('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
 
         call chem_io_read('ebu_pm_25.dat', data % emiss_abu(:,:,config % species % p_e_pm_25), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_pm_25 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_25 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_25)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_pm_25))
 
         call chem_io_read('ebu_so2.dat', data % emiss_abu(:,:,config % species % p_e_so2), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_so2)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_so2))
 
         call chem_io_read('ebu_sulf.dat', data % emiss_abu(:,:,config % species % p_e_sulf), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_sulf))
 
         call chem_io_read('plumestuff.dat', data % plumestuff, recrange=(/ 1, config % num_plumestuff /), &
           path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % plumestuff), maxval(data % plumestuff)
 
 
@@ -463,133 +463,133 @@ contains
           call chem_io_read('ebu_ald.dat', data % emiss_abu(:,:,config % species % p_e_ald), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_ald - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_ald - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ald)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_ald))
 
           call chem_io_read('ebu_co.dat', data % emiss_abu(:,:,config % species % p_e_co), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_co - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_co - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_co)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_co))
 
           call chem_io_read('ebu_csl.dat', data % emiss_abu(:,:,config % species % p_e_csl), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_csl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_csl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_csl)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_csl))
 
           call chem_io_read('ebu_dms.dat', data % emiss_abu(:,:,config % species % p_e_dms), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_dms - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_dms - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_dms)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_dms))
 
           call chem_io_read('ebu_eth.dat', data % emiss_abu(:,:,config % species % p_e_eth), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_eth - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_eth - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_eth)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_eth))
 
           call chem_io_read('ebu_hc3.dat', data % emiss_abu(:,:,config % species % p_e_hc3), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_hc3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_hc3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc3)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_hc3))
 
           call chem_io_read('ebu_hc5.dat', data % emiss_abu(:,:,config % species % p_e_hc5), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_hc5 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_hc5 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc5)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_hc5))
 
           call chem_io_read('ebu_hc8.dat', data % emiss_abu(:,:,config % species % p_e_hc8), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_hc8 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_hc8 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc8)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_hc8))
 
           call chem_io_read('ebu_hcho.dat', data % emiss_abu(:,:,config % species % p_e_hcho), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_hcho - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_hcho - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hcho)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_hcho))
 
           call chem_io_read('ebu_iso.dat', data % emiss_abu(:,:,config % species % p_e_iso), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_iso - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_iso - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_iso)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_iso))
 
           call chem_io_read('ebu_ket.dat', data % emiss_abu(:,:,config % species % p_e_ket), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_ket - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_ket - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ket)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_ket))
 
           call chem_io_read('ebu_nh3.dat', data % emiss_abu(:,:,config % species % p_e_nh3), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_nh3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_nh3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_nh3)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_nh3))
 
           call chem_io_read('ebu_no2.dat', data % emiss_abu(:,:,config % species % p_e_no2), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_no2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_no2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_no2)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_no2))
 
           call chem_io_read('ebu_no.dat', data % emiss_abu(:,:,config % species % p_e_no), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_no - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_no - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_no)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_no))
 
           call chem_io_read('ebu_oli.dat', data % emiss_abu(:,:,config % species % p_e_oli), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_oli - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_oli - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_oli)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_oli))
 
           call chem_io_read('ebu_olt.dat', data % emiss_abu(:,:,config % species % p_e_olt), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_olt - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_olt - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_olt)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_olt))
 
           call chem_io_read('ebu_ora2.dat', data % emiss_abu(:,:,config % species % p_e_ora2), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_ora2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_ora2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ora2)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_ora2))
 
           call chem_io_read('ebu_tol.dat', data % emiss_abu(:,:,config % species % p_e_tol), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_tol - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_tol - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_tol)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_tol))
 
           call chem_io_read('ebu_xyl.dat', data % emiss_abu(:,:,config % species % p_e_xyl), &
             path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_read: PET:",i2," DE:",i2," tile=",i2," ebu_xyl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_xyl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_xyl)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_xyl))
 
@@ -670,83 +670,83 @@ contains
         ! -- dust erosion factors
         call chem_io_write('dm0.dat', data % dm0, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," dm0 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," dm0 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % dm0)
 
         ! -- dust erosion factors
         call chem_io_write('erod1.dat', data % ero1, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero1)
         call chem_io_write('erod2.dat', data % ero2, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero2)
         call chem_io_write('erod3.dat', data % ero3, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % ero3)
 
         ! -- bacground values for chemical species
         call chem_io_write('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % h2o2_backgd)
         call chem_io_write('no3.dat', data % no3_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % no3_backgd)
         call chem_io_write('oh.dat', data % oh_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % dm0), maxval(data % oh_backgd)
 
         ! -- emissions
         call chem_io_write('e_bc.dat', data % emiss_ab(:,:,config % species % p_e_bc), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_bc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_bc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_bc)), maxval(data % emiss_ab(:,:,config % species % p_e_bc))
 
         call chem_io_write('e_oc.dat', data % emiss_ab(:,:,config % species % p_e_oc), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_oc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_oc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_oc)), maxval(data % emiss_ab(:,:,config % species % p_e_oc))
 
         call chem_io_write('e_pm_10.dat', data % emiss_ab(:,:,config % species % p_e_pm_10), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_pm_10 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_10)), maxval(data % emiss_ab(:,:,config % species % p_e_pm_10))
 
         call chem_io_write('e_pm_25.dat', data % emiss_ab(:,:,config % species % p_e_pm_25), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_pm_25 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_pm_25 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_pm_25)), maxval(data % emiss_ab(:,:,config % species % p_e_pm_25))
 
         call chem_io_write('e_so2.dat', data % emiss_ab(:,:,config % species % p_e_so2), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_so2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_so2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_so2)), maxval(data % emiss_ab(:,:,config % species % p_e_so2))
 
         call chem_io_write('e_sulf.dat', data % emiss_ab(:,:,config % species % p_e_sulf), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
         
         if (config % dust_opt == DUST_OPT_AFWA) then
            ! -- DUST_OPT_AFWA
           call chem_io_write('clay.dat', data % clayfrac, path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % dm0), maxval(data % clayfrac)
           call chem_io_write('sand.dat', data % sandfrac, path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % dm0), maxval(data % sandfrac)
         end if
 
@@ -756,115 +756,115 @@ contains
           call chem_io_write('e_ald.dat', data % emiss_ab(:,:,config % species % p_e_ald), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_ald - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_ald - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ald)), maxval(data % emiss_ab(:,:,config % species % p_e_ald))
 
           call chem_io_write('e_co.dat', data % emiss_ab(:,:,config % species % p_e_co), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_co - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_co - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_co)), maxval(data % emiss_ab(:,:,config % species % p_e_co))
 
           call chem_io_write('e_csl.dat', data % emiss_ab(:,:,config % species % p_e_csl), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_csl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_csl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_csl)), maxval(data % emiss_ab(:,:,config % species % p_e_csl))
 
           call chem_io_write('e_dms.dat', data % emiss_ab(:,:,config % species % p_e_dms), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_dms - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_dms - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_dms)), maxval(data % emiss_ab(:,:,config % species % p_e_dms))
 
           call chem_io_write('e_eth.dat', data % emiss_ab(:,:,config % species % p_e_eth), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_eth - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_eth - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_eth)), maxval(data % emiss_ab(:,:,config % species % p_e_eth))
 
           call chem_io_write('e_hc3.dat', data % emiss_ab(:,:,config % species % p_e_hc3), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_hc3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_hc3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc3)), maxval(data % emiss_ab(:,:,config % species % p_e_hc3))
 
           call chem_io_write('e_hc5.dat', data % emiss_ab(:,:,config % species % p_e_hc5), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_hc5 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_hc5 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc5)), maxval(data % emiss_ab(:,:,config % species % p_e_hc5))
 
           call chem_io_write('e_hc8.dat', data % emiss_ab(:,:,config % species % p_e_hc8), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_hc8 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_hc8 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hc8)), maxval(data % emiss_ab(:,:,config % species % p_e_hc8))
 
           call chem_io_write('e_hcho.dat', data % emiss_ab(:,:,config % species % p_e_hcho), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_hcho - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_hcho - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_hcho)), maxval(data % emiss_ab(:,:,config % species % p_e_hcho))
 
           call chem_io_write('e_iso.dat', data % emiss_ab(:,:,config % species % p_e_iso), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_iso - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_iso - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_iso)), maxval(data % emiss_ab(:,:,config % species % p_e_iso))
 
           call chem_io_write('e_ket.dat', data % emiss_ab(:,:,config % species % p_e_ket), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_ket - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_ket - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ket)), maxval(data % emiss_ab(:,:,config % species % p_e_ket))
 
           call chem_io_write('e_nh3.dat', data % emiss_ab(:,:,config % species % p_e_nh3), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_nh3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_nh3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_nh3)), maxval(data % emiss_ab(:,:,config % species % p_e_nh3))
 
           call chem_io_write('e_no2.dat', data % emiss_ab(:,:,config % species % p_e_no2), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_no2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_no2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_no2)), maxval(data % emiss_ab(:,:,config % species % p_e_no2))
 
           call chem_io_write('e_no.dat', data % emiss_ab(:,:,config % species % p_e_no), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_no - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_no - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_no)), maxval(data % emiss_ab(:,:,config % species % p_e_no))
 
           call chem_io_write('e_oli.dat', data % emiss_ab(:,:,config % species % p_e_oli), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_oli - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_oli - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_oli)), maxval(data % emiss_ab(:,:,config % species % p_e_oli))
 
           call chem_io_write('e_olt.dat', data % emiss_ab(:,:,config % species % p_e_olt), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_olt - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_olt - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_olt)), maxval(data % emiss_ab(:,:,config % species % p_e_olt))
 
           call chem_io_write('e_ora2.dat', data % emiss_ab(:,:,config % species % p_e_ora2), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_ora2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_ora2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_ora2)), maxval(data % emiss_ab(:,:,config % species % p_e_ora2))
 
           call chem_io_write('e_tol.dat', data % emiss_ab(:,:,config % species % p_e_tol), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_tol - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_tol - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_tol)), maxval(data % emiss_ab(:,:,config % species % p_e_tol))
 
           call chem_io_write('e_xyl.dat', data % emiss_ab(:,:,config % species % p_e_xyl), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," e_xyl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_xyl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_ab(:,:,config % species % p_e_xyl)), maxval(data % emiss_ab(:,:,config % species % p_e_xyl))
 
         end if
@@ -876,48 +876,48 @@ contains
         call chem_io_write('ebu_bc.dat', data % emiss_abu(:,:,config % species % p_e_bc), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_bc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_bc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_bc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_bc))
 
         call chem_io_write('ebu_oc.dat', data % emiss_abu(:,:,config % species % p_e_oc), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_oc - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_oc - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_oc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_oc))
 
         call chem_io_write('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
 
         call chem_io_write('ebu_pm_25.dat', data % emiss_abu(:,:,config % species % p_e_pm_25), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_pm_25 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_pm_25 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_25)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_pm_25))
 
         call chem_io_write('ebu_so2.dat', data % emiss_abu(:,:,config % species % p_e_so2), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_so2)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_so2))
 
         call chem_io_write('ebu_sulf.dat', data % emiss_abu(:,:,config % species % p_e_sulf), &
           path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') localpe, de, &
+        write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % emiss_abu(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_sulf))
 
 !       call chem_io_write('plumestuff.dat', data % plumestuff, path=trim(config % emi_outname), de=de, rc=localrc)
 !       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-!       write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
+!       write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
 !         tile, minval(data % plumestuff), maxval(data % plumestuff)
 
 
@@ -927,117 +927,117 @@ contains
           call chem_io_write('ebu_ald.dat', data % emiss_abu(:,:,config % species % p_e_ald), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_ald - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_ald - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ald)), maxval(data % emiss_abu(:,:,config % species % p_e_ald))
 
           call chem_io_write('ebu_co.dat', data % emiss_abu(:,:,config % species % p_e_co), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_co - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_co - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_co)), maxval(data % emiss_abu(:,:,config % species % p_e_co))
 
           call chem_io_write('ebu_csl.dat', data % emiss_abu(:,:,config % species % p_e_csl), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_csl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_csl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_csl)), maxval(data % emiss_abu(:,:,config % species % p_e_csl))
 
           call chem_io_write('ebu_dms.dat', data % emiss_abu(:,:,config % species % p_e_dms), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_dms - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_dms - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_dms)), maxval(data % emiss_abu(:,:,config % species % p_e_dms))
 
           call chem_io_write('ebu_eth.dat', data % emiss_abu(:,:,config % species % p_e_eth), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_eth - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_eth - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_eth)), maxval(data % emiss_abu(:,:,config % species % p_e_eth))
 
           call chem_io_write('ebu_hc3.dat', data % emiss_abu(:,:,config % species % p_e_hc3), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_hc3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_hc3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc3)), maxval(data % emiss_abu(:,:,config % species % p_e_hc3))
 
           call chem_io_write('ebu_hc5.dat', data % emiss_abu(:,:,config % species % p_e_hc5), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_hc5 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_hc5 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc5)), maxval(data % emiss_abu(:,:,config % species % p_e_hc5))
 
           call chem_io_write('ebu_hc8.dat', data % emiss_abu(:,:,config % species % p_e_hc8), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_hc8 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_hc8 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hc8)), maxval(data % emiss_abu(:,:,config % species % p_e_hc8))
 
           call chem_io_write('ebu_hcho.dat', data % emiss_abu(:,:,config % species % p_e_hcho), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_hcho - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_hcho - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_hcho)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_hcho))
 
           call chem_io_write('ebu_iso.dat', data % emiss_abu(:,:,config % species % p_e_iso), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_iso - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_iso - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_iso)), maxval(data % emiss_abu(:,:,config % species % p_e_iso))
 
           call chem_io_write('ebu_ket.dat', data % emiss_abu(:,:,config % species % p_e_ket), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_ket - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_ket - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ket)), maxval(data % emiss_abu(:,:,config % species % p_e_ket))
 
           call chem_io_write('ebu_nh3.dat', data % emiss_abu(:,:,config % species % p_e_nh3), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_nh3 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_nh3 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_nh3)), maxval(data % emiss_abu(:,:,config % species % p_e_nh3))
 
           call chem_io_write('ebu_no2.dat', data % emiss_abu(:,:,config % species % p_e_no2), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_no2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_no2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_no2)), maxval(data % emiss_abu(:,:,config % species % p_e_no2))
 
           call chem_io_write('ebu_no.dat', data % emiss_abu(:,:,config % species % p_e_no), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_no - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_no - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_no)), maxval(data % emiss_abu(:,:,config % species % p_e_no))
 
           call chem_io_write('ebu_oli.dat', data % emiss_abu(:,:,config % species % p_e_oli), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_oli - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_oli - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_oli)), maxval(data % emiss_abu(:,:,config % species % p_e_oli))
 
           call chem_io_write('ebu_olt.dat', data % emiss_abu(:,:,config % species % p_e_olt), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_olt - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_olt - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_olt)), maxval(data % emiss_abu(:,:,config % species % p_e_olt))
 
           call chem_io_write('ebu_ora2.dat', data % emiss_abu(:,:,config % species % p_e_ora2), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_ora2 - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_ora2 - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_ora2)), &
             maxval(data % emiss_abu(:,:,config % species % p_e_ora2))
 
           call chem_io_write('ebu_tol.dat', data % emiss_abu(:,:,config % species % p_e_tol), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_tol - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_tol - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_tol)), maxval(data % emiss_abu(:,:,config % species % p_e_tol))
 
           call chem_io_write('ebu_xyl.dat', data % emiss_abu(:,:,config % species % p_e_xyl), &
             path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          write(6,'("chem_backgd_write: PET:",i2," DE:",i2," tile=",i2," ebu_xyl - min/max = "2g16.6)') localpe, de, &
+          write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_xyl - min/max = "2g16.6)') localpe, de, &
             tile, minval(data % emiss_abu(:,:,config % species % p_e_xyl)), maxval(data % emiss_abu(:,:,config % species % p_e_xyl))
 
         end if
