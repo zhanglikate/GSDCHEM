@@ -140,47 +140,47 @@ contains
     character(CHEM_MAXSTR) :: sbuffer(3)
 
     ! -- variables in input namelist
-    character(len=CHEM_MAXSTR) :: emi_inname
-    character(len=CHEM_MAXSTR) :: fireemi_inname
-    character(len=CHEM_MAXSTR) :: emi_outname
-    character(len=CHEM_MAXSTR) :: fireemi_outname
-    character(len=CHEM_MAXSTR) :: input_chem_inname
-    character(len=CHEM_MAXSTR) :: input_chem_outname
-    character(len=CHEM_MAXSTR) :: chem_hist_outname
-    integer :: io_style_emissions
-    real(CHEM_KIND_R4)   :: bioemdt
-    real(CHEM_KIND_R4)   :: photdt
-    real(CHEM_KIND_R4)   :: chemdt
-    integer :: kemit
-    integer :: kfuture
-    integer :: chem_conv_tr
-    integer :: chem_opt
-    integer :: gaschem_onoff
-    integer :: aerchem_onoff
-    integer :: wetscav_onoff
-    integer :: cldchem_onoff
-    integer :: vertmix_onoff
-    integer :: chem_in_opt
-    integer :: phot_opt
-    integer :: drydep_opt
-    real(CHEM_KIND_R4)   :: depo_fact
-    integer :: emiss_opt
-    integer :: dust_opt
-    integer :: dmsemis_opt
-    integer :: seas_opt
-    integer :: bio_emiss_opt
-    integer :: biomass_burn_opt
-    integer :: plumerisefire_frq
-    integer :: emiss_inpt_opt
-    integer :: gas_bc_opt
-    integer :: gas_ic_opt
-    integer :: aer_bc_opt
-    integer :: aer_ic_opt
-    logical :: have_bcs_chem
-    integer :: aer_ra_feedback
-    integer :: aer_op_opt
-    integer :: conv_tr_aqchem
-    integer :: archive_step
+    character(len=CHEM_MAXSTR) :: emi_inname         = ""
+    character(len=CHEM_MAXSTR) :: fireemi_inname     = ""
+    character(len=CHEM_MAXSTR) :: emi_outname        = ""
+    character(len=CHEM_MAXSTR) :: fireemi_outname    = ""
+    character(len=CHEM_MAXSTR) :: input_chem_inname  = ""
+    character(len=CHEM_MAXSTR) :: input_chem_outname = ""
+    character(len=CHEM_MAXSTR) :: chem_hist_outname  = ""
+    integer :: io_style_emissions   = 0
+    real(CHEM_KIND_R4)   :: bioemdt = 0._CHEM_KIND_R4
+    real(CHEM_KIND_R4)   :: photdt = 0._CHEM_KIND_R4
+    real(CHEM_KIND_R4)   :: chemdt = 0._CHEM_KIND_R4
+    integer :: kemit               = 0
+    integer :: kfuture             = 0
+    integer :: chem_conv_tr        = 0
+    integer :: chem_opt            = 0
+    integer :: gaschem_onoff       = 0
+    integer :: aerchem_onoff       = 0
+    integer :: wetscav_onoff       = 0
+    integer :: cldchem_onoff       = 0
+    integer :: vertmix_onoff       = 0
+    integer :: chem_in_opt         = 0
+    integer :: phot_opt            = 0
+    integer :: drydep_opt          = 0
+    real(CHEM_KIND_R4)   :: depo_fact = 0._CHEM_KIND_R4
+    integer :: emiss_opt           = 0
+    integer :: dust_opt            = 0
+    integer :: dmsemis_opt         = 0
+    integer :: seas_opt            = 0
+    integer :: bio_emiss_opt       = 0
+    integer :: biomass_burn_opt    = 0
+    integer :: plumerisefire_frq   = 0
+    integer :: emiss_inpt_opt      = 0
+    integer :: gas_bc_opt          = 0
+    integer :: gas_ic_opt          = 0
+    integer :: aer_bc_opt          = 0
+    integer :: aer_ic_opt          = 0
+    logical :: have_bcs_chem       = .false.
+    integer :: aer_ra_feedback     = 0
+    integer :: aer_op_opt          = 0
+    integer :: conv_tr_aqchem      = 0
+    integer :: archive_step        = 0
 
 
     namelist /chem_nml/          &
@@ -232,6 +232,7 @@ contains
     ! -- set defaults
     chem_opt          = CHEM_OPT_NONE
     chemdt            = 3
+    bioemdt           = 3
     kemit             = 1
     phot_opt          = 1
     photdt            = 60
