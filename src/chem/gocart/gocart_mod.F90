@@ -421,13 +421,6 @@ contains
     dust_gamma = 1.6
 !   xlv = 2.5e+06
 
-    print *,'gocart_run: set control flags ...'
-    print *,'gocart_run: set control flags ...', biomass_burn_opt
-    print *,'gocart_run: set control flags ...', call_biomass
-    print *,'gocart_run: set control flags ...', call_chemistry
-    print *,'gocart_run: set control flags ...', call_radiation
-    print *,'gocart_run: set control flags ...', ktau, firstfire
-
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
     curr_secs = ktau * dts
@@ -440,6 +433,13 @@ contains
     call_radiation   = (mod(ktau, call_rad) == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
     print *,'gocart_run: control flags set'
+
+    print *,'gocart_run: set control flags ...'
+    print *,'gocart_run: set control flags ...', biomass_burn_opt
+    print *,'gocart_run: set control flags ...', call_biomass
+    print *,'gocart_run: set control flags ...', call_chemistry
+    print *,'gocart_run: set control flags ...', call_radiation
+    print *,'gocart_run: set control flags ...', ktau, firstfire
 
     print *,'gocart_run: get domain bounds ...', its, ite, jts, jte
     ! -- start working
