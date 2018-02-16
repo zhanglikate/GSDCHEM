@@ -567,8 +567,9 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: tile, tileComm
+    integer :: i, j, k, id, jd
     integer :: ids, ide, jds, jde, its, ite, jts, jte, nk
-    logical :: localIOflag
+    logical :: is_ijk, localIOflag
     character(len=CHEM_MAXSTR) :: datafile
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable, target :: buf3d, recvbuf
 
@@ -583,12 +584,17 @@ contains
       its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
+    ! -- guess index order:
+    ! -- start with (i,j,k)
     nk = size(farray,dim=3)
-
-    ! -- check size consistency
-    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+    is_ijk = (size(farray) == (ide-ids+1)*(jde-jds+1)*nk)
+    if (.not.is_ijk) then
+      ! -- try (i,k,j), if not give up
+      nk = size(farray,dim=2)
+      if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
         msg="size of input array inconsistent with domain decomposition", &
         file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
 
     allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
     if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
@@ -596,7 +602,21 @@ contains
 
     buf3d = 0._CHEM_KIND_R4
 
-    buf3d(ids:ide, jds:jde, :) = farray
+    if (is_ijk) then
+      buf3d(ids:ide, jds:jde, 1:nk) = farray
+    else
+      do k = 1, nk
+        j = 0
+        do jd = jds, jde
+          j = j + 1
+          i = 0
+          do id = ids, ide
+            i = i + 1
+            buf3d(id, jd, k) = farray(i, k, j)
+          end do
+        end do
+      end do
+    end if
 
     allocate(recvbuf(its:ite,jts:jte,nk), stat=localrc)
     if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
