@@ -252,7 +252,7 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("area_type")
+          case ("soil_type")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % stype2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -276,7 +276,7 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("exchange")
+          case ("exchange_coefficient_heat")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % exch, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -401,32 +401,49 @@ contains
 
   !-----------------------------------------------------------------------------
 
-  subroutine fieldPrintMinMax(field, vm, rc)
-    type(ESMF_Field), intent(in) :: field
-    type(ESMF_VM),    intent(in) :: vm
-    integer, intent(out) :: rc
+  subroutine fieldPrintMinMax(field, vm, global, rc)
+    type(ESMF_Field),        intent(in)  :: field
+    type(ESMF_VM), optional, intent(in)  :: vm
+    logical,       optional, intent(in)  :: global
+    integer,       optional, intent(out) :: rc
 
     ! local variables
+    type(ESMF_VM)               :: localVM
     real(ESMF_KIND_R8), pointer :: fp1d(:), fp2d(:,:), fp3d(:,:,:), fp4d(:,:,:,:)
     real(ESMF_KIND_R8)          :: fieldMaxValue, fieldMinValue, maxValue, minValue
     real(ESMF_KIND_R8)          :: globalMaxValue(1), globalMinValue(1)
-    integer                     :: localDe, localDeCount, localPet, rank
+    integer                     :: localDe, localDeCount, localPet, localrc, rank
+    logical                     :: addGlobal
     character(len=ESMF_MAXSTR)  :: fieldName
 
-    rc = ESMF_SUCCESS
+    ! -- begin
+    if (present(rc)) rc = ESMF_SUCCESS
+
+    addGlobal = .false.
+    if (present(global)) addGlobal = global
+
+    if (present(vm)) then
+      localVM = vm
+    else
+      call ESMF_VMGetCurrent(localVM, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return  ! bail out
+    end if
+
+    call ESMF_VMGet(localVM, localPet=localPet, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__, &
+      rcToReturn=rc)) return  ! bail out
 
     call ESMF_FieldGet(field, rank=rank, localDeCount=localDeCount, &
-      name=fieldName, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      name=fieldName, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
-    call ESMF_VMGet(vm, localPet=localPet, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail
+      file=__FILE__, &
+      rcToReturn=rc)) return  ! bail out
 
     fieldMinValue = huge(1.0_ESMF_KIND_R8)
     fieldMaxValue = -fieldMinValue
@@ -434,35 +451,35 @@ contains
     do localDe = 0, localDeCount - 1
       select case(rank)
         case(1)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp1d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp1d, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+            file=__FILE__, &
+            rcToReturn=rc)) return  ! bail out
           minValue = minval(fp1d)
           maxValue = maxval(fp1d)
         case(2)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp2d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp2d, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+            file=__FILE__, &
+            rcToReturn=rc)) return  ! bail out
           minValue = minval(fp2d)
           maxValue = maxval(fp2d)
         case(3)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp3d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp3d, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+            file=__FILE__, &
+            rcToReturn=rc)) return  ! bail out
           minValue = minval(fp3d)
           maxValue = maxval(fp3d)
         case(4)
-          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp4d, rc=rc)
-          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          call ESMF_FieldGet(field, localDe=localDe, farrayPtr=fp4d, rc=localrc)
+          if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
             line=__LINE__, &
-            file=__FILE__)) &
-            return  ! bail out
+            file=__FILE__, &
+            rcToReturn=rc)) return  ! bail out
           minValue = minval(fp4d)
           maxValue = maxval(fp4d)
         case default
@@ -470,7 +487,7 @@ contains
             msg="Field rank not implemented.", &
             line=__LINE__, &
             file=__FILE__, &
-            rcToReturn=rc)
+            rcToReturn=localrc)
           return ! bail out
       end select
       fieldMinValue = min(fieldMinValue, minValue)
@@ -479,25 +496,30 @@ contains
          localPet, localDe, trim(fieldName), minValue, maxValue
     end do
 
-    globalMinValue(1) = 0._ESMF_KIND_R8
-    globalMaxValue(1) = 0._ESMF_KIND_R8
+    if (addGlobal) then
 
-    call ESMF_VMReduce(vm, (/ fieldMinValue /), globalMinValue, 1, &
-      reduceflag=ESMF_REDUCE_MIN, rootPet=0, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-    call ESMF_VMReduce(vm, (/ fieldMaxValue /), globalMaxValue, 1, &
-      reduceflag=ESMF_REDUCE_MAX, rootPet=0, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail
+      globalMinValue(1) = 0._ESMF_KIND_R8
+      globalMaxValue(1) = 0._ESMF_KIND_R8
 
-    if (localPet == 0) then
-       write(6,'(a,":",a," - checking  - min/max = ",2g16.6)') 'Field', &
-         trim(fieldName), globalMinValue, globalMaxValue
+      call ESMF_VMReduce(localVM, (/ fieldMinValue /), globalMinValue, 1, &
+        reduceflag=ESMF_REDUCE_MIN, rootPet=0, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return  ! bail out
+        return  ! bail out
+      call ESMF_VMReduce(localVM, (/ fieldMaxValue /), globalMaxValue, 1, &
+        reduceflag=ESMF_REDUCE_MAX, rootPet=0, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)) return  ! bail out
+
+      if (localPet == 0) then
+         write(6,'(a,":",a," - checking  - min/max = ",2g16.6)') 'Field', &
+           trim(fieldName), globalMinValue, globalMaxValue
+      end if
+
     end if
 
   end subroutine fieldPrintMinMax

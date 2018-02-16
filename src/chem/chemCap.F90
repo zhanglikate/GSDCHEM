@@ -39,11 +39,11 @@ module CHM
       "y_wind                                   ", &
       "omega                                    ", &
       "mass_fraction_of_tracers_in_air          ", &
-      "area_type                                ", &
+      "soil_type                                ", &
       "atmosphere_boundary_layer_thickness      ", &
       "cell_area                                ", &
       "convective_rainfall_amount               ", &
-      "exchange                                 ", &
+      "exchange_coefficient_heat                ", &
       "friction_velocity                        ", &
       "rainfall_amount                          ", &
       "soil_moisture_content                    ", &
@@ -74,7 +74,7 @@ module CHM
       "grid_perm", &
       "surface_mask", &
       "cell_area", &
-      "area_type", &
+      "soil_type", &
       "vegetation_type", &
       "vegetation_area_fraction", &
       "thickness_of_snowfall_amount", &
@@ -92,7 +92,7 @@ module CHM
       "friction_velocity", &
       "z_over_l", &
       "air_temperature", &
-      "exchange", &
+      "exchange_coefficient_heat", &
       "omega", &
       "x_wind", &
       "y_wind", &
@@ -922,7 +922,7 @@ module CHM
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail out
-      call fieldPrintMinMax(field, vm, rc)
+      call fieldPrintMinMax(field, vm=vm, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
