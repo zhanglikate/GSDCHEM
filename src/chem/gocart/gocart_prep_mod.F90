@@ -18,12 +18,12 @@ module gocart_prep_mod
 contains
 
   subroutine gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dtstep,tr3d,tk3d,sm3d,&
-                       ts2d,us2d,rsds,pr3d,emiss_ash_mass,emiss_ash_height,          &
+                       ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height,          &
                        emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,               &
                        emiss_tr_dt,snwdph2d,VFRAC2d,VTYPE2d,STYPE2d,us3d,vs3d,ws3d,           &
                        slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf,&
                        oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,            &
-                       nvl_gocart, ttday,tcosz,gmt,julday,ph3d,area,ero1,            &
+                       nvl_gocart, ttday,tcosz,gmt,julday,area,ero1,                 &
                        ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvlp1,ntra,       &
                        relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb,       &
                        g,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,              &
@@ -60,6 +60,9 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: us2d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rsds
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvlp1), intent(in) :: pr3d
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl),   intent(in) :: prl3d
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvlp1), intent(in) :: ph3d
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl),   intent(in) :: phl3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_mass
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_ash_dt
@@ -91,7 +94,6 @@ contains
     real(CHEM_KIND_R4), dimension(nvl_gocart+1),     intent(in) :: p_gocart
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: ttday
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: tcosz
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvlp1), intent(in) :: ph3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: area
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
@@ -349,21 +351,28 @@ contains
         xlong(i,j)=deg_lon(i,j)
         ust(i,j)=us2d(i,j)
         tsk(i,j)=ts2d(i,j)
-        ivgtyp(i,j)=VTYPE2d(i,j)
-        isltyp(i,j)=STYPE2d(i,j)
+!       ivgtyp(i,j)=VTYPE2d(i,j)
+!       isltyp(i,j)=STYPE2d(i,j)
         gsw(i,j)=rsds(i,j)
         vegfra(i,j)=VFRAC2d(i,j)
         rmol(i,j)=0.
         znt(i,j)=zorl2d(i,j)*.01
 !SLMSK   - SEA(0),LAND(1),ICE(2) MASK
-        xland(i,j)=1.
-        if (slmsk2d(i,j) == 0.) then
-          xland(i,j) = 0.
-        else if (slmsk2d(i,j) == 1.) then
-          xland(i,j) = 1.
-        else if (slmsk2d(i,j) == 2.) then
-          xland(i,j) = 2.
+!       xland(i,j)=1.
+!       if (slmsk2d(i,j) == 0.) then
+!         xland(i,j) = 0.
+!       else if (slmsk2d(i,j) == 1.) then
+!         xland(i,j) = 1.
+!       else if (slmsk2d(i,j) == 2.) then
+!         xland(i,j) = 2.
+!       end if
+        xland(i,j) = real(nint(slmsk2d(i,j)), CHEM_KIND_R4)
+        if (nint(slmsk2d(i,j)) == 2) then
+          isltyp(i,j) = 16
+        else
+          isltyp(i,j) = int(stype2d(i,j)+0.5_CHEM_KIND_R4)
         end if
+        ivgtyp(i,j) = int(vtype2d(i,j)+0.5_CHEM_KIND_R4)
         dxy(i,j)=area(i,j)
         u10(i,j)=us3d(i,j,1)
         v10(i,j)=vs3d(i,j,1)
@@ -470,42 +479,46 @@ contains
 
     endif
 
+#if 0
     do i=its,ite
       do j=jts,jte
         do k=kts,kte
-          thv=tr3d(i,j,k,1)/(1.+0.6078*tr3d(i,j,k,2))
+          thv=tr3d(i,j,k,p_atm_ptem)/(1.+0.6078*tr3d(i,j,k,p_atm_cldq))
           tk3d(i,j,k)=thv*(.5*(p8w(i,k,j)+p8w(i,k+1,j))/p1000)**(rd/cp)
         enddo
       enddo
     enddo
+#endif
 
     do j=jts,jte
       do k=kts,kte+1
         kk=min(k,kte)
         do i=its,ite
-          zmid(i,k,j)=.5*(ph3d(i,j,kk+1)+ph3d(i,j,kk))/g
+!         zmid(i,k,j)=.5*(ph3d(i,j,kk+1)+ph3d(i,j,kk))/g
+          zmid(i,k,j)=phl3d(i,j,kk)/g
           dz8w(i,k,j)=z_at_w(i,kk+1,j)-z_at_w(i,kk,j)
           t_phy(i,k,j)=tk3d(i,j,kk)
 !         relhum(i,k,j)=rh3d(kk,j)
-          p_phy(i,k,j)=.5*(p8w(i,kk,j)+p8w(i,kk+1,j))
+!         p_phy(i,k,j)=.5*(p8w(i,kk,j)+p8w(i,kk+1,j))
+          p_phy(i,k,j)=prl3d(i,j,kk)
           u_phy(i,k,j)=us3d(i,j,kk)
           exch_h(i,k,j)=exch(i,j,kk)
           v_phy(i,k,j)=vs3d(i,j,kk)
 !       print *,'--> i,k,j, RD, p, T, t3d = ',i,k,j,RD,p_phy(i,k,j),T_phy(i,k,j),tr3d(kk,j,2)
-          rho_phy(i,k,j)= p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(i,j,kk,2)))
+          rho_phy(i,k,j)=p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(i,j,kk,p_atm_shum)))
           rri(i,k,j)=1./rho_phy(i,k,j)
 !       print *,'--> i,k,j, rho, 1/rho = ',i,k,j,rho_phy(i,k,j),rri(i,k,j)
           vvel(i,k,j)=-ws3d(i,j,kk)*rri(i,k,j)/g
           convfac(i,k,j)=p_phy(i,k,j)/rgasuniv/t_phy(i,k,j)
           moist(i,k,j,:)=0.
-          moist(i,k,j,1)=tr3d(i,j,kk,2)
+          moist(i,k,j,1)=tr3d(i,j,kk,p_atm_shum)
           if (t_phy(i,k,j) > 265.) then
-            moist(i,k,j,2)=tr3d(i,j,kk,3)
+            moist(i,k,j,2)=tr3d(i,j,kk,p_atm_cldq)
             moist(i,k,j,3)=0.
             if (moist(i,k,j,2) < 1.e-8) moist(i,k,j,2)=0.
           else
             moist(i,k,j,2)=0.
-            moist(i,k,j,3)=tr3d(i,j,kk,3)
+            moist(i,k,j,3)=tr3d(i,j,kk,p_atm_cldq)
             if(moist(i,k,j,3) < 1.e-8)moist(i,k,j,3)=0.
           endif
           relhum(i,k,j) = .95
@@ -577,8 +590,8 @@ contains
                   ! -- add initial constant into O3,CH4 and CO ect.
                   chem(i,k,j,p_o3)=epsilc
                   maxth=min(400.,th_pvsrf(i,j))
-                  if (tr3d(i,j,kk,1) > maxth) then 
-                    chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,4)*1e6 !convert kg/kg to ppm
+                  if (tr3d(i,j,kk,p_atm_ptem) > maxth) then
+                    chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,p_atm_o3mr)*1e6 !convert kg/kg to ppm
                   else
                     chem(i,k,j,p_o3)=0.03 !ppm
                   endif
@@ -606,8 +619,8 @@ contains
               kk=min(k,kte)
               do i=its,ite
                 maxth=min(400.,th_pvsrf(i,j))
-                if (tr3d(i,j,kk,1) >= maxth) then
-                  chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,4)*1e6 !convert kg/kg to ppm
+                if (tr3d(i,j,kk,p_atm_ptem) >= maxth) then
+                  chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,p_atm_o3mr)*1e6 !convert kg/kg to ppm
                 endif !380K
               enddo
             enddo

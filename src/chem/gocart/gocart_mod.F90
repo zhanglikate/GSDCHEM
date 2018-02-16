@@ -405,6 +405,7 @@ contains
 
     dp3d(:,:,1:nvl) = pr3d(:,:,1:nvl) - pr3d(:,:,2:nvi)
 
+    print *,'gocart_run: longitude min/max = ',minval(deg_lon),maxval(deg_lon)
     print *,'gocart_run: local array initialized ...'
     ! -- set run parameters
 
@@ -463,12 +464,12 @@ contains
 
     print *,'gocart_run: entering gocart_prep ...'
     call gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dt,tr3d,tk3d,sm3d,   &
-                   ts2d,us2d,rsds,pr3d,emiss_ash_mass,emiss_ash_height, &
+                   ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height, &
                    emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,      &
                    emiss_tr_dt,snwdph2d,VFRAC2d,VTYPE2d,STYPE2d,us3d,vs3d,ws3d,  &
                    slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf, &
                    oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,   &
-                   nvl_gocart,ttday,tcosz,gmt,julday,ph3d,area,ero1,   &
+                   nvl_gocart,ttday,tcosz,gmt,julday,area,ero1,   &
                    ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvi,ntra, &
                    relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb, &
                    grvity,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,        &

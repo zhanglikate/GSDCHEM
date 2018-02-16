@@ -468,6 +468,12 @@ contains
         file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
+    ! -- set pointers to predefined atmospheric tracers
+    ! -- NOTE: this is model-dependent
+    config % species % p_atm_shum = 1
+    config % species % p_atm_cldq = 2
+    config % species % p_atm_o3mr = 3
+
     if (config % aer_ra_feedback == 1) then
       config % species % p_extcof3    = 1
       config % species % p_extcof55   = 2

@@ -19,6 +19,11 @@ module chem_tracers_mod
   !     4. MSA       = Methane sulfonic acid       = CH3SO3H             
   INTEGER            :: NDMS=1, NSO2=2, NSO4=3, NMSA=4
   
+  ! -- predefined atmospheric tracers
+  INTEGER            ::     P_atm_ptem = 0  ! not connected
+  INTEGER            ::     P_atm_shum = 1
+  INTEGER            ::     P_atm_cldq = 2
+  INTEGER            ::     P_atm_o3mr = 3
 
   INTEGER            ::     P_qc = 1
   INTEGER            ::     P_qi = 1
@@ -1129,6 +1134,10 @@ contains
 
 !   num_chem       = config % num_chem
 !   num_moist      = config % num_moist
+
+    p_atm_shum     = config % species % p_atm_shum
+    p_atm_cldq     = config % species % p_atm_cldq
+    p_atm_o3mr     = config % species % p_atm_o3mr
 
     p_ac0          = config % species % p_ac0
     p_aco3         = config % species % p_aco3

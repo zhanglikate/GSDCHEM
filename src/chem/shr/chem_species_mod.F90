@@ -4,6 +4,11 @@ module chem_species_mod
 
   type chem_species_type
     sequence
+    ! -- atmospheric tracers
+    integer :: p_atm_shum    = 0
+    integer :: p_atm_cldq    = 0
+    integer :: p_atm_o3mr    = 0
+    ! -- chemical tracers
     integer :: p_ac0         = 0
     integer :: p_aco3        = 0
     integer :: p_ald         = 0
