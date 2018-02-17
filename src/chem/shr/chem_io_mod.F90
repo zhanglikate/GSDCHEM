@@ -171,7 +171,7 @@ contains
       if (filename(lstr-3:lstr) == ".dat") then
         write(fname, '("tile",i0,"/",a)') tile, trim(filename)
       else
-        write(fname, '(a,".tile",i0,".dat")') filename(:lstr-4), tile
+        write(fname, '(a,".tile",i0,".dat")') trim(filename), tile
       end if
     else
       write(fname, '(a,".tile",i0,".dat")') trim(filename), tile
