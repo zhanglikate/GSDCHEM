@@ -186,10 +186,57 @@ contains
     character(len=*), dimension(:), intent(in) :: fieldNames
     integer, intent(out) :: rc
 
+    ! -- local variables
+    type(chem_state_type), pointer :: stateOut
+    type(ESMF_Field)               :: field
+    integer                        :: item, localDe, localDeCount
     ! -- begin
     rc = ESMF_SUCCESS
 
-    ! -- nothing to export (yet)
+    do item = 1, size(fieldNames)
+
+      call ESMF_StateGet(state, field=field, &
+        itemName=trim(fieldNames(item)), rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail
+      call ESMF_FieldGet(field, localDeCount=localDeCount, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail
+
+      do localDe = 0, localDeCount-1
+
+        call chem_model_get(stateOut=stateOut, de=localDe, rc=rc)
+        if (chem_rc_check(rc)) then
+          call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+            msg="Failed to retrieve model's export state", &
+            line=__LINE__, &
+            file=__FILE__, &
+            rcToReturn=rc)
+          return  ! bail out
+        end if
+
+        select case (trim(fieldNames(item)))
+          case ("mass_fraction_of_tracers_in_air")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % tr3d, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case default
+            ! -- unused field
+        end select
+
+      end do
+      call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail
+    end do
 
   end subroutine chem_comp_export
 
@@ -198,7 +245,7 @@ contains
     character(len=*), intent(in)  :: fieldNames(:)
     integer,          intent(out) :: rc
 
-    ! local variables
+    ! -- local variables
     type(chem_state_type), pointer :: stateIn
     type(ESMF_Field)               :: field
     integer                        :: item, localDe, localDeCount
