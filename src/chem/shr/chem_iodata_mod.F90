@@ -1067,7 +1067,7 @@ contains
     do de = 0, deCount-1
       call chem_model_get(de=de, data=data, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, nl=kde, nt=nt, rc=localrc)
+      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, ni=kde, nt=nt, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
       ! -- dust 
@@ -1214,8 +1214,6 @@ contains
 
       do de = 0, deCount-1
         call chem_model_get(de=de, data=data, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, nl=kde, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
         select case (config % chem_opt)
@@ -1366,20 +1364,20 @@ contains
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
             if (config % chem_opt == CHEM_OPT_GOCART) then
-#if 0
-              call chem_io_write('ohbg', data % oh_bg, &
+
+              call chem_io_write('ohbg', data % oh_bg, order='ikj', &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('hobg', data % h2o2_bg, &
+              call chem_io_write('hobg', data % h2o2_bg, order='ikj', &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('no3b', data % no3_bg, &
+              call chem_io_write('no3b', data % no3_bg, order='ikj', &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('ocbb', data % ebu_oc, &
+              call chem_io_write('ocbb', data % ebu_oc, order='ikj', &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-#endif
+
             end if
             
           case (CHEM_OPT_RACM_SOA_VBS)
