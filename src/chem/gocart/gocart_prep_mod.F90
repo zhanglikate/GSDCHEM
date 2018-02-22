@@ -703,8 +703,8 @@ endif
     if (call_gocart .and. (chem_opt == CHEM_OPT_GOCART))then
       print *,'chem_prep: call_gocart enter...'
       do j=jts,jte
-        do k=kts,kte
-          do i=its,ite
+        do i=its,ite
+          do k=kts,kte
             do ll=2,nvl_gocart
               l=ll
               if (p_gocart(l) < .01*p_phy(i,k,j)) exit
