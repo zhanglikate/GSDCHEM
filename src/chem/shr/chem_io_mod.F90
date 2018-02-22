@@ -556,9 +556,10 @@ contains
   end subroutine chem_io_write_2DR4
 
 
-  subroutine chem_io_write_3DR4(filename, farray, path, pos, de, rc)
+  subroutine chem_io_write_3DR4(filename, farray, order, path, pos, de, rc)
     character(len=*),           intent(in)  :: filename
     real(CHEM_KIND_R4),         intent(in)  :: farray(:,:,:)
+    character(len=*), optional, intent(in)  :: order
     character(len=*), optional, intent(in)  :: path
     character(len=*), optional, intent(in)  :: pos
     integer,          optional, intent(in)  :: de
@@ -567,11 +568,13 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: tile, tileComm
-    integer :: i, j, k, id, jd
+    integer :: i, j, k, id, jd, lbuf
     integer :: ids, ide, jds, jde, its, ite, jts, jte, nk
-    logical :: is_ijk, localIOflag
+    logical :: localIOflag
+    character(len=3) :: localOrder
     character(len=CHEM_MAXSTR) :: datafile
-    real(CHEM_KIND_R4), dimension(:,:,:), allocatable, target :: buf3d, recvbuf
+    real(CHEM_KIND_R4), dimension(:),     allocatable :: recvbuf
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: buf3d
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -584,17 +587,22 @@ contains
       its=its, ite=ite, jts=jts, jte=jte, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-    ! -- guess index order:
-    ! -- start with (i,j,k)
-    nk = size(farray,dim=3)
-    is_ijk = (size(farray) == (ide-ids+1)*(jde-jds+1)*nk)
-    if (.not.is_ijk) then
-      ! -- try (i,k,j), if not give up
-      nk = size(farray,dim=2)
-      if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
-        msg="size of input array inconsistent with domain decomposition", &
-        file=__FILE__, line=__LINE__, rc=rc)) return
-    end if
+    localOrder = "ijk"
+    if (present(order)) localOrder = order
+
+    select case (trim(localOrder))
+      case("ikj")
+        ! -- (i,k,j)
+        nk = size(farray,dim=2)
+      case default
+        ! -- default to (i,j,k)
+        nk = size(farray,dim=3)
+    end select
+
+    ! -- check consistency in decomposition
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*nk), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     allocate(buf3d(its:ite,jts:jte,nk), stat=localrc)
     if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
@@ -602,37 +610,38 @@ contains
 
     buf3d = 0._CHEM_KIND_R4
 
-    if (is_ijk) then
-      buf3d(ids:ide, jds:jde, 1:nk) = farray
-    else
-      do k = 1, nk
-        j = 0
-        do jd = jds, jde
-          j = j + 1
-          i = 0
-          do id = ids, ide
-            i = i + 1
-            buf3d(id, jd, k) = farray(i, k, j)
+    select case (trim(localOrder))
+      case("ikj")
+        do k = 1, nk
+          j = 0
+          do jd = jds, jde
+            j = j + 1
+            i = 0
+            do id = ids, ide
+              i = i + 1
+              buf3d(id, jd, k) = farray(i, k, j)
+            end do
           end do
         end do
-      end do
-    end if
+      case default
+        buf3d(ids:ide, jds:jde, 1:nk) = farray
+    end select
 
-    allocate(recvbuf(its:ite,jts:jte,nk), stat=localrc)
+    lbuf = (ite-its+1)*(jte-jts+1)*nk
+    allocate(recvbuf(lbuf), stat=localrc)
     if (chem_rc_test((localrc /= 0), msg="Cannot allocate read buffer", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
     recvbuf = 0._CHEM_KIND_R4
 
-    call chem_comm_reduce(buf3d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
+    call chem_comm_reduce(reshape(buf3d, (/lbuf/)), recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     if (localIOflag) then
 
       call chem_io_file_name(datafile, filename, tile, pathname=path)
 
-      call chem_io_file_write(datafile, reshape(recvbuf, (/size(buf3d)/)), &
-        pos=pos, rc=localrc)
+      call chem_io_file_write(datafile, recvbuf, pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
       write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
