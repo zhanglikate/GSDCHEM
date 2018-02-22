@@ -42,6 +42,7 @@ module chem_comm_mod
   end interface chem_comm_allgather
 
   interface chem_comm_reduce
+    module procedure chem_comm_reduce_r1
     module procedure chem_comm_reduce_r2
     module procedure chem_comm_reduce_r3
   end interface chem_comm_reduce
@@ -295,6 +296,35 @@ contains
   end subroutine chem_comm_allgather_i1
 
   ! -- reduce
+
+  subroutine chem_comm_reduce_r1(sendbuf, recvbuf, op, rootpe, comm, rc)
+    real(CHEM_KIND_R4), intent(in)    :: sendbuf(:)
+    real(CHEM_KIND_R4), intent(inout) :: recvbuf(:)
+    integer,            intent(in)    :: op
+    integer, optional,  intent(in)    :: rootpe
+    integer, optional,  intent(in)    :: comm
+    integer, optional,  intent(out)   :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: localcomm, localroot
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    localcomm = mpi_comm_chem
+    if (present(comm)) localcomm = comm
+
+    localroot = chem_comm_rootpe
+    if (present(rootpe)) localroot = rootpe
+
+    call mpi_reduce(sendbuf, recvbuf, size(sendbuf), MPI_REAL, op, localroot, localcomm, localrc)
+    if (localrc /= MPI_SUCCESS) then
+      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+      return
+    end if
+
+  end subroutine chem_comm_reduce_r1
 
   subroutine chem_comm_reduce_r2(sendbuf, recvbuf, op, rootpe, comm, rc)
     real(CHEM_KIND_R4), intent(in)    :: sendbuf(:,:)
