@@ -437,11 +437,13 @@ contains
             ! -- unused field
         end select
       end do
+#if 0
       call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
         return  ! bail
+#endif
     end do
 
   end subroutine chem_comp_import

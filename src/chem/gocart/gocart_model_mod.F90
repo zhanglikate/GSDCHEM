@@ -70,7 +70,7 @@ contains
     type(chem_config_type), pointer :: config
     type(chem_core_type),   pointer :: core
     type(chem_data_type),   pointer :: data
-    type(chem_state_type),  pointer :: stateIn
+    type(chem_state_type),  pointer :: stateIn, stateOut
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -86,7 +86,8 @@ contains
       file=__FILE__, line=__LINE__, rc=rc)) return
 
     do de = 0, deCount-1
-      call chem_model_get(de=de, config=config, core=core, data=data, stateIn=stateIn, rc=localrc)
+      call chem_model_get(de=de, config=config, core=core, data=data, &
+        stateIn=stateIn, stateOut=stateOut, rc=localrc)
       if (chem_rc_check(localrc, msg="Failed to retrieve model on local DE", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -151,6 +152,7 @@ contains
         stateIn % ws3d, &
         stateIn % tr3d, &
         ! -- output tracers
+        stateOut % tr3d, &
         data % tr3d, &
         data % trdp, &
         data % emi_d1, &

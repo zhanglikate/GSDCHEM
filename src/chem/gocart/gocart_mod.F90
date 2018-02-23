@@ -42,7 +42,7 @@ contains
     ts2d_in, us2d_in, vtype2d_in, vfrac2d_in, zorl2d_in, exch_in, ph3d_in, phl3d_in, pr3d_in, prl3d_in, &
 !   area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
 !   ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
-    sm3d_in, tk3d_in, us3d_in, vs3d_in, ws3d_in, tr3d_in, tr3d, trdp, &
+    sm3d_in, tk3d_in, us3d_in, vs3d_in, ws3d_in, tr3d_in, tr3d_out, tr3d, trdp, &
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5, ext_cof, sscal, asymp, aod2d, &
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
@@ -162,7 +162,8 @@ contains
 
 
 
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(in) :: tr3d_in
+    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(in)  :: tr3d_in
+    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(out) :: tr3d_out
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(out) :: tr3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(inout) :: trdp
 
@@ -764,7 +765,6 @@ contains
     print *,'gocart_run: put chem stuff back into tracer array ...'
     print *,'gocart_run: ntra, ntrb, ntra+ntrb, nbegin, num_chem, nbegin+num_chem', &
                          ntra, ntrb, ntra+ntrb, nbegin, num_chem, nbegin+num_chem
-!   return
 
     do nv = 1, num_chem
       nvv = nbegin + nv
@@ -779,6 +779,8 @@ contains
       end do
     end do
 
+    ! -- export tr3d
+    tr3d_out = real(tr3d, CHEM_KIND_R8)
 
   end subroutine gocart_advance
 

@@ -1,5 +1,5 @@
 module CHM
-#undef FEEDBACK
+#define FEEDBACK
   !-----------------------------------------------------------------------------
   ! CHM Component.
   !-----------------------------------------------------------------------------
@@ -42,12 +42,12 @@ module CHM
       "vegetation_area_fraction                 ", &
       "z_over_l                                 "  &
     /)
-#if FEEDBACK
+#ifdef FEEDBACK
   ! -- export fields
   integer, parameter :: exportFieldCount = 1
   character(len=*), dimension(exportFieldCount), parameter :: &
     exportFieldNames = (/ &
-      "mass_fraction_of_tracers_in_air          ", &
+      "mass_fraction_of_tracers_in_air          "  &
     /)
 #endif
 
@@ -152,7 +152,7 @@ module CHM
         return  ! bail out
     end if
 
-#if FEEDBACK
+#ifdef FEEDBACK
     ! -- advertise exported fields
     if (exportFieldCount > 0) then
       call NUOPC_Advertise(exportState, exportFieldNames, &
@@ -214,7 +214,7 @@ module CHM
       return  ! bail out
     end if
 
-#if FEEDBACK
+#ifdef FEEDBACK
     ! -- check if export fields are defined
     if (exportFieldCount < 1) then 
       call ESMF_LogSetError(ESMF_RC_NOT_IMPL, &
@@ -226,7 +226,7 @@ module CHM
 #endif
 
     ! -- query the Component for its clock, importState and exportState
-#if FEEDBACK
+#ifdef FEEDBACK
     call NUOPC_ModelGet(model, importState=importState, &
       exportState=exportState, modelClock=clock, rc=rc)
 #else
@@ -506,7 +506,7 @@ module CHM
       return  ! bail out
     print *, ' -- chemCap: after chem_comp_connect(import) '
 
-#if FEEDBACK
+#ifdef FEEDBACK
     ! -- connect export fields to model
     ! -- this can be done only once since remote fields are accessed by reference
     call chem_comp_connect('export', exportState, exportFieldNames, rc)
