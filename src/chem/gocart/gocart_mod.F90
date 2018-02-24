@@ -724,7 +724,7 @@ contains
         do i = its, ite
           pm25  (i,j,k) = pm2_5_dry(i,k,j)
           p10   (i,j,k) = pm10     (i,k,j)
-          ebu_oc(i,j,k) = ebu      (i,k,k,p_ebu_oc)
+          ebu_oc(i,j,k) = ebu      (i,k,j,p_ebu_oc)
         end do
       end do
     end do
