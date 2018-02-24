@@ -757,14 +757,13 @@ contains
           do i = its, ite
             tr3d(i,j,k,nvv) = max(epsilc,chem(i,k,j,nv))
             trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(i,j,k)-pr3d(i,j,k+1))
+            ! -- export tr3d
+            tr3d_out(i,j,k,nvv) = real(tr3d(i,j,k,nvv), kind=CHEM_KIND_R8)
           end do
         end do
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
       end do
     end do
-
-    ! -- export tr3d
-!   tr3d_out = real(tr3d, CHEM_KIND_R8)
 
   end subroutine gocart_advance
 
