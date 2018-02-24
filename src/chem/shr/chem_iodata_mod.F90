@@ -597,29 +597,39 @@ contains
       end if
 
       ! -- volcanic stuff
-
-   
       if (config % chem_opt == CHEM_OPT_GOCART) then
          ! -- also for chem_opt = 316, 317, 502
 
         if (config % ash_mass > -900._CHEM_KIND_R4) then
           ! -- TODO
-!         call chem_data_read('volcanic.dat', nv_g, rc, label='nv_g')
-!         if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading nv_g')
-!         call chem_data_read('volcanic.dat', emiss_ash_mass, 4, rc, perm=perm, label='emiss_ash_mass')
-!         if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_mass')
-!         call chem_data_read('volcanic.dat', emiss_ash_height, 5, rc, perm=perm, label='emiss_ash_height')
-!         if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_height')
-!         call chem_data_read('volcanic.dat', emiss_ash_dt, 6, rc, perm=perm, label='emiss_ash_dt')
-!         if (rc /= 0) call mpp_error(FATAL, 'chem_fields_read: error reading emiss_ash_dt')
+          call chem_io_read('volcanic.dat', data % emiss_ash_mass,recrange=(/ 4, 4 /), &
+            path=trim(config % emi_inname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," emiss_ash_mass - min/max = "2g16.6)') localpe, de, &
+            tile, minval(data % emiss_ash_mass), &
+            maxval(data % emiss_ash_mass)
+
+          call chem_io_read('volcanic.dat', data % emiss_ash_height,recrange=(/ 5, 5 /), &
+            path=trim(config % emi_inname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," emiss_ash_height - min/max = "2g16.6)') localpe, de, &
+            tile, minval(data % emiss_ash_height), &
+            maxval(data % emiss_ash_height)
+
+          call chem_io_read('volcanic.dat', data % emiss_ash_dt, recrange=(/ 6, 6 /),&
+            path=trim(config % emi_inname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," emiss_ash_dt - min/max = "2g16.6)') localpe, de, &
+            tile, minval(data % emiss_ash_dt), &
+            maxval(data % emiss_ash_dt)
 
         end if
-        ! -- overwrite ash_mass if nameist value exists
+        ! -- overwrite ash_mass if namelist value exists
         if (config % ash_mass > -100._CHEM_KIND_R4)then
           write(0,*)'using namelist value for ash_mass'
           where(data % emiss_ash_mass > 0._CHEM_KIND_R4) data % emiss_ash_mass = config % ash_mass
         endif
-        ! -- overwrite ash_height if nameist value exists
+        ! -- overwrite ash_height if namelist value exists
         if (config % ash_height > 0._CHEM_KIND_R4) then
 
           write(0,*)'using namelist value for ash_height'
@@ -1053,7 +1063,7 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: de, deCount
-    integer :: ids, ide, jds, jde, kds, kde, nt
+    integer :: ids, ide, jds, jde, nvl, nt
     type(chem_data_type),   pointer :: data   => null()
     type(chem_config_type), pointer :: config => null()
 
@@ -1063,11 +1073,10 @@ contains
     call chem_model_get(deCount=deCount, config=config, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-    kds = 1
     do de = 0, deCount-1
       call chem_model_get(de=de, data=data, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, ni=kde, nt=nt, rc=localrc)
+      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, nl=nvl, nt=nt, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
       ! -- dust 
@@ -1108,55 +1117,55 @@ contains
       end if
 
       if (.not.allocated(data % ext_cof)) then
-        allocate(data % ext_cof(ids:ide,kds:kde,jds:jde,config % nbands), stat=localrc)
+        allocate(data % ext_cof(ids:ide,jds:jde,nvl,config % nbands), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % ext_cof = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % sscal)) then
-        allocate(data % sscal(ids:ide,kds:kde,jds:jde,config % nbands), stat=localrc)
+        allocate(data % sscal(ids:ide,jds:jde,nvl,config % nbands), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % sscal = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % asymp)) then
-        allocate(data % asymp(ids:ide,kds:kde,jds:jde,config % nbands), stat=localrc)
+        allocate(data % asymp(ids:ide,jds:jde,nvl,config % nbands), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % asymp = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % pm10)) then
-        allocate(data % pm10(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % pm10(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % pm10 = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % pm25)) then
-        allocate(data % pm25(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % pm25(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % pm25 = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % ebu_oc)) then
-        allocate(data % ebu_oc(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % ebu_oc(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % ebu_oc = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % oh_bg)) then
-        allocate(data % oh_bg(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % oh_bg(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % oh_bg = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % h2o2_bg)) then
-        allocate(data % h2o2_bg(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % h2o2_bg(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % h2o2_bg = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % no3_bg)) then
-        allocate(data % no3_bg(ids:ide,kds:kde,jds:jde), stat=localrc)
+        allocate(data % no3_bg(ids:ide,jds:jde,nvl), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % no3_bg = 0._CHEM_KIND_R4
       end if
@@ -1168,13 +1177,13 @@ contains
       end if
 
       if (.not.allocated(data % tr3d)) then
-        allocate(data % tr3d(ids:ide,jds:jde,kds:kde,nt), stat=localrc)
+        allocate(data % tr3d(ids:ide,jds:jde,nvl,nt), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % tr3d = 0._CHEM_KIND_R4
       end if
 
       if (.not.allocated(data % trdp)) then
-        allocate(data % trdp(ids:ide,jds:jde,kds:kde,nt), stat=localrc)
+        allocate(data % trdp(ids:ide,jds:jde,nvl,nt), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % trdp = 0._CHEM_KIND_R4
       end if
@@ -1189,7 +1198,7 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: de, deCount
-    integer :: ids, ide, jds, jde, kde
+    integer :: ids, ide, jds, jde
     integer :: advanceCount
     type(chem_data_type),    pointer :: data   => null()
     type(chem_config_type),  pointer :: config => null()
@@ -1279,14 +1288,12 @@ contains
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-#if 0
             call chem_io_write('pm10', data % pm10, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             call chem_io_write('pm25', data % pm25, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-#endif
 
             call chem_io_write('emd1', data % emi_d1, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
@@ -1306,7 +1313,6 @@ contains
             call chem_io_write('ao2D', data % aod2d, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-
 
             call chem_io_write('wbc2', data % wet_dep(:,:,s % p_bc2), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
@@ -1350,31 +1356,29 @@ contains
             call chem_io_write('wse4', data % wet_dep(:,:,s % p_seas_4), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('aiso', data % wet_dep(:,:,s % p_e_iso), &
+
+            call chem_io_write('aso2', data % emiss_ab(:,:,s % p_e_so2), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('aso2', data % wet_dep(:,:,s % p_e_so2), &
+            call chem_io_write('anbc', data % emiss_ab(:,:,s % p_e_bc), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('ano2', data % wet_dep(:,:,s % p_e_no2), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('fiso', data % wet_dep(:,:,s % p_e_iso), &
+            call chem_io_write('anoc', data % emiss_ab(:,:,s % p_e_oc), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
             if (config % chem_opt == CHEM_OPT_GOCART) then
 
-              call chem_io_write('ohbg', data % oh_bg, order='ikj', &
+              call chem_io_write('ohbg', data % oh_bg, &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('hobg', data % h2o2_bg, order='ikj', &
+              call chem_io_write('hobg', data % h2o2_bg, &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('no3b', data % no3_bg, order='ikj', &
+              call chem_io_write('no3b', data % no3_bg, &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-              call chem_io_write('ocbb', data % ebu_oc, order='ikj', &
+              call chem_io_write('ocbb', data % ebu_oc, &
                 path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -1385,24 +1389,18 @@ contains
             call chem_io_write('ao2D', data % aod2d, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-
-#if 0
             call chem_io_write('pm10', data % pm10, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             call chem_io_write('pm25', data % pm25, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-!           call chem_io_write('extt', data % ext_cof, path=trim(config % emi_outname), de=de, rc=localrc)
-!           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-#endif
 
           case default
 
             ! -- no output
 
         end select
-
 
       end do
 

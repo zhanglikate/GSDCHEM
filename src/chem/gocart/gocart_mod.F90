@@ -40,8 +40,6 @@ contains
     h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
     area_in, hf2d_in, pb2d_in, rc2d_in, rn2d_in, rsds_in, slmsk2d_in, snwdph2d_in, stype2d_in,       &
     ts2d_in, us2d_in, vtype2d_in, vfrac2d_in, zorl2d_in, exch_in, ph3d_in, phl3d_in, pr3d_in, prl3d_in, &
-!   area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
-!   ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d_in, tk3d_in, us3d_in, vs3d_in, ws3d_in, tr3d_in, tr3d_out, tr3d, trdp, &
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5, ext_cof, sscal, asymp, aod2d, &
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
@@ -75,10 +73,6 @@ contains
                                       num_emis_dust, num_emis_seas
     integer,            intent(in) :: num_asym_par, num_bscat_coef, num_ext_coef
     integer,            intent(in) :: numgas
-!   integer,            intent(in) :: nbands, num_asym_par, num_bscat_coef, &
-!                                     num_chem, num_ebu, num_ebu_in, num_emis_dust, &
-!                                     num_emis_seas, num_ext_coef, num_moist, &
-!                                     num_soil_layers, numgas
     integer, optional, intent(out) :: rc
 
     real(CHEM_KIND_R8), intent(in) :: dts
@@ -104,23 +98,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(in) :: emiss_abu
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
 
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: area
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: hf2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: pb2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rc2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rn2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rsds
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: slmsk2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: snwdph2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: stype2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ts2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: us2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: vtype2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: vfrac2d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: zorl2d
-!   real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lat
-!   real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lon
-
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: area_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: hf2d_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: pb2d_in
@@ -138,17 +115,6 @@ contains
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lat
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lon
 
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: exch
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvi), intent(in) :: ph3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: phl3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvi), intent(in) :: pr3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: prl3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_soil_layers), intent(in) :: sm3d
-!   real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: tk3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: us3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: vs3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: ws3d
-
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: exch_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvi), intent(in) :: ph3d_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: phl3d_in
@@ -159,8 +125,6 @@ contains
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: us3d_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: vs3d_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: ws3d_in
-
-
 
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(in)  :: tr3d_in
     real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(out) :: tr3d_out
@@ -174,16 +138,16 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d4
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d5
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: aod2d
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nbands), intent(out) :: ext_cof
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nbands), intent(out) :: sscal
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nbands), intent(out) :: asymp
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: p10
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: pm25
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: ebu_oc
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: oh_bg
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: h2o2_bg
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: no3_bg
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem), intent(out) :: wet_dep
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: p10
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: pm25
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: ebu_oc
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: oh_bg
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: h2o2_bg
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: no3_bg
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: ext_cof
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: sscal
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: asymp
 
     ! -- local variables
 
@@ -325,7 +289,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: us3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: vs3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: ws3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: dp3d
+!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: dp3d
 
     ! -----------------------------------------------------------------------
     ! -- local variables
@@ -404,7 +368,7 @@ contains
     tk3d       = real(tk3d_in, CHEM_KIND_R4)
     tr3d       = real(tr3d_in, CHEM_KIND_R4)
 
-    dp3d(:,:,1:nvl) = pr3d(:,:,1:nvl) - pr3d(:,:,2:nvi)
+!   dp3d(:,:,1:nvl) = pr3d(:,:,1:nvl) - pr3d(:,:,2:nvi)
 
     print *,'gocart_run: longitude min/max = ',minval(deg_lon),maxval(deg_lon)
     print *,'gocart_run: local array initialized ...'
@@ -729,10 +693,18 @@ contains
       
       ! -- store aerosol optical variables for feedback in radiation
       if (store_arrays) then
-        ext_cof(its:ite,kts:kte,jts:jte,1:nbands) = extt   (its:ite,kts:kte,jts:jte,1:nbands)
-        sscal  (its:ite,kts:kte,jts:jte,1:nbands) = ssca   (its:ite,kts:kte,jts:jte,1:nbands)
-        asymp  (its:ite,kts:kte,jts:jte,1:nbands) = asympar(its:ite,kts:kte,jts:jte,1:nbands)
-        aod2d  (its:ite,jts:jte)                  = aod    (its:ite,jts:jte)
+        do nv = 1, nbands
+          do j = jts, jte
+            do k = kts, kte
+              do i = its, ite
+                ext_cof(i,j,k,nv) = extt   (i,k,j,nv)
+                sscal  (i,j,k,nv) = ssca   (i,k,j,nv)
+                asymp  (i,j,k,nv) = asympar(i,k,j,nv)
+              end do
+            end do
+          end do
+        end do
+        aod2d(its:ite,jts:jte) = aod(its:ite,jts:jte)
       end if
     endif
 
@@ -747,18 +719,30 @@ contains
 
     ! -- pm25 and pm10 for output , not for tracer options
     print *,'gocart_run: setting output arrays ...'
-    pm25  (its:ite,kts:kte,jts:jte) = pm2_5_dry(its:ite,kts:kte,jts:jte)
-    p10   (its:ite,kts:kte,jts:jte) = pm10     (its:ite,kts:kte,jts:jte)
-    ebu_oc(its:ite,kts:kte,jts:jte) = ebu      (its:ite,kts:kte,jts:jte,p_ebu_oc)
+    do j = jts, jte
+      do k = kts, kte
+        do i = its, ite
+          pm25  (i,j,k) = pm2_5_dry(i,k,j)
+          p10   (i,j,k) = pm10     (i,k,j)
+          ebu_oc(i,j,k) = ebu      (i,k,k,p_ebu_oc)
+        end do
+      end do
+    end do
     print *,'gocart_run: done output arrays'
 
     print *,'gocart_run: call GOCART?',call_gocart
     if (call_gocart) then
-        print *,'gocart_run: set bg fields ...'
-        oh_bg  (its:ite,kts:kte,jts:jte) = max(0., oh_t  (its:ite,kts:kte,jts:jte))
-        h2o2_bg(its:ite,kts:kte,jts:jte) = max(0., h2o2_t(its:ite,kts:kte,jts:jte))
-        no3_bg (its:ite,kts:kte,jts:jte) = max(0., no3_t (its:ite,kts:kte,jts:jte))
-        print *,'gocart_run: set bg fields done'
+      print *,'gocart_run: set bg fields ...'
+      do j = jts, jte
+        do k = kts, kte
+          do i = its, ite
+            oh_bg  (i,j,k) = max(0., oh_t  (i,k,j))
+            h2o2_bg(i,j,k) = max(0., h2o2_t(i,k,j))
+            no3_bg (i,j,k) = max(0., no3_t (i,k,j))
+          end do
+        end do
+      end do
+      print *,'gocart_run: set bg fields done'
     end if
 
     ! -- put chem stuff back into tracer array
@@ -772,7 +756,7 @@ contains
         do k = kts, kte
           do i = its, ite
             tr3d(i,j,k,nvv) = max(epsilc,chem(i,k,j,nv))
-            trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*dp3d(i,j,k)
+            trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(i,j,k)-pr3d(i,j,k+1))
           end do
         end do
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
@@ -780,7 +764,7 @@ contains
     end do
 
     ! -- export tr3d
-    tr3d_out = real(tr3d, CHEM_KIND_R8)
+!   tr3d_out = real(tr3d, CHEM_KIND_R8)
 
   end subroutine gocart_advance
 
