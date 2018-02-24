@@ -966,6 +966,7 @@ endif
          !endif ! ktau
 
     print *,'chem_prep: stage 4'
+#if 0
     if (chem_opt == 316) then
       do j = jts, jte
         do k = kts, kte-2
@@ -1001,6 +1002,7 @@ endif
         enddo
       enddo
     endif
+#endif
 
     if(chem_opt == CHEM_OPT_GOCART)  then
       ! -- for gocart only lump ash into p25 and p10
