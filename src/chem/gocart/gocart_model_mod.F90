@@ -85,6 +85,9 @@ contains
     if (chem_rc_check(localrc, msg="Failed to retrieve model clock on local DE", &
       file=__FILE__, line=__LINE__, rc=rc)) return
 
+    ! -- GOCART time steps start from 1, while model time steps start from 0
+    advanceCount = advanceCount + 1
+
     do de = 0, deCount-1
       call chem_model_get(de=de, config=config, core=core, data=data, &
         stateIn=stateIn, stateOut=stateOut, rc=localrc)
