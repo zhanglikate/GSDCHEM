@@ -80,7 +80,7 @@ contains
     ! -- check if model is active on this PET, bail out if not
     call chem_model_get(deCount=deCount, config=config, rc=rc)
     if (chem_rc_check(rc, file=__FILE__, line=__LINE__)) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to set model's internal clock", &
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to get model info", &
         line=__LINE__, file=__FILE__, rcToReturn=rc)
       return  ! bail out
     end if
@@ -193,6 +193,16 @@ contains
     ! -- begin
     rc = ESMF_SUCCESS
 
+    ! -- check if model is active on this PET, bail out if not
+    call chem_model_get(deCount=localDeCount, rc=rc)
+    if (chem_rc_check(rc, file=__FILE__, line=__LINE__)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to get model info", &
+        line=__LINE__, file=__FILE__, rcToReturn=rc)
+      return  ! bail out
+    end if
+
+    if (localDeCount < 1) return
+
     do item = 1, size(fieldNames)
 
       call ESMF_StateGet(state, field=field, &
@@ -250,7 +260,18 @@ contains
     type(ESMF_Field)               :: field
     integer                        :: item, localDe, localDeCount
 
+    ! -- begin
     rc = ESMF_SUCCESS
+
+    ! -- check if model is active on this PET, bail out if not
+    call chem_model_get(deCount=localDeCount, rc=rc)
+    if (chem_rc_check(rc, file=__FILE__, line=__LINE__)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to get model info", &
+        line=__LINE__, file=__FILE__, rcToReturn=rc)
+      return  ! bail out
+    end if
+
+    if (localDeCount < 1) return
 
     do item = 1, size(fieldNames)
 
@@ -437,13 +458,6 @@ contains
             ! -- unused field
         end select
       end do
-#if 0
-      call NUOPC_SetAttribute(field, name="Updated", value="true", rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-#endif
     end do
 
   end subroutine chem_comp_import
