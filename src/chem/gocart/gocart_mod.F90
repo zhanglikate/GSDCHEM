@@ -98,38 +98,37 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(in) :: emiss_abu
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
 
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: area_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: hf2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: pb2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: rc2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: rn2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: rsds_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: slmsk2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: snwdph2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: stype2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: ts2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: us2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: vtype2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: vfrac2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: zorl2d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lat
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme), intent(in) :: lon
+    ! -- input pointers: indexing must always start from 1
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rc2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rn2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d_in
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: lat
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: lon
 
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: exch_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvi), intent(in) :: ph3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: phl3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvi), intent(in) :: pr3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: prl3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, num_soil_layers), intent(in) :: sm3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: tk3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: us3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: vs3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl), intent(in) :: ws3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d_in
 
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(in)  :: tr3d_in
-    real(CHEM_KIND_R8), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(out) :: tr3d_out
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(out) :: tr3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(inout) :: trdp
+    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
 
     ! -- output tracers
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d1
@@ -145,9 +144,11 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: oh_bg
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: h2o2_bg
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: no3_bg
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: ext_cof
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: sscal
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands), intent(out) :: asymp
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: ext_cof
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: sscal
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: asymp
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: tr3d
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: trdp
 
     ! -- local variables
 
@@ -301,7 +302,7 @@ contains
 !   integer :: julday
     integer :: localrc
     integer :: nbegin, nv, nvv
-    integer :: i, j, jp, jps, k
+    integer :: i, ip, j, jp, jps, k, kp
     integer :: ids, ide, jds, jde, kds, kde
 !   integer :: current_month, current_gmt, current_secs, current_msecs
     real(CHEM_KIND_R4) :: dt
@@ -752,13 +753,19 @@ contains
 
     do nv = 1, num_chem
       nvv = nbegin + nv
+      jp = 0
       do j = jts, jte
+        jp = jp + 1
+        kp = 0
         do k = kts, kte
+          kp = kp + 1
+          ip = 0
           do i = its, ite
+            ip = ip + 1
             tr3d(i,j,k,nvv) = max(epsilc,chem(i,k,j,nv))
             trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(i,j,k)-pr3d(i,j,k+1))
             ! -- export tr3d
-            tr3d_out(i,j,k,nvv) = real(tr3d(i,j,k,nvv), kind=CHEM_KIND_R8)
+            tr3d_out(ip,jp,kp,nvv) = real(tr3d(i,j,k,nvv), kind=CHEM_KIND_R8)
           end do
         end do
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
