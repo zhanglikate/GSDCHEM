@@ -1,5 +1,6 @@
 module chem_data_mod
 
+  use chem_rc_mod
   use chem_types_mod
 
   implicit none
@@ -47,6 +48,176 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:,:,:), allocatable :: trdp
   end type chem_data_type
 
+  private
+
+  public :: chem_data_type
+  public :: chem_data_destroy
+
 contains
+
+  subroutine chem_data_destroy(data, rc)
+    type(chem_data_type)           :: data
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    if (allocated(data % p_gocart)) then
+      deallocate(data % p_gocart, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % clayfrac)) then
+      deallocate(data % clayfrac, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % dm0)) then
+      deallocate(data % dm0, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_ab)) then
+      deallocate(data % emiss_ab, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_abu)) then
+      deallocate(data % emiss_abu, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_ash_dt)) then
+      deallocate(data % emiss_ash_dt, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_ash_height)) then
+      deallocate(data % emiss_ash_height, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_ash_mass)) then
+      deallocate(data % emiss_ash_mass, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_tr_dt)) then
+      deallocate(data % emiss_tr_dt, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_tr_height)) then
+      deallocate(data % emiss_tr_height, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emiss_tr_mass)) then
+      deallocate(data % emiss_tr_mass, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ero1)) then
+      deallocate(data % ero1, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ero2)) then
+      deallocate(data % ero2, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ero3)) then
+      deallocate(data % ero3, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % h2o2_backgd)) then
+      deallocate(data % h2o2_backgd, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % no3_backgd)) then
+      deallocate(data % no3_backgd, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % oh_backgd)) then
+      deallocate(data % oh_backgd, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % plumestuff)) then
+      deallocate(data % plumestuff, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % sandfrac)) then
+      deallocate(data % sandfrac, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % th_pvsrf)) then
+      deallocate(data % th_pvsrf, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emi_d1)) then
+      deallocate(data % emi_d1, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emi_d2)) then
+      deallocate(data % emi_d2, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emi_d3)) then
+      deallocate(data % emi_d3, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emi_d4)) then
+      deallocate(data % emi_d4, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % emi_d5)) then
+      deallocate(data % emi_d5, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % aod2d)) then
+      deallocate(data % aod2d, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % pm10)) then
+      deallocate(data % pm10, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % pm25)) then
+      deallocate(data % pm25, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ebu_oc)) then
+      deallocate(data % ebu_oc, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % oh_bg)) then
+      deallocate(data % oh_bg, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % h2o2_bg)) then
+      deallocate(data % h2o2_bg, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % no3_bg)) then
+      deallocate(data % no3_bg, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % wet_dep)) then
+      deallocate(data % wet_dep, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ext_cof)) then
+      deallocate(data % ext_cof, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % sscal)) then
+      deallocate(data % sscal, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % asymp)) then
+      deallocate(data % asymp, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % tr3d)) then
+      deallocate(data % tr3d, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % trdp)) then
+      deallocate(data % trdp, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+
+  end subroutine chem_data_destroy
 
 end module chem_data_mod

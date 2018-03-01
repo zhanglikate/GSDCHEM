@@ -110,6 +110,9 @@ module chem_config_mod
   private
 
   public :: chem_config_type
+  ! -- provide subtypes
+  public :: chem_species_type
+
   public :: chem_config_read
   public :: chem_config_control_init
   public :: chem_config_species_init

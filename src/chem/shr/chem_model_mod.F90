@@ -3,9 +3,8 @@ module chem_model_mod
   use chem_rc_mod
   use chem_types_mod
   use chem_config_mod
-  use chem_species_mod
   use chem_clock_mod
-  use chem_data_mod,     only : chem_data_type
+  use chem_data_mod,     only : chem_data_type, chem_data_destroy
   use chem_domain_mod,   only : chem_domain_type
   use chem_state_mod,    only : chem_state_type
   use chem_iolayout_mod, only : chem_iolayout_type
@@ -16,7 +15,6 @@ module chem_model_mod
   type chem_model_type
     type(chem_clock_type),   pointer :: clock   => null()
     type(chem_config_type),  pointer :: config  => null()
-    type(chem_species_type), pointer :: species => null()
     type(chem_domain_type)   :: domain
     type(chem_state_type)    :: stateIn, stateOut
     type(chem_data_type)     :: data
@@ -35,7 +33,6 @@ module chem_model_mod
   ! -- also provide subtypes
   public :: chem_clock_type
   public :: chem_config_type
-  public :: chem_species_type
   public :: chem_domain_type
   public :: chem_state_type
   public :: chem_data_type
@@ -85,14 +82,45 @@ contains
 
     !-- local variables
     integer :: localrc
+    integer :: de
 
     !-- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     if (allocated(chem_model)) then
-      ! -- TODO: deallocate underlying types and arrays
+      do de = 1, size(chem_model)-1
+        call chem_data_destroy(chem_model(de) % data, rc=localrc)
+        if (chem_rc_test((localrc /= 0), &
+          msg="Failure to allocate model data memory", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        nullify(chem_model(de) % config)
+        nullify(chem_model(de) % clock)
+      end do
+      de = 0
+      call chem_data_destroy(chem_model(de) % data, rc=localrc)
+      if (associated(chem_model(de) % config)) then
+        if (associated(chem_model(de) % config % species)) then
+          deallocate(chem_model(de) % config % species, stat=localrc)
+          if (chem_rc_test((localrc /= 0), &
+            msg="Failure to allocate model species memory", &
+            file=__FILE__, line=__LINE__, rc=rc)) return
+          nullify(chem_model(de) % config % species)
+        end if
+        deallocate(chem_model(de) % config, stat=localrc)
+        if (chem_rc_test((localrc /= 0), &
+          msg="Failure to allocate model config memory", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        nullify(chem_model(de) % config)
+      end if
+      if (associated(chem_model(de) % clock)) then
+        deallocate(chem_model(de) % clock, stat=localrc)
+        if (chem_rc_test((localrc /= 0), &
+          msg="Failure to allocate model clock memory", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        nullify(chem_model(de) % clock)
+      end if
       deallocate(chem_model, stat=localrc)
-      if (chem_rc_test((localrc /= 0), msg="Failure to allocate model internal memory", &
+      if (chem_rc_test((localrc /= 0), msg="Failure to allocate model memory", &
           file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
