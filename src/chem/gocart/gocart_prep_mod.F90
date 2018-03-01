@@ -20,7 +20,7 @@ contains
   subroutine gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dtstep,tr3d,tk3d,sm3d,&
                        ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height,          &
                        emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,               &
-                       emiss_tr_dt,snwdph2d,VFRAC2d,VTYPE2d,STYPE2d,us3d,vs3d,ws3d,           &
+                       emiss_tr_dt,snwdph2d,vfrac2d,vtype2d,stype2d,us3d,vs3d,ws3d,           &
                        slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf,&
                        oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,            &
                        nvl_gocart, ttday,tcosz,gmt,julday,area,ero1,                 &
@@ -52,17 +52,37 @@ contains
                                    its,ite, jts,jte, kts,kte
     LOGICAL,      INTENT(IN) :: call_gocart
     REAL(CHEM_KIND_R4), INTENT(IN) :: g,rd,p1000,cp,dtstep,gmt
-!---------------------------
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl, ntra+ntrb), intent(inout) :: tr3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl),            intent(inout) :: tk3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_soil_layers), intent(in) :: sm3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ts2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: us2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rsds
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvlp1), intent(in) :: pr3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl),   intent(in) :: prl3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvlp1), intent(in) :: ph3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl),   intent(in) :: phl3d
+
+    ! -- input pointers: indexing must always start from 1
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
+
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d
+
+    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d
+
+    ! -- I/O arrays
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_mass
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_ash_dt
@@ -70,18 +90,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_mass
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_dt
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: snwdph2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: vfrac2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: vtype2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: stype2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: us3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: vs3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: ws3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: slmsk2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: zorl2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl), intent(in) :: exch
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: pb2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: hf2d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: clayfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: sandfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: th_pvsrf
@@ -94,14 +102,11 @@ contains
     real(CHEM_KIND_R4), dimension(nvl_gocart+1),     intent(in) :: p_gocart
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: ttday
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: tcosz
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: area
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero3
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rcav
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: raincv_b
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: deg_lat
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: deg_lon
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: relhum
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: rri
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: t_phy
@@ -157,11 +162,10 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: firesize_agsv
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: firesize_aggr
 
-
     INTEGER, OPTIONAL, INTENT(OUT) :: rc
 
     ! -- local variables
-    integer i,j,k,kk,nv,jmax,jmaxi,l,ll,n,ndystep,ixhour
+    integer i,ip,j,jp,k,kp,kk,kkp,nv,jmax,jmaxi,l,ll,n,ndystep,ixhour
     real(CHEM_KIND_R4) ::  maxv,factor,factor2,pu,pl,aln,pwant,rlat
     real(CHEM_KIND_R4) ::  thv,xhour,xmin,gmtp,xlonn,xtime,real_time
     real(CHEM_KIND_R4), DIMENSION (1,1) :: sza,cosszax
@@ -172,7 +176,9 @@ contains
     real(CHEM_KIND_R4) :: x1,ashz_above_vent
     real(CHEM_KIND_R4), DIMENSION (kms:kme) :: vert_mass_dist
     real(CHEM_KIND_R4) :: eh,h1,h2,h3,h4,h5,h6,maxth
+#if 0
     logical, save :: first_init = .true.
+#endif
 
     ! -- volcano ashes parameters
     !  + original
@@ -203,15 +209,20 @@ contains
     e_co = 0.
 
     do j=jts,jte
+      jp = j - jts + 1
       do i=its,ite
-         z_at_w(i,kts,j)=max(0.,ph3d(i,j,kts)/g)
+         ip = i - its + 1
+         z_at_w(i,kts,j)=max(0.,ph3d(ip,jp,1)/g)
       enddo
     enddo
 
     do j=jts,jte
+      jp = j - jts + 1
       do k=kts,kte
+        kp = k - kts + 1
         do i=its,ite
-          dz8w(i,k,j)=(ph3d(i,j,k+1)-ph3d(i,j,k))/g
+          ip = i - its + 1
+          dz8w(i,k,j)=(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))/g
           if (dz8w(i,k,j) < 0.) dz8w(i,k,j)=-dz8w(i,k,j)
           z_at_w(i,k+1,j)=z_at_w(i,k,j)+dz8w(i,k,j)
         enddo
@@ -219,33 +230,36 @@ contains
     enddo
 
     do j=jts,jte
+      jp = j - jts + 1
       do k=kts,kte+1
+        kp = k - kts + 1
         do i=its,ite
-          p8w(i,k,j)=pr3d(i,j,k)
+          ip = i - its + 1
+          p8w(i,k,j)=pr3d(ip,jp,kp)
         enddo
       enddo
     enddo
 
     do j=jts,jte
+      jp = j - jts + 1
       do i=its,ite
+        ip = i - its + 1
         raincv_b(i,j)=rcav(i,j)
-        pbl(i,j)=pb2d(i,j)
+        pbl(i,j)=pb2d(ip,jp)
         dms_0(i,j)=dm0(i,j)
-        hfx(i,j)=hf2d(i,j)
-        snowh(i,j)=snwdph2d(i,j)*.001
+        hfx(i,j)=hf2d(ip,jp)
+        snowh(i,j)=snwdph2d(ip,jp)*.001
         erod(i,j,1)=ero1(i,j)
         erod(i,j,2)=ero2(i,j)
         erod(i,j,3)=ero3(i,j)
-        xlat(i,j)=deg_lat(i,j)
-        xlong(i,j)=deg_lon(i,j)
-        ust(i,j)=us2d(i,j)
-        tsk(i,j)=ts2d(i,j)
-!       ivgtyp(i,j)=VTYPE2d(i,j)
-!       isltyp(i,j)=STYPE2d(i,j)
-        gsw(i,j)=rsds(i,j)
-        vegfra(i,j)=VFRAC2d(i,j)
+        xlat(i,j)=deg_lat(ip,jp)
+        xlong(i,j)=deg_lon(ip,jp)
+        ust(i,j)=us2d(ip,jp)
+        tsk(i,j)=ts2d(ip,jp)
+        gsw(i,j)=rsds(ip,jp)
+        vegfra(i,j)=vfrac2d(ip,jp)
         rmol(i,j)=0.
-        znt(i,j)=zorl2d(i,j)*.01
+        znt(i,j)=zorl2d(ip,jp)*.01
 !SLMSK   - SEA(0),LAND(1),ICE(2) MASK
 !       xland(i,j)=1.
 !       if (slmsk2d(i,j) == 0.) then
@@ -255,16 +269,16 @@ contains
 !       else if (slmsk2d(i,j) == 2.) then
 !         xland(i,j) = 2.
 !       end if
-        xland(i,j) = real(nint(slmsk2d(i,j)), CHEM_KIND_R4)
-        if (nint(slmsk2d(i,j)) == 2) then
+        xland(i,j) = real(nint(slmsk2d(ip,jp)), CHEM_KIND_R4)
+        if (nint(slmsk2d(ip,jp)) == 2) then
           isltyp(i,j) = 16
         else
-          isltyp(i,j) = int(stype2d(i,j)+0.5_CHEM_KIND_R4)
+          isltyp(i,j) = int(stype2d(ip,jp)+0.5_CHEM_KIND_R4)
         end if
-        ivgtyp(i,j) = int(vtype2d(i,j)+0.5_CHEM_KIND_R4)
-        dxy(i,j)=area(i,j)
-        u10(i,j)=us3d(i,j,1)
-        v10(i,j)=vs3d(i,j,1)
+        ivgtyp(i,j) = int(vtype2d(ip,jp)+0.5_CHEM_KIND_R4)
+        dxy(i,j)=area(ip,jp)
+        u10(i,j)=us3d(ip,jp,1)
+        v10(i,j)=vs3d(ip,jp,1)
         clayf(i,j) = clayfrac(i,j)
         sandf(i,j) = sandfrac(i,j)
       enddo
@@ -335,8 +349,7 @@ contains
           ebu_in(i,j,p_ebu_in_pm25)=emiss_abu(i,j,p_e_pm_25)
           ebu_in(i,j,p_ebu_in_pm10)=emiss_abu(i,j,p_e_pm_10)
           ebu_in(i,j,p_ebu_in_so2)=emiss_abu(i,j,p_e_so2)
-          ebu_in(i,j,p_ebu_in_dms)= 0. !emiss_abu(j,p_e_dms)
-         !ebu_in(i,j,p_ebu_in_sulf)=0. ! for now
+          ebu_in(i,j,p_ebu_in_dms)= 0.
 
           mean_fct_agtf(i,j)=plumestuff(i,j,1)
           mean_fct_agef(i,j)=plumestuff(i,j,2)
@@ -368,46 +381,33 @@ contains
 
     endif
 
-#if 0
-    do i=its,ite
-      do j=jts,jte
-        do k=kts,kte
-          thv=tr3d(i,j,k,p_atm_ptem)/(1.+0.6078*tr3d(i,j,k,p_atm_cldq))
-          tk3d(i,j,k)=thv*(.5*(p8w(i,k,j)+p8w(i,k+1,j))/p1000)**(rd/cp)
-        enddo
-      enddo
-    enddo
-#endif
-
     do j=jts,jte
+      jp = j - jts + 1
       do k=kts,kte+1
         kk=min(k,kte)
+        kkp = kk - kts + 1
         do i=its,ite
-!         zmid(i,k,j)=.5*(ph3d(i,j,kk+1)+ph3d(i,j,kk))/g
-          zmid(i,k,j)=phl3d(i,j,kk)/g
+          ip = i - its + 1
+          zmid(i,k,j)=phl3d(ip,jp,kkp)/g
           dz8w(i,k,j)=z_at_w(i,kk+1,j)-z_at_w(i,kk,j)
-          t_phy(i,k,j)=tk3d(i,j,kk)
-!         relhum(i,k,j)=rh3d(kk,j)
-!         p_phy(i,k,j)=.5*(p8w(i,kk,j)+p8w(i,kk+1,j))
-          p_phy(i,k,j)=prl3d(i,j,kk)
-          u_phy(i,k,j)=us3d(i,j,kk)
-          exch_h(i,k,j)=exch(i,j,kk)
-          v_phy(i,k,j)=vs3d(i,j,kk)
-!       print *,'--> i,k,j, RD, p, T, t3d = ',i,k,j,RD,p_phy(i,k,j),T_phy(i,k,j),tr3d(kk,j,2)
-          rho_phy(i,k,j)=p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(i,j,kk,p_atm_shum)))
+          t_phy(i,k,j)=tk3d(ip,jp,kkp)
+          p_phy(i,k,j)=prl3d(ip,jp,kkp)
+          u_phy(i,k,j)=us3d(ip,jp,kkp)
+          exch_h(i,k,j)=exch(ip,jp,kkp)
+          v_phy(i,k,j)=vs3d(ip,jp,kkp)
+          rho_phy(i,k,j)=p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(ip,jp,kkp,p_atm_shum)))
           rri(i,k,j)=1./rho_phy(i,k,j)
-!       print *,'--> i,k,j, rho, 1/rho = ',i,k,j,rho_phy(i,k,j),rri(i,k,j)
-          vvel(i,k,j)=-ws3d(i,j,kk)*rri(i,k,j)/g
+          vvel(i,k,j)=-ws3d(ip,jp,kkp)*rri(i,k,j)/g
           convfac(i,k,j)=p_phy(i,k,j)/rgasuniv/t_phy(i,k,j)
           moist(i,k,j,:)=0.
-          moist(i,k,j,1)=tr3d(i,j,kk,p_atm_shum)
+          moist(i,k,j,1)=tr3d(ip,jp,kkp,p_atm_shum)
           if (t_phy(i,k,j) > 265.) then
-            moist(i,k,j,2)=tr3d(i,j,kk,p_atm_cldq)
+            moist(i,k,j,2)=tr3d(ip,jp,kkp,p_atm_cldq)
             moist(i,k,j,3)=0.
             if (moist(i,k,j,2) < 1.e-8) moist(i,k,j,2)=0.
           else
             moist(i,k,j,2)=0.
-            moist(i,k,j,3)=tr3d(i,j,kk,p_atm_cldq)
+            moist(i,k,j,3)=tr3d(ip,jp,kkp,p_atm_cldq)
             if(moist(i,k,j,3) < 1.e-8)moist(i,k,j,3)=0.
           endif
           relhum(i,k,j) = .95
@@ -422,7 +422,7 @@ contains
     do j=jts,jte
       do k=2,kte
         do i=its,ite
-          t8w(i,k,j)=.5*(t_phy(i,k,j)+t_phy(i,k-1,j)) ! .5*(tk3d(k-1,j)+tk3d(k,j))
+          t8w(i,k,j)=.5*(t_phy(i,k,j)+t_phy(i,k-1,j))
         enddo
       enddo
     enddo
@@ -437,10 +437,13 @@ contains
 
     do nv=1,num_chem
       do j=jts,jte
+        jp = j - jts + 1
         do k=kts,kte+1
           kk=min(k,kte)
+          kkp = kk - kts + 1
           do i=its,ite
-            chem(i,k,j,nv)=tr3d(i,j,kk,ntra+nv)
+            ip = i - its + 1
+            chem(i,k,j,nv)=tr3d(ip,jp,kkp,ntra+nv)
           enddo
         enddo
       enddo
@@ -454,8 +457,10 @@ contains
         if(ktau.le.1)then
 !           if(chem_opt > 0 ) then
           do j=jts,jte
+            jp = j - jts + 1
             do k=kts,kte
               do i=its,ite
+                ip = i - its + 1
                 if (chem_opt == CHEM_OPT_GOCART) then
                   do n=1,num_chem
                     chem(i,k,j,n)=1.e-12
@@ -476,11 +481,12 @@ contains
 
                 if ((chem_opt == CHEM_OPT_GOCART_RACM) .or. (chem_opt == CHEM_OPT_RACM_SOA_VBS)) then  !added o3 background !lzhang
                   kk=min(k,kte)
+                  kkp = kk - kts + 1
                   ! -- add initial constant into O3,CH4 and CO ect.
                   chem(i,k,j,p_o3)=epsilc
                   maxth=min(400.,th_pvsrf(i,j))
-                  if (tr3d(i,j,kk,p_atm_ptem) > maxth) then
-                    chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,p_atm_o3mr)*1e6 !convert kg/kg to ppm
+                  if (tr3d(ip,jp,kkp,p_atm_ptem) > maxth) then
+                    chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
                   else
                     chem(i,k,j,p_o3)=0.03 !ppm
                   endif
@@ -504,12 +510,15 @@ contains
 
         if ((ktau<=1).and.((chem_opt == CHEM_OPT_GOCART_RACM).or.(chem_opt == CHEM_OPT_RACM_SOA_VBS))) then  !added GFS o3 background above 380K!lzhang
           do j=jts,jte
+            jp = j - jts + 1
             do k=kts,kte+1
               kk=min(k,kte)
+              kkp = kk - kts + 1
               do i=its,ite
+                ip = i - its + 1
                 maxth=min(400.,th_pvsrf(i,j))
-                if (tr3d(i,j,kk,p_atm_ptem) >= maxth) then
-                  chem(i,k,j,p_o3)=(airmw/48.)*tr3d(i,j,kk,p_atm_o3mr)*1e6 !convert kg/kg to ppm
+                if (tr3d(ip,jp,kkp,p_atm_ptem) >= maxth) then
+                  chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
                 endif !380K
               enddo
             enddo
@@ -662,9 +671,11 @@ endif
 
     print *,'chem_prep: smois: start'
     do j=jts,jte
+      jp = j - jts + 1
       do nv=1,num_soil_layers
         do i=its,ite
-          smois(i,nv,j)=sm3d(i,j,nv)
+          ip = i - its + 1
+          smois(i,nv,j)=sm3d(ip,jp,nv)
         enddo
       enddo
     enddo
@@ -685,11 +696,13 @@ endif
 ! default
 !
     do j=jts,jte
+      jp = j - jts + 1
       do i=its,ite
+        ip = i - its + 1
         if (emiss_ash_dt(i,j) > 0.) then
-          so2_mass(i,j)=1.5e4*3600.*1.e9/64./area(i,j)
+          so2_mass(i,j)=1.5e4*3600.*1.e9/64./area(ip,jp)
           eh=2600.*(emiss_ash_height(i,j)*.0005)**4.1494
-          emiss_ash_mass(i,j)=eh*1.e9/area(i,j)
+          emiss_ash_mass(i,j)=eh*1.e9/area(ip,jp)
         end if
       enddo
     enddo
@@ -698,10 +711,12 @@ endif
     do nv = 1, 6
       if ((curr_hours >= h(nv)) .and. (curr_hours < h(nv+1))) then
         do j = jts, jte
+          jp = j - jts + 1
           do i = its, ite
+            ip = i - its + 1
             if (emiss_ash_dt(i,j) > 0) then
               emiss_ash_height(i,j) = emiss_ash_table(nv)
-              emiss_ash_mass(i,j)   = 1.e+09 * eh_table(nv) / area(i,j)
+              emiss_ash_mass(i,j)   = 1.e+09 * eh_table(nv) / area(ip,jp)
             end if
           end do
         end do

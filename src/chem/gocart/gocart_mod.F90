@@ -38,14 +38,14 @@ contains
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
     emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3,     &
     h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
-    area_in, hf2d_in, pb2d_in, rc2d_in, rn2d_in, rsds_in, slmsk2d_in, snwdph2d_in, stype2d_in,       &
-    ts2d_in, us2d_in, vtype2d_in, vfrac2d_in, zorl2d_in, exch_in, ph3d_in, phl3d_in, pr3d_in, prl3d_in, &
-    sm3d_in, tk3d_in, us3d_in, vs3d_in, ws3d_in, tr3d_in, tr3d_out, tr3d, trdp, &
+    area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
+    ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
+    sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, tr3d, trdp, &
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5, ext_cof, sscal, asymp, aod2d, &
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
-    num_asym_par, num_bscat_coef, num_ext_coef, lon, lat, &
+    num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
     its, ite, jts, jte, kts, kte, &
     ims, ime, jms, jme, kms, kme, rc)
 
@@ -99,33 +99,33 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
 
     ! -- input pointers: indexing must always start from 1
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rc2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rn2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d_in
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: lat
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: lon
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rc2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rn2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
+    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
 
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d_in
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d
 
     real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in
     real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
@@ -193,8 +193,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: xlat
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: xlong
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: znt
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: deg_lat
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: deg_lon
 
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in) :: ebu_in
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:3)        :: erod
@@ -233,7 +231,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: convfac
     real(CHEM_KIND_R4), dimension(ims:ime, 1:num_soil_layers, jms:jme) :: smois
 
-
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_asym_par)   :: asym_par
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:nbands)         :: asympar
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_bscat_coef) :: bscat_coeff
@@ -263,48 +260,15 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: tauaersw
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: waersw
 
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: tk3d
-
-    ! -----------------------------------------------------------------------
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: area
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: hf2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: pb2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rc2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rn2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rsds
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: slmsk2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: snwdph2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: stype2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: ts2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: us2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: vtype2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: vfrac2d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: zorl2d
-
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: exch
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvi) :: ph3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: phl3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvi) :: pr3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: prl3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_soil_layers) :: sm3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: us3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: vs3d
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: ws3d
-!   real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl) :: dp3d
-
-    ! -----------------------------------------------------------------------
     ! -- local variables
     logical, save :: firstfire = .true.
     logical :: call_gocart, call_plume, call_radiation, scale_fire_emiss
     logical :: store_arrays
 
-!   integer :: ktau
-!   integer :: julday
     integer :: localrc
     integer :: nbegin, nv, nvv
     integer :: i, ip, j, jp, jps, k, kp
     integer :: ids, ide, jds, jde, kds, kde
-!   integer :: current_month, current_gmt, current_secs, current_msecs
     real(CHEM_KIND_R4) :: dt
     real(CHEM_KIND_R8) :: curr_secs
 
@@ -319,33 +283,6 @@ contains
 
     if (chem_opt == CHEM_OPT_NONE) return
 
-    ! -----------------------------------------------------------------------
-    area = area_in
-    hf2d = hf2d_in
-    pb2d = pb2d_in
-    rc2d = rc2d_in
-    rn2d = rn2d_in
-    rsds = rsds_in
-    slmsk2d = slmsk2d_in
-    snwdph2d = snwdph2d_in
-    stype2d  = stype2d_in
-    ts2d = ts2d_in
-    us2d = us2d_in
-    vtype2d = vtype2d_in
-    vfrac2d = vfrac2d_in
-    zorl2d  = zorl2d_in
-
-    exch = exch_in
-    ph3d = ph3d_in
-    phl3d = phl3d_in
-    pr3d  = pr3d_in
-    prl3d = prl3d_in
-    sm3d  = sm3d_in
-    us3d  = us3d_in
-    vs3d  = vs3d_in
-    ws3d  = ws3d_in
-    ! -----------------------------------------------------------------------
-
     ! -- set domain
     ids = ims
     ide = ime
@@ -355,7 +292,6 @@ contains
     kde = kme
 
     ! -- initialize local arrays
-    print *,'gocart_run: initializing local arrays ...'
     dep_vel_o3 = 0.
     e_co       = 0.
     raincv_b   = 0.
@@ -364,19 +300,9 @@ contains
     seashelp   = 0.
     var_rmv    = 0.
     tr_fall    = 0.
-    deg_lon    = real(lon,     CHEM_KIND_R4)
-    deg_lat    = real(lat,     CHEM_KIND_R4)
-    tk3d       = real(tk3d_in, CHEM_KIND_R4)
-    tr3d       = real(tr3d_in, CHEM_KIND_R4)
 
-!   dp3d(:,:,1:nvl) = pr3d(:,:,1:nvl) - pr3d(:,:,2:nvi)
-
-    print *,'gocart_run: longitude min/max = ',minval(deg_lon),maxval(deg_lon)
-    print *,'gocart_run: local array initialized ...'
     ! -- set run parameters
-
     ! -- nbegin is the start address (-1) of the first chem variable in tr3d
-!   nbegin = ntra + num_moist - 3 + min(max(num_moist-3,0),1)
     if (num_moist > 3) then
       nbegin = ntra + num_moist - 2
     else
@@ -386,7 +312,6 @@ contains
     ! -- set numerical parameters
     dust_alpha = 1.0
     dust_gamma = 1.6
-!   xlv = 2.5e+06
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
@@ -408,7 +333,6 @@ contains
     print *,'gocart_run: set control flags ...', call_radiation
     print *,'gocart_run: set control flags ...', ktau, firstfire
 
-    print *,'gocart_run: get domain bounds ...', its, ite, jts, jte
     ! -- start working
     if (ktau <= 1) then
       dtstep = dt
@@ -420,19 +344,15 @@ contains
       rnav = max(0.,rn2d-rc2d-rnav)
     end if
 
-    ! -- add time interval to initial date (to be replaced by ESMF_Clock
-    ! -- this may not be needed
+    ! -- initialize local tracers
+    tr3d = tr3d_in
 
     ! -- get ready for chemistry run
-    ! -- ttday and tcosz are computed -- should they be replaced with FV3 quantities?
-    ! -- gmt is needed to compute quantities above
-    ! -- get julday ----
-
     print *,'gocart_run: entering gocart_prep ...'
-    call gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dt,tr3d,tk3d,sm3d,   &
+    call gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dt,tr3d_in,tk3d,sm3d,   &
                    ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height, &
                    emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,      &
-                   emiss_tr_dt,snwdph2d,VFRAC2d,VTYPE2d,STYPE2d,us3d,vs3d,ws3d,  &
+                   emiss_tr_dt,snwdph2d,vfrac2d,vtype2d,stype2d,us3d,vs3d,ws3d,  &
                    slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf, &
                    oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,   &
                    nvl_gocart,ttday,tcosz,gmt,julday,area,ero1,   &
@@ -762,10 +682,11 @@ contains
           ip = 0
           do i = its, ite
             ip = ip + 1
+            ! -- update tracers and export
             tr3d(i,j,k,nvv) = max(epsilc,chem(i,k,j,nv))
-            trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(i,j,k)-pr3d(i,j,k+1))
-            ! -- export tr3d
             tr3d_out(ip,jp,kp,nvv) = real(tr3d(i,j,k,nvv), kind=CHEM_KIND_R8)
+            ! -- compute auxiliary array trdp
+            trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           end do
         end do
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
