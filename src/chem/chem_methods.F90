@@ -12,15 +12,7 @@ module chem_methods
 
   implicit none
 
-! private
-
   public 
-
-! public :: chem_comp_advance
-! public :: chem_comp_connect
-! public :: chem_comp_finalize
-! public :: chem_comp_init
-! public :: chem_rc_check
 
 contains
 
@@ -41,14 +33,12 @@ contains
     if (deCount > 0) then
       select case (config % chem_opt)
         case(CHEM_OPT_GOCART, CHEM_OPT_GOCART_RACM, CHEM_OPT_RACM_SOA_VBS)
-          print *,'chem: calling gocart init'
           call gocart_model_init(rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__)) then
             call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to initialize model", &
               line=__LINE__, file=__FILE__, rcToReturn=rc)
             return  ! bail out
           end if
-          print *,'chem: done gocart init'
         case default
           return
       end select
@@ -131,22 +121,15 @@ contains
 
     select case (config % chem_opt)
       case(CHEM_OPT_GOCART, CHEM_OPT_GOCART_RACM, CHEM_OPT_RACM_SOA_VBS)
-        print *,'chem_comp_advance() -- starting GOCART step ...'
-        flush 6
         call gocart_model_advance(rc=rc)
         if (chem_rc_check(rc, file=__FILE__, line=__LINE__)) then
           call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, msg="Failed to advance model", &
             line=__LINE__, file=__FILE__, rcToReturn=rc)
           return  ! bail out
         end if
-        print *,'chem_comp_advance() -- ending GOCART step...'
-        flush 6
       case default
         return
     end select
-
-    ! -- write history
-!   call chem_history_write(chem_config, its)
 
   end subroutine chem_comp_advance
 
@@ -154,6 +137,7 @@ contains
   subroutine chem_comp_finalize(rc)
     integer, intent(out) :: rc
 
+    ! -- begin
     rc = ESMF_SUCCESS
 
     call chem_model_destroy()
@@ -169,13 +153,15 @@ contains
     integer,           intent(out) :: rc
 
     ! -- begin
+    rc = ESMF_RC_NOT_IMPL
+
     select case (trim(stateType))
       case('import','i')
         call chem_comp_import(state, fieldNames, rc)
       case('export','e')
         call chem_comp_export(state, fieldNames, rc)
       case default
-        rc = ESMF_RC_NOT_IMPL
+        ! not implemented
     end select
 
   end subroutine chem_comp_connect
@@ -190,6 +176,7 @@ contains
     type(chem_state_type), pointer :: stateOut
     type(ESMF_Field)               :: field
     integer                        :: item, localDe, localDeCount
+
     ! -- begin
     rc = ESMF_SUCCESS
 
@@ -207,11 +194,6 @@ contains
 
       call ESMF_StateGet(state, field=field, &
         itemName=trim(fieldNames(item)), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-      call ESMF_FieldGet(field, localDeCount=localDeCount, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
@@ -277,11 +259,6 @@ contains
 
       call ESMF_StateGet(state, field=field, &
         itemName=trim(fieldNames(item)), rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail
-      call ESMF_FieldGet(field, localDeCount=localDeCount, rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
         line=__LINE__, &
         file=__FILE__)) &
