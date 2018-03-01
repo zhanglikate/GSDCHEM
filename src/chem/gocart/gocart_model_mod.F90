@@ -68,7 +68,6 @@ contains
     real(CHEM_KIND_R8) :: dts
     real(CHEM_KIND_R8), dimension(:,:), pointer :: lat, lon
     type(chem_config_type), pointer :: config
-    type(chem_core_type),   pointer :: core
     type(chem_data_type),   pointer :: data
     type(chem_state_type),  pointer :: stateIn, stateOut
 
@@ -89,7 +88,7 @@ contains
     advanceCount = advanceCount + 1
 
     do de = 0, deCount-1
-      call chem_model_get(de=de, config=config, core=core, data=data, &
+      call chem_model_get(de=de, config=config, data=data, &
         stateIn=stateIn, stateOut=stateOut, rc=localrc)
       if (chem_rc_check(localrc, msg="Failed to retrieve model on local DE", &
         file=__FILE__, line=__LINE__, rc=rc)) return

@@ -99,7 +99,6 @@ am_libshr_a_OBJECTS = libshr_a-chem_clock_mod.$(OBJEXT) \
 	libshr_a-chem_comm_mod.$(OBJEXT) \
 	libshr_a-chem_config_mod.$(OBJEXT) \
 	libshr_a-chem_const_mod.$(OBJEXT) \
-	libshr_a-chem_core_mod.$(OBJEXT) \
 	libshr_a-chem_data_mod.$(OBJEXT) \
 	libshr_a-chem_domain_mod.$(OBJEXT) \
 	libshr_a-chem_io_mod.$(OBJEXT) \
@@ -266,7 +265,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libshr.a
-libshr_a_SOURCES = chem_clock_mod.F90 chem_comm_mod.F90 chem_config_mod.F90 chem_const_mod.F90 chem_core_mod.F90 \
+libshr_a_SOURCES = chem_clock_mod.F90 chem_comm_mod.F90 chem_config_mod.F90 chem_const_mod.F90 \
 	chem_data_mod.F90 chem_domain_mod.F90 chem_io_mod.F90 chem_iodata_mod.F90 chem_iolayout_mod.F90 \
 	chem_model_mod.F90 chem_rc_mod.F90 chem_species_mod.F90 \
 	chem_state_mod.F90 chem_tracers_mod.F90 chem_types_mod.F90 chem_vars_mod.F90
@@ -350,12 +349,6 @@ libshr_a-chem_const_mod.o: chem_const_mod.F90
 
 libshr_a-chem_const_mod.obj: chem_const_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_const_mod.obj `if test -f 'chem_const_mod.F90'; then $(CYGPATH_W) 'chem_const_mod.F90'; else $(CYGPATH_W) '$(srcdir)/chem_const_mod.F90'; fi`
-
-libshr_a-chem_core_mod.o: chem_core_mod.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_core_mod.o `test -f 'chem_core_mod.F90' || echo '$(srcdir)/'`chem_core_mod.F90
-
-libshr_a-chem_core_mod.obj: chem_core_mod.F90
-	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_core_mod.obj `if test -f 'chem_core_mod.F90'; then $(CYGPATH_W) 'chem_core_mod.F90'; else $(CYGPATH_W) '$(srcdir)/chem_core_mod.F90'; fi`
 
 libshr_a-chem_data_mod.o: chem_data_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libshr_a_FCFLAGS) $(FCFLAGS) -c -o libshr_a-chem_data_mod.o `test -f 'chem_data_mod.F90' || echo '$(srcdir)/'`chem_data_mod.F90
@@ -637,7 +630,6 @@ libshr_a-chem_comm_mod.$(OBJEXT): libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_t
 libshr_a-chem_config_mod.$(OBJEXT): libshr_a-chem_comm_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) \
 	libshr_a-chem_species_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_const_mod.$(OBJEXT): libshr_a-chem_types_mod.$(OBJEXT)
-libshr_a-chem_core_mod.$(OBJEXT): libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_data_mod.$(OBJEXT): libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_domain_mod.$(OBJEXT): libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_io_mod.$(OBJEXT): libshr_a-chem_comm_mod.$(OBJEXT) libshr_a-chem_model_mod.$(OBJEXT) \
@@ -646,9 +638,9 @@ libshr_a-chem_iodata_mod.$(OBJEXT): libshr_a-chem_comm_mod.$(OBJEXT) libshr_a-ch
 	libshr_a-chem_data_mod.$(OBJEXT) libshr_a-chem_io_mod.$(OBJEXT) libshr_a-chem_model_mod.$(OBJEXT) \
 	libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_model_mod.$(OBJEXT): libshr_a-chem_clock_mod.$(OBJEXT) libshr_a-chem_comm_mod.$(OBJEXT) \
-	libshr_a-chem_config_mod.$(OBJEXT) libshr_a-chem_core_mod.$(OBJEXT) libshr_a-chem_data_mod.$(OBJEXT) \
-	libshr_a-chem_domain_mod.$(OBJEXT) libshr_a-chem_iolayout_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) \
-	libshr_a-chem_species_mod.$(OBJEXT) libshr_a-chem_state_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
+	libshr_a-chem_config_mod.$(OBJEXT) libshr_a-chem_data_mod.$(OBJEXT) libshr_a-chem_domain_mod.$(OBJEXT) \
+	libshr_a-chem_iolayout_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_species_mod.$(OBJEXT) \
+	libshr_a-chem_state_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_state_mod.$(OBJEXT): libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_tracers_mod.$(OBJEXT): libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT)
 

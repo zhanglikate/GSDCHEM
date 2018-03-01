@@ -5,7 +5,6 @@ module chem_model_mod
   use chem_config_mod
   use chem_species_mod
   use chem_clock_mod
-  use chem_core_mod
   use chem_data_mod,     only : chem_data_type
   use chem_domain_mod,   only : chem_domain_type
   use chem_state_mod,    only : chem_state_type
@@ -20,7 +19,6 @@ module chem_model_mod
     type(chem_species_type), pointer :: species => null()
     type(chem_domain_type)   :: domain
     type(chem_state_type)    :: stateIn, stateOut
-    type(chem_core_type)     :: core
     type(chem_data_type)     :: data
     type(chem_iolayout_type) :: iolayout
   end type chem_model_type
@@ -40,7 +38,6 @@ module chem_model_mod
   public :: chem_species_type
   public :: chem_domain_type
   public :: chem_state_type
-  public :: chem_core_type
   public :: chem_data_type
   public :: chem_iolayout_type
 
@@ -53,7 +50,6 @@ module chem_model_mod
   public :: chem_model_clock_get
   public :: chem_model_clock_set
   public :: chem_model_config_init
-  public :: chem_model_core_init
   public :: chem_model_domain_get
   public :: chem_model_domain_set
   public :: chem_model_domain_coord_set
@@ -292,39 +288,6 @@ contains
   end subroutine chem_model_config_init
 
 
-  subroutine chem_model_core_init(rc)
-    integer, optional, intent(out) :: rc
-
-    ! -- local variables
-    integer :: localrc
-    integer :: de, deCount
-    integer :: is, ie, js, je, nl
-    type(chem_config_type), pointer :: config => null()
-    type(chem_core_type),   pointer :: core   => null()
-
-    ! -- begin
-    if (present(rc)) rc = CHEM_RC_SUCCESS
-
-    call chem_model_local_get(deCount=deCount, rc=localrc)
-    if (chem_rc_check(localrc, msg="Failure to retrieve model", &
-      file=__FILE__, line=__LINE__, rc=rc)) return
-
-    do de = 0, deCount-1
-      call chem_model_domain_get(de=de, &
-        ims=is, ime=ie, jms=js, jme=je, nl=nl, rc=localrc)
-      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-      call chem_model_get(de=de, config=config, core=core, rc=localrc)
-      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-      call chem_core_init(core, is, ie, js, je, 1, nl, &
-        config % kemit, config % ne_area, config % num_emis_ant, &
-        config % num_emis_dust, config % num_emis_seas, config % num_emis_vol, &
-        config % num_chem, rc=localrc)
-      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-    end do
-
-  end subroutine chem_model_core_init
-
-
   subroutine chem_model_domain_set(minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile, &
     minIndexLocal, maxIndexLocal, tile, tileCount, de, rc)
 
@@ -508,14 +471,13 @@ contains
 
 
   subroutine chem_model_get(de, deCount, stateIn, stateOut, clock, config, &
-    core, data, domain, tile, tileCount, tileComm, modelComm, localIOflag, rc)
+    data, domain, tile, tileCount, tileComm, modelComm, localIOflag, rc)
 
     integer,               optional,  intent(in)  :: de
     integer,               optional,  intent(out) :: deCount
     type(chem_state_type), optional,  pointer     :: stateIn, stateOut
     type(chem_clock_type), optional,  pointer     :: clock
     type(chem_config_type),optional,  pointer     :: config
-    type(chem_core_type),  optional,  pointer     :: core
     type(chem_data_type),  optional,  pointer     :: data
     type(chem_domain_type),optional,  pointer     :: domain
     integer,               optional,  intent(out) :: tile
@@ -543,7 +505,6 @@ contains
       if (present(stateOut))    stateOut    => model % stateOut
       if (present(clock))       clock       => model % clock
       if (present(config))      config      => model % config
-      if (present(core))        core        => model % core
       if (present(data))        data        => model % data
       if (present(domain))      domain      => model % domain
       if (present(tile))        tile        =  model % domain % tile
