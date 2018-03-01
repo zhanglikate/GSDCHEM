@@ -156,27 +156,21 @@ contains
     if (present(localpe)) then
       localpe = -1
       call mpi_comm_rank(mpi_comm_chem, localpe, ierr) 
-      if (ierr /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((ierr /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (present(pecount)) then
       pecount = -1
       call mpi_comm_size(mpi_comm_chem, pecount, ierr) 
-      if (ierr /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((ierr /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (present(comm)) comm = mpi_comm_chem
 
     if (present(group)) then
       call mpi_comm_group(mpi_comm_chem, group, ierr)
-      if (ierr /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((ierr /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
   end subroutine chem_comm_get
@@ -196,18 +190,14 @@ contains
     if (present(localpe)) then
       localpe = -1
       call mpi_comm_rank(comm, localpe, localrc)
-      if (localrc /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((localrc /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (present(pecount)) then
       pecount = -1
       call mpi_comm_size(comm, pecount, localrc)
-      if (localrc /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((localrc /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
   end subroutine chem_comm_inquire
@@ -226,10 +216,8 @@ contains
       mpi_comm_chem = comm
       ! -- update group handle
       call mpi_comm_group(mpi_comm_chem, mpi_group_chem, localrc)
-      if (localrc /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((localrc /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
   end subroutine chem_comm_set
@@ -288,10 +276,8 @@ contains
 
     call mpi_allgather(sendbuf, localcount, MPI_INTEGER, recvbuf, localcount, &
       MPI_INTEGER, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     
   end subroutine chem_comm_allgather_i1
 
@@ -319,10 +305,8 @@ contains
     if (present(rootpe)) localroot = rootpe
 
     call mpi_reduce(sendbuf, recvbuf, size(sendbuf), MPI_REAL, op, localroot, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_comm_reduce_r1
 
@@ -348,10 +332,8 @@ contains
     if (present(rootpe)) localroot = rootpe
 
     call mpi_reduce(sendbuf, recvbuf, size(sendbuf), MPI_REAL, op, localroot, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_comm_reduce_r2
 
@@ -377,10 +359,8 @@ contains
     if (present(rootpe)) localroot = rootpe
 
     call mpi_reduce(sendbuf, recvbuf, size(sendbuf), MPI_REAL, op, localroot, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_comm_reduce_r3
 
@@ -403,10 +383,8 @@ contains
     if (present(comm)) localcomm = comm
 
     call mpi_comm_split(localcomm, color, 0, newcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_comm_create_comm
 
@@ -428,23 +406,17 @@ contains
     if (present(comm)) then
       localcomm = comm
       call mpi_comm_group(localcomm, localgroup, localrc)
-      if (localrc /= MPI_SUCCESS) then
-        call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-        return
-      end if
+      if (chem_rc_test((localrc /= MPI_SUCCESS), &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     end if
 
     call mpi_group_incl(localgroup, size(peList), peList, newgroup, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     call mpi_comm_create_group(localcomm, newgroup, 0, newcomm, localrc)
-    if (localrc /= MPI_SUCCESS) then
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     
   end subroutine chem_comm_create_group
 
@@ -540,8 +512,8 @@ contains
     localcomm = mpi_comm_chem
     if (present(comm)) localcomm = comm
     call mpi_bcast(buffer, localcount, MPI_REAL, root, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) &
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     
   end subroutine chem_comm_bcast_r1
 
@@ -562,8 +534,8 @@ contains
     localcomm = mpi_comm_chem
     if (present(comm)) localcomm = comm
     call mpi_bcast(data, len(data), MPI_CHARACTER, root, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) &
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     
   end subroutine chem_comm_bcast_s0
 
@@ -591,8 +563,8 @@ contains
     localcomm = mpi_comm_chem
     if (present(comm)) localcomm = comm
     call mpi_bcast(buffer, localcount*len(buffer(1)), MPI_CHARACTER, root, localcomm, localrc)
-    if (localrc /= MPI_SUCCESS) &
-      call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
+    if (chem_rc_test((localrc /= MPI_SUCCESS), &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     
   end subroutine chem_comm_bcast_s1
 

@@ -37,7 +37,6 @@ contains
     integer :: pe, peCount
     integer :: i, localpe, npe
     integer :: comm, tileComm
-!   integer :: commGroup, tileGroup
     integer, dimension(:), allocatable :: localTile, tileToPet, pes
 
     ! -- begin
@@ -65,12 +64,6 @@ contains
     end do
 
     ! -- build a global tile-to-PET map
-!   call mpi_allgather(localTile, tileCount, MPI_INTEGER, tileToPet, tileCount, MPI_INTEGER, comm, localrc)
-!   if (localrc /= MPI_SUCCESS) then
-!     call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-!     return
-!   end if
-
     call chem_comm_allgather(localTile, tileToPet, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -83,14 +76,6 @@ contains
     if (chem_rc_test((localrc /= 0), msg="Unable to allocate memory", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
-    ! -- get handle for global PET group
-    ! -- handle is available by default in chem_comm_ APIs
-!   call mpi_comm_group(comm, commGroup, localrc)
-!   if (localrc /= MPI_SUCCESS) then
-!     call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-!     return
-!   end if
-
     ! -- gather PET list for each tile and create tile-specific communicator
     pes = -1
     do tile = 1, tileCount
@@ -102,18 +87,7 @@ contains
         end if
       end do
 
-!     call mpi_group_incl(commGroup, npe, pes(1:npe), tileGroup, localrc)
-!     if (localrc /= MPI_SUCCESS) then
-!       call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-!       return
-!     end if
-!     call mpi_comm_create_group(comm, tileGroup, 0, tileComm, localrc)
-!     if (localrc /= MPI_SUCCESS) then
-!       call chem_rc_set(CHEM_RC_FAILURE, file=__FILE__, line=__LINE__, rc=rc)
-!       return
-!     end if
-
-!     ! -- create new communicator
+      ! -- create new communicator
       call chem_comm_create(tileComm, pes(1:npe), rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -138,11 +112,9 @@ contains
       ! -- get local PET for tile 
       call chem_comm_inquire(tileComm, localpe=pe, pecount=npe, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-!     call mpi_comm_rank(tileComm, pe, localrc)
       ! -- mark local root PET as I/O PET
       call chem_model_set(de=de, localIOflag=(pe == 0), rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-!     call mpi_comm_size(tileComm, npe, localrc)
       write(6,'("chem_io_init: PET:",i2," DE:",i02," tile=",i0," - comm=",i0," PE:",i0,"/",i0)') &
         localpe, de, tile, tileComm, pe, npe
       flush(6)
@@ -335,20 +307,15 @@ contains
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     ! -- check size consistency
-    if (size(farray) /= (ide-ids+1)*(jde-jds+1)) then
-      call chem_rc_set(CHEM_RC_FAILURE, &
-        msg="size of input array inconsistent with domain decomposition", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     bsize = (/ ite-its+1, jte-jts+1 /)
     allocate(buffer(bsize(1)*bsize(2)), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     buffer = 0._CHEM_KIND_R4
 
     if (localIOflag) then
@@ -366,22 +333,18 @@ contains
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     allocate(buf2d(its:ite,jts:jte), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     buf2d = reshape(buffer, bsize)
 
     farray = buf2d(ids:ide, jds:jde) 
      
     deallocate(buffer, buf2d, stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_io_read_2DR4
 
@@ -420,19 +383,14 @@ contains
     bsize = (/ ite-its+1, jte-jts+1, size(farray, dim=3) /)
 
     ! -- check size consistency
-    if (size(farray) /= (ide-ids+1)*(jde-jds+1)*bsize(3)) then
-      call chem_rc_set(CHEM_RC_FAILURE, &
-        msg="size of input array inconsistent with domain decomposition", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)*bsize(3)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     allocate(buffer(bsize(1)*bsize(2)*bsize(3)), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     buffer = 0._CHEM_KIND_R4
 
     if (localIOflag) then
@@ -450,22 +408,18 @@ contains
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     allocate(buf3d(its:ite,jts:jte,bsize(3)), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     buf3d = reshape(buffer, bsize)
 
     farray = buf3d(ids:ide, jds:jde, :)
      
     deallocate(buffer, buf3d, stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_io_read_3DR4
 
@@ -498,38 +452,24 @@ contains
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     ! -- check size consistency
-    if (size(farray) /= (ide-ids+1)*(jde-jds+1)) then
-      call chem_rc_set(CHEM_RC_FAILURE, &
-        msg="size of input array inconsistent with domain decomposition", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((size(farray) /= (ide-ids+1)*(jde-jds+1)), &
+      msg="size of input array inconsistent with domain decomposition", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     allocate(buf2d(its:ite,jts:jte), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
     buf2d = 0._CHEM_KIND_R4
 
     buf2d(ids:ide, jds:jde) = farray
 
     allocate(recvbuf(its:ite,jts:jte), stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot allocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     recvbuf = 0._CHEM_KIND_R4
-
-!   call mpi_reduce(buf2d, recvbuf, bufSize, MPI_REAL, MPI_SUM, 0, tileComm, localrc)
-!   if (localrc /= MPI_SUCCESS) then
-!     call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot allocate read buffer", &
-!       file=__FILE__, line=__LINE__, rc=localrc)
-!     return
-!   end if
 
     call chem_comm_reduce(buf2d, recvbuf, CHEM_COMM_SUM, comm=tileComm, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -547,11 +487,9 @@ contains
     end if
 
     deallocate(buf2d, recvbuf, stat=localrc)
-    if (localrc /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Cannot deallocate read buffer", &
-        file=__FILE__, line=__LINE__, rc=localrc)
-      return
-    end if
+    if (chem_rc_test((localrc /= 0), &
+      msg="Cannot deallocate read buffer", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
   end subroutine chem_io_write_2DR4
 

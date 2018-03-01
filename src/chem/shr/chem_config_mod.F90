@@ -33,9 +33,7 @@ module chem_config_mod
     real(CHEM_KIND_R4) :: bioemdt
     real(CHEM_KIND_R4) :: photdt
     real(CHEM_KIND_R4) :: chemdt
-!   integer :: ne_area
     integer :: kemit
-!   integer :: nmegan
     integer :: kfuture
     integer :: chem_conv_tr
     integer :: chem_opt
@@ -72,7 +70,6 @@ module chem_config_mod
     real(CHEM_KIND_R4):: ash_mass
     real(CHEM_KIND_R4):: ash_height
     ! -- control variables
-!   integer :: ntra                = 4      ! # of tracers advected on small dt: 1=theta 2=qv 3=qw 4=O3
     integer :: ntra                = 3      ! # of tracers advected on small dt: FV3 only has 3 tracers
     integer :: ntrb                = 0      ! # of tracers advected on large dt: will include chemistry
     integer :: num_chem            = 0
@@ -285,11 +282,8 @@ contains
     end if
     call chem_comm_bcast(iostat, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-    if (iostat /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Failed to open namelist file: "//chem_file_nml, &
-        file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((iostat /= 0), msg="Failed to open namelist file: "//chem_file_nml, &
+        file=__FILE__, line=__LINE__, rc=rc)) return
     if (chem_comm_isroot()) then
       rewind(unit)
       read(unit, nml=chem_nml, iostat=iostat )
@@ -298,11 +292,8 @@ contains
     end if
     call chem_comm_bcast(iostat, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-    if (iostat /= 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="Failed to read &chem namelist in: "//chem_file_nml, &
-        file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((iostat /= 0), msg="Failed to read &chem namelist in: "//chem_file_nml, &
+        file=__FILE__, line=__LINE__, rc=rc)) return
 
     ! -- pack integer values in buffer
     buffer = (/ &
@@ -505,21 +496,15 @@ contains
     select case (config % chem_opt)
       case (CHEM_OPT_GOCART)
         ! -- gocart simple
-        if (config % num_chem    /= 19) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_chem is not equal to 19", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
-        if (config % num_emis_ant < 4) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_emis_ant smaller than 4", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
-        if ((config % num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_emis_ant smaller than 6 with biomass_burn_opt=1", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
+        if (chem_rc_test((config % num_chem    /= 19), &
+          msg="num_chem is not equal to 19", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_test((config % num_emis_ant < 4), &
+          msg="num_emis_ant smaller than 4", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_test(((config % num_emis_ant < 6) .and. (config % biomass_burn_opt == 1)), &
+          msg="num_emis_ant smaller than 6 with biomass_burn_opt=1", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
         config % species % p_qv=1
         config % species % p_qc=2
         config % species % p_qi=3
@@ -580,16 +565,12 @@ contains
 
       case (CHEM_OPT_GOCART_RACM)
         ! -- gocart + racm
-        if (config % num_chem    /= 66) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_chem is not equal to 66", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
-        if (config % num_emis_ant < 25) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_emis_ant smaller than 25", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
+        if (chem_rc_test((config % num_chem    /= 66), &
+          msg="num_chem is not equal to 66", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_test((config % num_emis_ant < 25), &
+          msg="num_emis_ant smaller than 25", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
 
         ! -- initialize pointers for gas phase and aerosol stuff
         config % conv_tr_aqchem = 1
@@ -602,16 +583,12 @@ contains
 
       case (CHEM_OPT_RACM_SOA_VBS)
         ! -- racm + soa
-        if (config % num_chem   /= 103) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_chem is not equal to 103", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
-        if (config % num_emis_ant < 25) then
-          call chem_rc_set(CHEM_RC_FAILURE, msg="num_emis_ant smaller than 25", &
-            file=__FILE__, line=__LINE__, rc=rc)
-          return
-        end if
+        if (chem_rc_test((config % num_chem   /= 103), &
+          msg="num_chem is not equal to 103", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
+        if (chem_rc_test((config % num_emis_ant < 25), &
+          msg="num_emis_ant smaller than 25", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
 
         ! -- initialize pointers for gas phase and aerosol stuff
         config % conv_tr_aqchem = 1

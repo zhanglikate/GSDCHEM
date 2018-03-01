@@ -535,11 +535,9 @@ contains
     localDe = 0
     if (present(de)) localDe = de
 
-    if (localDe < 0) then
-      call chem_rc_set(CHEM_RC_FAILURE, msg="DE must be >= 0", &
-        file=__FILE__, line=__LINE__, rc=rc)
-      return
-    end if
+    if (chem_rc_test((localDe < 0), &
+      msg="DE must be >= 0", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
 
     if (allocated(chem_model)) then
       if (present(deCount)) deCount = size(chem_model)
