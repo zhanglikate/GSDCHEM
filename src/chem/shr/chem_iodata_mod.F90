@@ -5,7 +5,6 @@ module chem_iodata_mod
   use chem_io_mod
   use chem_comm_mod
   use chem_model_mod
-  use chem_data_mod
   use chem_config_mod
 
   implicit none
@@ -1176,12 +1175,6 @@ contains
         data % wet_dep = 0._CHEM_KIND_R4
       end if
 
-      if (.not.allocated(data % tr3d)) then
-        allocate(data % tr3d(ids:ide,jds:jde,nvl,nt), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % tr3d = 0._CHEM_KIND_R4
-      end if
-
       if (.not.allocated(data % trdp)) then
         allocate(data % trdp(ids:ide,jds:jde,nvl,nt), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
@@ -1200,9 +1193,10 @@ contains
     integer :: de, deCount
     integer :: ids, ide, jds, jde
     integer :: advanceCount
-    type(chem_data_type),    pointer :: data   => null()
-    type(chem_config_type),  pointer :: config => null()
-    type(chem_species_type), pointer :: s      => null()
+    type(chem_config_type),  pointer :: config   => null()
+    type(chem_species_type), pointer :: s        => null()
+    type(chem_data_type),    pointer :: data     => null()
+    type(chem_state_type),   pointer :: stateOut => null()
 
     character(len=*), parameter :: filepos = 'append'
 
@@ -1214,6 +1208,8 @@ contains
 
     if (deCount < 1) return
 
+    if (config % archive_step < 0) return
+
     call chem_model_clock_get(advanceCount=advanceCount, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -1222,69 +1218,69 @@ contains
       s => config % species
 
       do de = 0, deCount-1
-        call chem_model_get(de=de, data=data, rc=localrc)
+        call chem_model_get(de=de, data=data, stateOut=stateOut, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
         select case (config % chem_opt)
           case (CHEM_OPT_GOCART, CHEM_OPT_GOCART_RACM)
 
-            call chem_io_write('d1st', data % tr3d(:,:,:,config % ntra + s % p_dust_1), &
+            call chem_io_write('d1st', stateOut % tr3d(:,:,:,config % ntra + s % p_dust_1), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('d2st', data % tr3d(:,:,:,config % ntra + s % p_dust_2), &
+            call chem_io_write('d2st', stateOut % tr3d(:,:,:,config % ntra + s % p_dust_2), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('d3st', data % tr3d(:,:,:,config % ntra + s % p_dust_3), &
+            call chem_io_write('d3st', stateOut % tr3d(:,:,:,config % ntra + s % p_dust_3), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('d4st', data % tr3d(:,:,:,config % ntra + s % p_dust_4), &
+            call chem_io_write('d4st', stateOut % tr3d(:,:,:,config % ntra + s % p_dust_4), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('d5st', data % tr3d(:,:,:,config % ntra + s % p_dust_5), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-
-            call chem_io_write('dms1', data % tr3d(:,:,:,config % ntra + s % p_dms), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('pmsa', data % tr3d(:,:,:,config % ntra + s % p_msa), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('s1ea', data % tr3d(:,:,:,config % ntra + s % p_seas_1), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('s2ea', data % tr3d(:,:,:,config % ntra + s % p_seas_2), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('s3ea', data % tr3d(:,:,:,config % ntra + s % p_seas_3), &
-              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
-            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('s4ea', data % tr3d(:,:,:,config % ntra + s % p_seas_4), &
+            call chem_io_write('d5st', stateOut % tr3d(:,:,:,config % ntra + s % p_dust_5), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-            call chem_io_write('pbc1', data % tr3d(:,:,:,config % ntra + s % p_bc1), &
+            call chem_io_write('dms1', stateOut % tr3d(:,:,:,config % ntra + s % p_dms), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('pbc2', data % tr3d(:,:,:,config % ntra + s % p_bc2), &
+            call chem_io_write('pmsa', stateOut % tr3d(:,:,:,config % ntra + s % p_msa), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('poc1', data % tr3d(:,:,:,config % ntra + s % p_oc1), &
+            call chem_io_write('s1ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_1), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('poc2', data % tr3d(:,:,:,config % ntra + s % p_oc2), &
+            call chem_io_write('s2ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_2), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('pso2', data % tr3d(:,:,:,config % ntra + s % p_so2), &
+            call chem_io_write('s3ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_3), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('sulf', data % tr3d(:,:,:,config % ntra + s % p_sulf), &
+            call chem_io_write('s4ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_4), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('pp25', data % tr3d(:,:,:,config % ntra + s % p_p25), &
+
+            call chem_io_write('pbc1', stateOut % tr3d(:,:,:,config % ntra + s % p_bc1), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            call chem_io_write('pp10', data % tr3d(:,:,:,config % ntra + s % p_p10), &
+            call chem_io_write('pbc2', stateOut % tr3d(:,:,:,config % ntra + s % p_bc2), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('poc1', stateOut % tr3d(:,:,:,config % ntra + s % p_oc1), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('poc2', stateOut % tr3d(:,:,:,config % ntra + s % p_oc2), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('pso2', stateOut % tr3d(:,:,:,config % ntra + s % p_so2), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('sulf', stateOut % tr3d(:,:,:,config % ntra + s % p_sulf), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('pp25', stateOut % tr3d(:,:,:,config % ntra + s % p_p25), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('pp10', stateOut % tr3d(:,:,:,config % ntra + s % p_p10), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 

@@ -20,8 +20,8 @@ libshr_a-chem_domain_mod.$(OBJEXT): libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_io_mod.$(OBJEXT): libshr_a-chem_comm_mod.$(OBJEXT) libshr_a-chem_model_mod.$(OBJEXT) \
 	libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_iodata_mod.$(OBJEXT): libshr_a-chem_comm_mod.$(OBJEXT) libshr_a-chem_config_mod.$(OBJEXT) \
-	libshr_a-chem_data_mod.$(OBJEXT) libshr_a-chem_io_mod.$(OBJEXT) libshr_a-chem_model_mod.$(OBJEXT) \
-	libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
+	libshr_a-chem_io_mod.$(OBJEXT) libshr_a-chem_model_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) \
+	libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_model_mod.$(OBJEXT): libshr_a-chem_clock_mod.$(OBJEXT) libshr_a-chem_comm_mod.$(OBJEXT) \
 	libshr_a-chem_config_mod.$(OBJEXT) libshr_a-chem_data_mod.$(OBJEXT) libshr_a-chem_domain_mod.$(OBJEXT) \
 	libshr_a-chem_iolayout_mod.$(OBJEXT) libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_species_mod.$(OBJEXT) \

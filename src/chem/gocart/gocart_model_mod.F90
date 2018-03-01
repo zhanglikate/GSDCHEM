@@ -155,7 +155,6 @@ contains
         stateIn % tr3d, &
         ! -- output tracers
         stateOut % tr3d, &
-        data % tr3d, &
         data % trdp, &
         data % emi_d1, &
         data % emi_d2, &

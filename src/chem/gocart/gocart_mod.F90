@@ -40,7 +40,7 @@ contains
     h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
-    sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, tr3d, trdp, &
+    sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trdp, &
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5, ext_cof, sscal, asymp, aod2d, &
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
@@ -147,7 +147,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: ext_cof
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: sscal
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: asymp
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: tr3d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: trdp
 
     ! -- local variables
@@ -343,9 +342,6 @@ contains
       rcav = max(0.,rc2d-rcav)
       rnav = max(0.,rn2d-rc2d-rnav)
     end if
-
-    ! -- initialize local tracers
-    tr3d = tr3d_in
 
     ! -- get ready for chemistry run
     print *,'gocart_run: entering gocart_prep ...'
@@ -682,11 +678,10 @@ contains
           ip = 0
           do i = its, ite
             ip = ip + 1
-            ! -- update tracers and export
-            tr3d(i,j,k,nvv) = max(epsilc,chem(i,k,j,nv))
-            tr3d_out(ip,jp,kp,nvv) = real(tr3d(i,j,k,nvv), kind=CHEM_KIND_R8)
+            ! -- export updated tracers
+            tr3d_out(ip,jp,kp,nvv) = real(max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
             ! -- compute auxiliary array trdp
-            trdp(i,j,k,nvv) = tr3d(i,j,k,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
+            trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           end do
         end do
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
