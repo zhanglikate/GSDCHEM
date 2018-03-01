@@ -6,9 +6,6 @@ module chem_clock_mod
   implicit none
 
   type chem_clock_type
-!   integer            :: year  = 0                  ! year
-!   integer            :: month = 0                  ! month
-!   integer            :: day   = 0                  ! day
     integer            :: yy    = 0                  ! year
     integer            :: mm    = 0                  ! month
     integer            :: dd    = 0                  ! day
