@@ -2,7 +2,8 @@ module gocart_mod
 
   use chem_rc_mod
   use chem_types_mod
-  use chem_const_mod,  only : cp, grvity, mwdry, p1000, rd, epsilc
+  use chem_const_mod,  only : cp, grvity, mwdry, mw_so2_aer, mw_so4_aer, &
+                              p1000, rd, epsilc
   use chem_tracers_mod
   use chem_config_mod, only : CHEM_OPT_NONE,   &
                               CHEM_OPT_GOCART, &
@@ -259,6 +260,8 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: tauaersw
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: waersw
 
+    real(CHEM_KIND_R4), dimension(1:num_chem) :: ppm2ugkg
+
     ! -- local variables
     logical, save :: firstfire = .true.
     logical :: call_gocart, call_plume, call_radiation, scale_fire_emiss
@@ -291,14 +294,18 @@ contains
     kde = kme
 
     ! -- initialize local arrays
-    dep_vel_o3 = 0.
-    e_co       = 0.
-    raincv_b   = 0.
-    cu_co_ten  = 0.
-    dusthelp   = 0.
-    seashelp   = 0.
-    var_rmv    = 0.
-    tr_fall    = 0.
+    dep_vel_o3 = 0._CHEM_KIND_R4
+    e_co       = 0._CHEM_KIND_R4
+    raincv_b   = 0._CHEM_KIND_R4
+    cu_co_ten  = 0._CHEM_KIND_R4
+    dusthelp   = 0._CHEM_KIND_R4
+    seashelp   = 0._CHEM_KIND_R4
+    var_rmv    = 0._CHEM_KIND_R4
+    tr_fall    = 0._CHEM_KIND_R4
+    ! -- volume to mass fraction conversion table (ppm -> ug/kg)
+    ppm2ugkg         = 1._CHEM_KIND_R4
+    ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
+    ppm2ugkg(p_sulf) = 1.e+03_CHEM_KIND_R4 * mw_so4_aer / mwdry
 
     ! -- set run parameters
     ! -- nbegin is the start address (-1) of the first chem variable in tr3d
@@ -309,8 +316,8 @@ contains
     end if
 
     ! -- set numerical parameters
-    dust_alpha = 1.0
-    dust_gamma = 1.6
+    dust_alpha = 1.0_CHEM_KIND_R4
+    dust_gamma = 1.6_CHEM_KIND_R4
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
@@ -363,6 +370,7 @@ contains
                    mean_fct_agtf,mean_fct_agef,mean_fct_agsv, &
                    mean_fct_aggr,firesize_agtf,firesize_agef, &
                    firesize_agsv,firesize_aggr, &
+                   ppm2ugkg, &
                    ids,ide, jds,jde, kds,kde, &
                    ims,ime, jms,jme, kms,kme, &
                    its,ite, jts,jte, kts,kte, rc=localrc)
@@ -679,7 +687,7 @@ contains
           do i = its, ite
             ip = ip + 1
             ! -- export updated tracers
-            tr3d_out(ip,jp,kp,nvv) = real(max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
+            tr3d_out(ip,jp,kp,nvv) = real(ppm2ugkg(nv) * max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           end do

@@ -50,6 +50,7 @@ module chem_const_mod
   !     4. MSA       = Methane sulfonic acid       = CH3SO3H             
 ! INTEGER               :: NDMS=1, NSO2=2, NSO4=3, NMSA=4
   REAL,    PARAMETER :: airmw      = 28.97
+  REAL,    PARAMETER :: mw_so2_aer = 64.066
   REAL,    PARAMETER :: mw_so4_aer = 96.066
   REAL,    PARAMETER :: smw        = 32.00
   REAL,    PARAMETER :: nh4_mfac = 1.375   ! increase sulf (output ond AOD only)

@@ -7,7 +7,7 @@ module gocart_prep_mod
                               CHEM_OPT_GOCART_RACM,  &
                               CHEM_OPT_RACM_SOA_VBS, &
                               CHEM_OPT_MAX
-  use chem_const_mod,  only : airmw, epsilc, rgasuniv
+  use chem_const_mod,  only : airmw, epsilc, rgasuniv, mwdry
 
   implicit none
 
@@ -35,6 +35,7 @@ contains
                        mean_fct_agtf,mean_fct_agef,mean_fct_agsv,                    &
                        mean_fct_aggr,firesize_agtf,firesize_agef,                    &
                        firesize_agsv,firesize_aggr,                                  &
+                       ppm2ugkg,                                                     &
                        ids,ide, jds,jde, kds,kde,                                    &
                        ims,ime, jms,jme, kms,kme,                                    &
                        its,ite, jts,jte, kts,kte, rc)
@@ -161,6 +162,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: firesize_agef
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: firesize_agsv
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: firesize_aggr
+    real(CHEM_KIND_R4), dimension(num_chem), intent(in) :: ppm2ugkg
 
     INTEGER, OPTIONAL, INTENT(OUT) :: rc
 
@@ -443,7 +445,7 @@ contains
           kkp = kk - kts + 1
           do i=its,ite
             ip = i - its + 1
-            chem(i,k,j,nv)=tr3d(ip,jp,kkp,ntra+nv)
+            chem(i,k,j,nv)=tr3d(ip,jp,kkp,ntra+nv)/ppm2ugkg(nv)
           enddo
         enddo
       enddo
