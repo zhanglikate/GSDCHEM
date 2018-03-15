@@ -1108,6 +1108,42 @@ contains
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % emi_d5 = 0._CHEM_KIND_R4
       end if
+      ! column burden
+      if (.not.allocated(data % intaer)) then
+        allocate(data % intaer(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intaer = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % intsea)) then
+        allocate(data % intsea(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intsea = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % intbc)) then
+        allocate(data % intbc(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intbc = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % intdust)) then
+        allocate(data % intdust(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intdust = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % intoc)) then
+        allocate(data % intoc(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intoc = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % intsulf)) then
+        allocate(data % intsulf(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % intsulf = 0._CHEM_KIND_R4
+      end if
 
       if (.not.allocated(data % aod2d)) then
         allocate(data % aod2d(ids:ide,jds:jde), stat=localrc)
@@ -1306,6 +1342,26 @@ contains
             call chem_io_write('emd5', data % emi_d5, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            !column burden
+            call chem_io_write('cbae', data % intaer, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('cbbc', data % intbc, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('cboc', data % intoc, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('cbsf', data % intsulf, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('cbdt', data % intdust, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('cbss', data % intsea, &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            
             call chem_io_write('ao2D', data % aod2d, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return

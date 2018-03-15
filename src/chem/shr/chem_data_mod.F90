@@ -33,6 +33,12 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: emi_d3
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: emi_d4
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: emi_d5
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intaer
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intbc
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intoc
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intsulf
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intdust
+    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: intsea
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: aod2d
     real(CHEM_KIND_R4), dimension(:,:,:),   allocatable :: pm10
     real(CHEM_KIND_R4), dimension(:,:,:),   allocatable :: pm25
@@ -163,6 +169,30 @@ contains
     end if
     if (allocated(data % emi_d5)) then
       deallocate(data % emi_d5, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intaer)) then
+      deallocate(data % intaer, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intbc)) then
+      deallocate(data % intbc, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intoc)) then
+      deallocate(data % intoc, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intsulf)) then
+      deallocate(data % intsulf, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intdust)) then
+      deallocate(data % intdust, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % intsea)) then
+      deallocate(data % intsea, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (allocated(data % aod2d)) then

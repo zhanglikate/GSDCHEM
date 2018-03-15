@@ -161,6 +161,12 @@ contains
         data % emi_d3, &
         data % emi_d4, &
         data % emi_d5, &
+        data % intaer, &
+        data % intbc, &
+        data % intoc, &
+        data % intsulf, &
+        data % intdust, &
+        data % intsea, &
         data % ext_cof, &
         data % sscal, &
         data % asymp, &

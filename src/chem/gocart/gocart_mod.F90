@@ -8,7 +8,10 @@ module gocart_mod
   use chem_config_mod, only : CHEM_OPT_NONE,   &
                               CHEM_OPT_GOCART, &
                               DUST_OPT_GOCART, &
-                              DUST_OPT_AFWA
+                              DUST_OPT_AFWA,   &
+                              CHEM_OPT_GOCART_RACM,&
+                              CHEM_OPT_RACM_SOA_VBS, &
+                              CHEM_OPT_MAX
 
   use gocart_prep_mod
   use gocart_settling_mod
@@ -42,7 +45,8 @@ contains
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trdp, &
-    emi_d1, emi_d2, emi_d3, emi_d4, emi_d5, ext_cof, sscal, asymp, aod2d, &
+    emi_d1, emi_d2, emi_d3, emi_d4, emi_d5,intaer, intbc, intoc, intsulf, intdust, intsea, &
+    ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
@@ -137,6 +141,12 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d3
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d4
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d5
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intaer
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intbc
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intoc
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intsulf
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intdust
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intsea
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: aod2d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem), intent(out) :: wet_dep
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: p10
@@ -273,6 +283,7 @@ contains
     integer :: ids, ide, jds, jde, kds, kde
     real(CHEM_KIND_R4) :: dt
     real(CHEM_KIND_R8) :: curr_secs
+    real(CHEM_KIND_R4) :: dpsum
 
     real(CHEM_KIND_R4) :: factor, factor2
     real(CHEM_KIND_R4) :: dtstep, gmt
@@ -695,6 +706,102 @@ contains
         wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
       end do
     end do
+
+!calulate the aerosol column burden 
+        jp=0
+        do j=jts, jte
+        jp = jp + 1
+          ip = 0
+         do i= its, ite
+            ip = ip + 1
+          dpsum=0.
+          intsea(i,j)=0.
+          intaer(i,j)=0.
+          intbc(i,j)=0.
+          intoc(i,j)=0.
+          intsulf(i,j)=0.
+          intdust(i,j)=0.
+          !o3du(i,j)=0.
+          !o3dg(i,j)=0.
+           kp=0
+          do k = kts, kte
+           kp=kp+1
+            dpsum=dpsum+(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
+            if ((chem_opt >= CHEM_OPT_GOCART) .and. ( chem_opt < CHEM_OPT_MAX)) then
+              intaer(i,j)=intaer(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_p25)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intbc(i,j)=intbc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_bc1)&
+                +tr3d_out(ip,jp,kp,nbegin+p_bc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_oc1)&
+                +tr3d_out(ip,jp,kp,nbegin+p_oc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_dust_1)&
+                +.286*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intsulf(i,j)=intsulf(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_sulf)*(pr3d(ip,jp,kp)&
+                -pr3d(ip,jp,kp+1))/grvity
+              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
+                -pr3d(ip,jp,kp+1))/grvity
+            end if !chem_opt >= 300 .and. chem_opt < 500
+
+            if (chem_opt == CHEM_OPT_RACM_SOA_VBS) then
+              intaer(i,j)=intaer(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_p25j)+&
+                tr3d_out(ip,jp,kp,nbegin+p_p25i))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intbc(i,j)=intbc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_ecj)&
+                +tr3d_out(ip,jp,kp,nbegin+p_eci))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_orgpaj)&
+                +tr3d_out(ip,jp,kp,nbegin+p_orgpai))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_soila)&
+                )*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+              intsulf(i,j)=intsulf(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_so4aj)+&
+                tr3d_out(ip,jp,kp,nbegin+p_so4ai))*1e-6*(pr3d(ip,jp,kp)&
+                -pr3d(ip,jp,kp+1))/grvity
+            end if !chem_opt == 108
+! comment out the column ozone for gas-phase chemistry
+#if 0
+            rho_phys(i,j,k)=(pr3l(i,j,k)&
+              /(RD*tk3d(i,j,k)) !*(1.+.608*qv3d(k,j))
+            if ((chem_opt == 301) .or. ( chem_opt == 108))then
+              o3du(i,j)=o3du(i,j)+(0.001*tr3d_out(ip,jp,kp,nbegin+p_o3)*(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))&
+                *rho_phys(i,j,k)*6.022*1e23/(48.*9.8*2.69*1e20))
+            end if
+            o3dg(i,j)=o3dg(i,j)+(1e6*0.001*tr3d_out(ip,jp,kp,4)*airmw/48.*(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))&
+              *rho_phys(i,j,k)*6.022*1e23/(48.*9.8*2.69*1e20))
+#endif
+! comment out the chem_option for 304,316,317
+#if 0
+          if ( chem_opt==304.or. chem_opt==316.or.chem_opt==317) then
+              intdust(i,j)=intdust(i,j)+d1st(i,j,k)*1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))&
+                /grvity
+           endif
+            if (chem_opt == 316) then
+              intash(i,j)=intash(i,j)+(tr3d_out(i,j,k,ichem_start+p_vash_1)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_2)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_3)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_4)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_5)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_6)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_7)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_8)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_9)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_10))     &
+                *1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))/grvity
+            endif
+            if ( chem_opt == 317 ) then
+              intash(i,j)=intash(i,j)+(tr3d_out(i,j,k,ichem_start+p_vash_1)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_2)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_3)       &
+                + tr3d_out(i,j,k,ichem_start+p_vash_4))      &
+                *1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))/grvity
+            endif
+#endif
+          end do
+!          if (config % chem_opt == 316 .or. config % chem_opt == 317)intash(j)=intash(j)
+! column burden average
+          !intaer(i,j)=intaer(i,j)/dpsum
+          !intbc(i,j)=intbc(i,j)/dpsum
+          !intoc(i,j)=intoc(i,j)/dpsum
+          !intsulf(i,j)=intsulf(i,j)/dpsum
+          !intdust(i,j)=intdust(i,j)/dpsum
+        end do
+       end do
 
   end subroutine gocart_advance
 
