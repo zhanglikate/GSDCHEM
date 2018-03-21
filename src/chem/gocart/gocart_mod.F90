@@ -353,12 +353,28 @@ contains
     ! -- start working
     if (ktau <= 1) then
       dtstep = dt
-      rcav = rc2d
-      rnav = rn2d-rc2d
+        jp=0
+        do j=jts, jte
+        jp = jp + 1
+          ip = 0
+         do i= its, ite
+            ip = ip + 1      
+      rcav(i,j) = rc2d(ip,jp)*1000.
+      rnav(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
+         enddo
+        enddo
     else
       dtstep = call_chemistry * dt
-      rcav = max(0.,rc2d-rcav)
-      rnav = max(0.,rn2d-rc2d-rnav)
+        jp=0
+        do j=jts, jte
+        jp = jp + 1
+          ip = 0
+         do i= its, ite
+            ip = ip + 1     
+      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav(i,j))
+      rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav(i,j))
+         enddo
+        enddo
     end if
 
     ! -- get ready for chemistry run
@@ -701,9 +717,11 @@ contains
             tr3d_out(ip,jp,kp,nvv) = real(ppm2ugkg(nv) * max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
+          if (k==1) then
+          wet_dep(i,j,nv) = var_rmv(i,j,nv)
+          endif
           end do
         end do
-        wet_dep(its:ite,j,nv) = var_rmv(its:ite,j,nv)
       end do
     end do
 
