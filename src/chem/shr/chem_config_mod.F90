@@ -137,7 +137,7 @@ contains
     integer                :: localrc, iostat
     integer                :: buffer(24)
     real(CHEM_KIND_R4)     :: rbuffer(6)
-    character(CHEM_MAXSTR) :: sbuffer(3)
+    character(CHEM_MAXSTR) :: sbuffer(4)
 
     ! -- variables in input namelist
     character(len=CHEM_MAXSTR) :: emi_inname
@@ -368,14 +368,15 @@ contains
     config % depo_fact  = rbuffer(6)
 
     ! -- pack strings into buffer
-    sbuffer = (/ chem_hist_outname, emi_inname, emi_outname /)
+    sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname /)
     ! -- broadcast string variable
     call chem_comm_bcast(sbuffer, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
     ! -- set string values to config
     config % chem_hist_outname = sbuffer(1)
     config % emi_inname        = sbuffer(2)
-    config % emi_outname       = sbuffer(3)
+    config % fireemi_inname    = sbuffer(3)
+    config % emi_outname       = sbuffer(4)
 
   end subroutine chem_config_read
 
