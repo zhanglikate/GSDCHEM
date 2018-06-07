@@ -752,10 +752,10 @@ contains
               intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_oc1)&
                 +tr3d_out(ip,jp,kp,nbegin+p_oc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
               intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_dust_1)&
-                +.286*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+                +.3125*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
               intsulf(i,j)=intsulf(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_sulf)*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
-              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
+              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.75*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
             end if !chem_opt >= 300 .and. chem_opt < 500
 
