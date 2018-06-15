@@ -15,37 +15,37 @@ module CHM
   integer, parameter :: importFieldCount = 25
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
-      "air_pressure                             ", &
-      "air_pressure_in_model_layers             ", &
-      "geopotential                             ", &
-      "geopotential_in_model_layers             ", &
-      "air_temperature                          ", &
-      "x_wind                                   ", &
-      "y_wind                                   ", &
-      "omega                                    ", &
-      "mass_fraction_of_tracers_in_air          ", &
-      "soil_type                                ", &
-      "atmosphere_boundary_layer_thickness      ", &
-      "cell_area                                ", &
-      "convective_rainfall_amount               ", &
-      "exchange_coefficient_heat                ", &
-      "friction_velocity                        ", &
-      "rainfall_amount                          ", &
-      "soil_moisture_content                    ", &
-      "surface_downwelling_shortwave_flux_in_air", &
-      "surface_mask                             ", &
-      "surface_skin_temperature                 ", &
-      "surface_upward_sensible_heat_flux        ", &
-      "thickness_of_snowfall_amount             ", &
-      "vegetation_type                          ", &
-      "vegetation_area_fraction                 ", &
-      "z_over_l                                 "  &
+      "inst_pres_interface                  ", &
+      "inst_pres_levels                     ", &
+      "inst_geop_interface                  ", &
+      "inst_geop_levels                     ", &
+      "inst_temp_levels                     ", &
+      "inst_zonal_wind_levels               ", &
+      "inst_merid_wind_levels               ", &
+      "inst_omega_levels                    ", &
+      "inst_tracer_mass_frac                ", &
+      "soil_type                            ", &
+      "inst_pbl_height                      ", &
+      "surface_cell_area                    ", &
+      "inst_convective_rainfall_amount      ", &
+      "inst_exchange_coefficient_heat_levels", &
+      "inst_friction_velocity               ", &
+      "inst_rainfall_amount                 ", &
+      "inst_soil_moisture_content           ", &
+      "inst_down_sw_flx                     ", &
+      "inst_land_sea_mask                   ", &
+      "inst_temp_height_surface             ", &
+      "inst_up_sensi_heat_flx               ", &
+      "inst_lwe_snow_thickness              ", &
+      "vegetation_type                      ", &
+      "inst_vegetation_area_frac            ", &
+      "inst_surface_roughness               "  &
     /)
   ! -- export fields
   integer, parameter :: exportFieldCount = 1
   character(len=*), dimension(exportFieldCount), parameter :: &
     exportFieldNames = (/ &
-      "mass_fraction_of_tracers_in_air          "  &
+      "inst_tracer_mass_frac                "  &
     /)
 
   ! -- verbosity

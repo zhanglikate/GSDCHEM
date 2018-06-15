@@ -212,7 +212,7 @@ contains
         end if
 
         select case (trim(fieldNames(item)))
-          case ("mass_fraction_of_tracers_in_air")
+          case ("inst_tracer_mass_frac")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % tr3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -277,21 +277,21 @@ contains
         end if
 
         select case (trim(fieldNames(item)))
-          case ("air_pressure")
+          case ("inst_pres_interface")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % pr3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
             call chem_model_set(numIntLayers=size(stateIn % pr3d,dim=3), de=localDe)
-          case ("air_pressure_in_model_layers")
+          case ("inst_pres_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % prl3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
             call chem_model_set(numModLayers=size(stateIn % prl3d,dim=3), de=localDe)
-          case ("air_temperature")
+          case ("inst_temp_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % tk3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -303,99 +303,99 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("atmosphere_boundary_layer_thickness")
+          case ("inst_pbl_height")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % pb2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("cell_area")
+          case ("surface_cell_area")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % area, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("convective_rainfall_amount")
+          case ("inst_convective_rainfall_amount")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % rc2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("exchange_coefficient_heat")
+          case ("inst_exchange_coefficient_heat_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % exch, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("friction_velocity")
+          case ("inst_friction_velocity")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % us2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("geopotential")
+          case ("inst_geop_interface")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % ph3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("geopotential_in_model_layers")
+          case ("inst_geop_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % phl3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("mass_fraction_of_tracers_in_air")
+          case ("inst_tracer_mass_frac")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % tr3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
             call chem_model_set(numTracers=size(stateIn % tr3d, dim=4), de=localDe)
-          case ("omega")
+          case ("inst_omega_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % ws3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("rainfall_amount")
+          case ("inst_rainfall_amount")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % rn2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("soil_moisture_content")
+          case ("inst_soil_moisture_content")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % sm3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
             call chem_model_set(numSoilLayers=size(stateIn % sm3d, dim=3), de=localDe)
-          case ("surface_downwelling_shortwave_flux_in_air")
+          case ("inst_down_sw_flx")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % rsds, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("surface_mask")
+          case ("inst_land_sea_mask")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % slmsk2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("surface_skin_temperature")
+          case ("inst_temp_height_surface")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % ts2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("surface_upward_sensible_heat_flux")
+          case ("inst_up_sensi_heat_flx")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % hf2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("thickness_of_snowfall_amount")
+          case ("inst_lwe_snow_thickness")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % snwdph2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
@@ -407,25 +407,25 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("vegetation_area_fraction")
+          case ("inst_vegetation_area_frac")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % vfrac2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("x_wind")
+          case ("inst_zonal_wind_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % us3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("y_wind")
+          case ("inst_merid_wind_levels")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % vs3d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
-          case ("z_over_l")
+          case ("inst_surface_roughness")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % zorl2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
               line=__LINE__, &
