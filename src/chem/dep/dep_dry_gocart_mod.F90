@@ -160,6 +160,7 @@ SUBROUTINE depvel_gocart(      &
   REAL(CHEM_KIND_R8)     :: dtmp1, dtmp2, dtmp3, dtmp4
   REAL(CHEM_KIND_R8)     :: biofit,vk
 
+   psi_h=0.0
   ! executable statements
   j_loop: DO j = 1,jmx               
      i_loop: DO i = 1,imx            
@@ -249,7 +250,6 @@ SUBROUTINE depvel_gocart(      &
            !  Aerosol species, Rs here is the combination of Rb and Rs.
 
               ra = (LOG(cz/z0(i,j)) - psi_h) / (vk*ustar(i,j))
-        
 
            vds = 0.002*ustar(i,j)
            IF (obk < 0.0) &

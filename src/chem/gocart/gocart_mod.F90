@@ -2,7 +2,7 @@ module gocart_mod
 
   use chem_rc_mod
   use chem_types_mod
-  use chem_const_mod,  only : cp, grvity, mwdry, mw_so2_aer, mw_so4_aer, &
+  use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, mw_so2_aer, mw_so4_aer, &
                               p1000, rd, epsilc
   use chem_tracers_mod
   use chem_config_mod, only : CHEM_OPT_NONE,   &
@@ -34,7 +34,7 @@ contains
   subroutine gocart_init
   end subroutine gocart_init
 
-  subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, &
+  subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
     biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, aer_ra_feedback, &
     call_biomass, call_chemistry, call_rad, &
     kemit, ktau, dts, current_month, tz, julday,      &
@@ -57,6 +57,7 @@ contains
     logical,            intent(in) :: readrestart
     integer,            intent(in) :: chem_opt
     integer,            intent(in) :: chem_in_opt
+    integer,            intent(in) :: chem_conv_tr
     integer,            intent(in) :: biomass_burn_opt
     integer,            intent(in) :: seas_opt
     integer,            intent(in) :: dust_opt
@@ -166,7 +167,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: aod
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: ash_fall
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: clayf
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: cu_co_ten
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: dep_vel_o3
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: e_co
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: dms_0
@@ -239,6 +239,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: z_at_w
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: zmid
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: convfac
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: cu_co_ten
     real(CHEM_KIND_R4), dimension(ims:ime, 1:num_soil_layers, jms:jme) :: smois
 
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_asym_par)   :: asym_par
@@ -328,7 +329,8 @@ contains
 
     ! -- set numerical parameters
     dust_alpha = 1.0_CHEM_KIND_R4
-    dust_gamma = 1.6_CHEM_KIND_R4
+    !dust_gamma = 1.6_CHEM_KIND_R4 !lzhang
+    dust_gamma = 2.0_CHEM_KIND_R4
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
@@ -378,7 +380,7 @@ contains
     end if
 
     ! -- get ready for chemistry run
-    print *,'gocart_run: entering gocart_prep ...'
+    print *,'gocart_run: entering gocart_prep ...,katu=',ktau
     call gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dt,tr3d_in,tk3d,sm3d,   &
                    ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height, &
                    emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,      &
@@ -544,22 +546,22 @@ contains
       end do
       print *,'gocart_run: set chem: done'
     end if
-
-#if 0
+write(0,*),'zlzlbefore',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
     ! -- subgrid convective transport
+     print *,'gocart_run: calling grelldrvct ...'
     if (chem_conv_tr == 2 )then
-      call grelldrvct(DT,ktau,             &
-        rho_phy,RAINCV_b,chem,tr_fall,     &
-        U_phy,V_phy,t_phy,moist,dz8w,p_phy,&
-        XLV,CP,grvity,rv,z_at_w,cu_co_ten, &
+      call grelldrvct(dt,ktau,             &
+        rho_phy,raincv_b,chem,tr_fall,     &
+        u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w,&
+        pbl,xlv,cp,grvity,rv,z_at_w,cu_co_ten, &
         numgas,chem_opt,                   &
         num_chem,num_moist,                &
         ids,ide, jds,jde, kds,kde,         &
         ims,ime, jms,jme, kms,kme,         &
         its,ite, jts,jte, kts,kte)
+     print *,'gocart_run: done grelldrvct ...'
      endif
-#endif
-
+write(0,*),'zlzlg1',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
      print *,'gocart_run: calling dry_dep_driver ...'
      call dry_dep_driver(ktau,dt,julday,current_month,t_phy,p_phy,&
        moist,p8w,rmol,rri,gmt,t8w,rcav,                           &
@@ -573,6 +575,7 @@ contains
        ims,ime, jms,jme, kms,kme,                                 &
        its,ite, jts,jte, kts,kte)
      print *,'gocart_run: done dry_dep_driver ...'
+write(0,*),'zlzlg2',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
      ! -- ls wet deposition
      print *,'gocart_run: calling wetdep_ls ...'
@@ -582,6 +585,7 @@ contains
          ims,ime, jms,jme, kms,kme,                               &
          its,ite, jts,jte, kts,kte)
      print *,'gocart_run: calling wetdep_ls ...'
+write(0,*),'zlzlg3',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
     if (call_gocart) then
      print *,'gocart_run: calling GOCART CHEM driver ...'
@@ -593,6 +597,7 @@ contains
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
      print *,'gocart_run: done GOCART CHEM driver'
+write(0,*),'zlzlg4',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
      print *,'gocart_run: calling GOCART aerosols driver ...'
        call gocart_aerosols_driver(ktau,dtstep,t_phy,moist,  &
          chem,rho_phy,dz8w,p8w,dxy,grvity,         &
@@ -602,6 +607,7 @@ contains
          its,ite, jts,jte, kts,kte                                         )
      print *,'gocart_run: done GOCART aerosols driver'
     endif
+write(0,*),'zlzlg5',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
     if (call_radiation) then
      print *,'gocart_run: calling radiation ...'
@@ -718,7 +724,8 @@ contains
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           if (k==1) then
-          wet_dep(i,j,nv) = var_rmv(i,j,nv)
+          !wet_dep(i,j,nv) = var_rmv(i,j,nv)   !largescale
+          wet_dep(i,j,nv) = tr_fall(i,j,nv)    !convetive 
           endif
           end do
         end do
@@ -752,10 +759,10 @@ contains
               intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_oc1)&
                 +tr3d_out(ip,jp,kp,nbegin+p_oc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
               intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_dust_1)&
-                +.3125*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
+                +.38*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
               intsulf(i,j)=intsulf(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_sulf)*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
-              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.75*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
+              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
             end if !chem_opt >= 300 .and. chem_opt < 500
 

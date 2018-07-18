@@ -261,7 +261,7 @@ contains
         gsw(i,j)=rsds(ip,jp)
         vegfra(i,j)=vfrac2d(ip,jp)
         rmol(i,j)=0.
-        znt(i,j)=zorl2d(ip,jp)*.01
+        znt(i,j)=zorl2d(ip,jp)*.01 !(unit:cm -> m)
 !SLMSK   - SEA(0),LAND(1),ICE(2) MASK
 !       xland(i,j)=1.
 !       if (slmsk2d(i,j) == 0.) then
@@ -475,6 +475,7 @@ contains
                   chem(i,k,j,p_dms)=0.1e-6
                   chem(i,k,j,p_bc1)=0.1e-3
                   chem(i,k,j,p_bc2)=0.1e-3
+                  chem(i,1:5,j,p_bc2)=3. !lzhang
                   chem(i,k,j,p_oc1)=0.1e-3
                   chem(i,k,j,p_oc2)=0.1e-3
                   chem(i,k,j,p_p25)=1.

@@ -211,29 +211,29 @@ contains
         call chem_io_read('erod1.dat', data % ero1, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % ero1)
+          tile, minval(data % ero1), maxval(data % ero1)
         call chem_io_read('erod2.dat', data % ero2, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % ero2)
+          tile, minval(data % ero2), maxval(data % ero2)
         call chem_io_read('erod3.dat', data % ero3, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % ero3)
+          tile, minval(data % ero3), maxval(data % ero3)
 
         ! -- bacground values for chemical species
         call chem_io_read('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % h2o2_backgd)
+          tile, minval(data % h2o2_backgd), maxval(data % h2o2_backgd)
         call chem_io_read('no3.dat', data % no3_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % no3_backgd)
+          tile, minval(data % no3_backgd), maxval(data % no3_backgd)
         call chem_io_read('oh.dat', data % oh_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % dm0), maxval(data % oh_backgd)
+          tile, minval(data % oh_backgd), maxval(data % oh_backgd)
 
         ! -- emissions
         call chem_io_read('e_bc.dat', data % emiss_ab(:,:,config % species % p_e_bc), &
@@ -454,7 +454,6 @@ contains
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
           tile, minval(data % plumestuff), maxval(data % plumestuff)
-
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
             (config % chem_opt == CHEM_OPT_RACM_SOA_VBS)) then
@@ -1366,6 +1365,8 @@ contains
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
+            call chem_io_write('wpre', data % wet_dep(:,:,s % p_so2), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             call chem_io_write('wbc2', data % wet_dep(:,:,s % p_bc2), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return

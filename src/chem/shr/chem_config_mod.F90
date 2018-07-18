@@ -39,7 +39,7 @@ module chem_config_mod
     integer :: chem_opt
     integer :: gaschem_onoff
     integer :: aerchem_onoff
-    integer :: wetscav_onoff
+    integer :: gfdlmp_onoff
     integer :: cldchem_onoff
     integer :: vertmix_onoff
     integer :: chem_in_opt
@@ -157,7 +157,7 @@ contains
     integer :: chem_opt
     integer :: gaschem_onoff
     integer :: aerchem_onoff
-    integer :: wetscav_onoff
+    integer :: gfdlmp_onoff
     integer :: cldchem_onoff
     integer :: vertmix_onoff
     integer :: chem_in_opt
@@ -203,7 +203,7 @@ contains
       chem_opt,                  &
       gaschem_onoff,             &
       aerchem_onoff,             &
-      wetscav_onoff,             &
+      gfdlmp_onoff,              &
       cldchem_onoff,             &
       vertmix_onoff,             &
       chem_in_opt,               &
@@ -259,7 +259,7 @@ contains
     AER_IC_OPT        = 1
     gaschem_onoff     = 1
     aerchem_onoff     = 1
-    wetscav_onoff     = 0
+    gfdlmp_onoff      = 0
     cldchem_onoff     = 0
     vertmix_onoff     = 1
     chem_conv_tr      = 1
@@ -317,7 +317,7 @@ contains
       AER_IC_OPT,        &
       gaschem_onoff,     &
       aerchem_onoff,     &
-      wetscav_onoff,     &
+      gfdlmp_onoff,      &
       cldchem_onoff,     &
       vertmix_onoff,     &
       chem_conv_tr,      &
@@ -346,7 +346,7 @@ contains
     config % aer_ic_opt        = buffer( 15 )
     config % gaschem_onoff     = buffer( 16 )
     config % aerchem_onoff     = buffer( 17 )
-    config % wetscav_onoff     = buffer( 18 )
+    config % gfdlmp_onoff      = buffer( 18 )
     config % cldchem_onoff     = buffer( 19 )
     config % vertmix_onoff     = buffer( 20 )
     config % chem_conv_tr      = buffer( 21 )
@@ -395,6 +395,10 @@ contains
     config % numgas     = 1
     config % num_ebu    = 0
     config % num_ebu_in = 0
+
+    if (config % gfdlmp_onoff == 1) then
+    config % ntra = 8
+    endif
 
     if (config % mp_physics == 0) then
 

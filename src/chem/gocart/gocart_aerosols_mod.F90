@@ -108,9 +108,9 @@ end subroutine gocart_aerosols_driver
    real minv,maxv,d_2_5,s_2_5,d_10,sulfate,mwdry
    integer i,j,k,ii,jj,n,maxp,maxs,maxd
     mwdry=airmw
-    d_2_5=0.3125
-    s_2_5=0.75
-    d_10=0.67
+    d_2_5=0.38
+    s_2_5=0.83
+    d_10=0.74
 
 !
 ! sum up pm2_5 and pm10 output

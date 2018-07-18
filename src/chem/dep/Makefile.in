@@ -100,7 +100,9 @@ am_libdep_a_OBJECTS = libdep_a-dep_mod.$(OBJEXT) \
 	libdep_a-dep_dry_gocart_mod.$(OBJEXT) \
 	libdep_a-dep_dry_mod.$(OBJEXT) \
 	libdep_a-dep_simple_mod.$(OBJEXT) \
-	libdep_a-dep_vertmx_mod.$(OBJEXT)
+	libdep_a-dep_vertmx_mod.$(OBJEXT) \
+	libdep_a-dep_ctrans_grell_mod.$(OBJEXT) \
+	libdep_a-dep_cu_g3_mod.$(OBJEXT)
 libdep_a_OBJECTS = $(am_libdep_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -256,7 +258,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libdep.a
 libdep_a_SOURCES = dep_mod.F90 dep_wet_ls_mod.F90 dep_dry_gocart_mod.F90 dep_dry_mod.F90 dep_simple_mod.F90 \
-	dep_vertmx_mod.F90
+	dep_vertmx_mod.F90 dep_ctrans_grell_mod.F90 dep_cu_g3_mod.F90
 
 
 #local_INCLUDE    = -I . -I ../shr/ -I ../aero/
@@ -353,6 +355,18 @@ libdep_a-dep_vertmx_mod.o: dep_vertmx_mod.F90
 
 libdep_a-dep_vertmx_mod.obj: dep_vertmx_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdep_a_FCFLAGS) $(FCFLAGS) -c -o libdep_a-dep_vertmx_mod.obj `if test -f 'dep_vertmx_mod.F90'; then $(CYGPATH_W) 'dep_vertmx_mod.F90'; else $(CYGPATH_W) '$(srcdir)/dep_vertmx_mod.F90'; fi`
+
+libdep_a-dep_ctrans_grell_mod.o: dep_ctrans_grell_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdep_a_FCFLAGS) $(FCFLAGS) -c -o libdep_a-dep_ctrans_grell_mod.o `test -f 'dep_ctrans_grell_mod.F90' || echo '$(srcdir)/'`dep_ctrans_grell_mod.F90
+
+libdep_a-dep_ctrans_grell_mod.obj: dep_ctrans_grell_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdep_a_FCFLAGS) $(FCFLAGS) -c -o libdep_a-dep_ctrans_grell_mod.obj `if test -f 'dep_ctrans_grell_mod.F90'; then $(CYGPATH_W) 'dep_ctrans_grell_mod.F90'; else $(CYGPATH_W) '$(srcdir)/dep_ctrans_grell_mod.F90'; fi`
+
+libdep_a-dep_cu_g3_mod.o: dep_cu_g3_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdep_a_FCFLAGS) $(FCFLAGS) -c -o libdep_a-dep_cu_g3_mod.o `test -f 'dep_cu_g3_mod.F90' || echo '$(srcdir)/'`dep_cu_g3_mod.F90
+
+libdep_a-dep_cu_g3_mod.obj: dep_cu_g3_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdep_a_FCFLAGS) $(FCFLAGS) -c -o libdep_a-dep_cu_g3_mod.obj `if test -f 'dep_cu_g3_mod.F90'; then $(CYGPATH_W) 'dep_cu_g3_mod.F90'; else $(CYGPATH_W) '$(srcdir)/dep_cu_g3_mod.F90'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -557,8 +571,9 @@ uninstall-am:
 clean-local:
 	-rm -f *.mod
 
-libdep_a-dep_mod.$(OBJEXT)     : libdep_a-dep_wet_ls_mod.$(OBJEXT) libdep_a-dep_dry_mod.$(OBJEXT)
+libdep_a-dep_mod.$(OBJEXT)     : libdep_a-dep_wet_ls_mod.$(OBJEXT) libdep_a-dep_dry_mod.$(OBJEXT) libdep_a-dep_ctrans_grell_mod.$(OBJEXT)
 libdep_a-dep_dry_mod.$(OBJEXT) : libdep_a-dep_dry_gocart_mod.$(OBJEXT) libdep_a-dep_simple_mod.$(OBJEXT) libdep_a-dep_vertmx_mod.$(OBJEXT)
+libdep_a-dep_ctrans_grell_mod.$(OBJEXT) : libdep_a-dep_cu_g3_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

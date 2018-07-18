@@ -292,7 +292,9 @@ CONTAINS
     ! executable statements
 ! decrease seasalt emissions (Colarco et al. 2010)
 !
-    fudge_fac= 1. !.5
+    !fudge_fac= 1. !.5
+    !fudge_fac= .5 !lzhang
+    fudge_fac= .25 !lzhang
 !
     DO n = 1,nmx
 !    if(ipr.eq.1)write(0,*)'in seasalt',n,ipr,ilwi

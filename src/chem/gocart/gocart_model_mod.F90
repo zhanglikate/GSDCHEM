@@ -99,8 +99,8 @@ contains
         file=__FILE__, line=__LINE__, rc=rc)) return
 
       print *,'gocart_model_advance(rc) -- before gocart_advance(), de=',de, deCount
-      call gocart_advance(config % readrestart, &
-        config % chem_opt, config % chem_in_opt, config % biomass_burn_opt, &
+      call gocart_advance(config % readrestart, config % chem_opt,&
+        config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
         config % seas_opt, config % dust_opt, config % dmsemis_opt, &
         config % aer_ra_feedback, &
         config % call_biomass, config % call_chemistry, config % call_radiation, &
