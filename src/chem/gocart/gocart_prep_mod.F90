@@ -445,7 +445,7 @@ contains
           kkp = kk - kts + 1
           do i=its,ite
             ip = i - its + 1
-            chem(i,k,j,nv)=tr3d(ip,jp,kkp,ntra+nv)/ppm2ugkg(nv)
+            chem(i,k,j,nv)=max(epsilc,tr3d(ip,jp,kkp,ntra+nv)/ppm2ugkg(nv))
           enddo
         enddo
       enddo
@@ -475,7 +475,6 @@ contains
                   chem(i,k,j,p_dms)=0.1e-6
                   chem(i,k,j,p_bc1)=0.1e-3
                   chem(i,k,j,p_bc2)=0.1e-3
-                  chem(i,1:5,j,p_bc2)=3. !lzhang
                   chem(i,k,j,p_oc1)=0.1e-3
                   chem(i,k,j,p_oc2)=0.1e-3
                   chem(i,k,j,p_p25)=1.

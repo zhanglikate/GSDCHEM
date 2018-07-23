@@ -314,6 +314,8 @@ contains
     seashelp   = 0._CHEM_KIND_R4
     var_rmv    = 0._CHEM_KIND_R4
     tr_fall    = 0._CHEM_KIND_R4
+    emis_dust  = 0._CHEM_KIND_R4
+    emis_seas  = 0._CHEM_KIND_R4
     ! -- volume to mass fraction conversion table (ppm -> ug/kg)
     ppm2ugkg         = 1._CHEM_KIND_R4
     ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
@@ -546,7 +548,6 @@ contains
       end do
       print *,'gocart_run: set chem: done'
     end if
-write(0,*),'zlzlbefore',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
     ! -- subgrid convective transport
      print *,'gocart_run: calling grelldrvct ...'
     if (chem_conv_tr == 2 )then
@@ -561,7 +562,6 @@ write(0,*),'zlzlbefore',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
         its,ite, jts,jte, kts,kte)
      print *,'gocart_run: done grelldrvct ...'
      endif
-write(0,*),'zlzlg1',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
      print *,'gocart_run: calling dry_dep_driver ...'
      call dry_dep_driver(ktau,dt,julday,current_month,t_phy,p_phy,&
        moist,p8w,rmol,rri,gmt,t8w,rcav,                           &
@@ -575,7 +575,6 @@ write(0,*),'zlzlg1',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
        ims,ime, jms,jme, kms,kme,                                 &
        its,ite, jts,jte, kts,kte)
      print *,'gocart_run: done dry_dep_driver ...'
-write(0,*),'zlzlg2',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
      ! -- ls wet deposition
      print *,'gocart_run: calling wetdep_ls ...'
@@ -585,7 +584,6 @@ write(0,*),'zlzlg2',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
          ims,ime, jms,jme, kms,kme,                               &
          its,ite, jts,jte, kts,kte)
      print *,'gocart_run: calling wetdep_ls ...'
-write(0,*),'zlzlg3',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
     if (call_gocart) then
      print *,'gocart_run: calling GOCART CHEM driver ...'
@@ -597,7 +595,6 @@ write(0,*),'zlzlg3',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
      print *,'gocart_run: done GOCART CHEM driver'
-write(0,*),'zlzlg4',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
      print *,'gocart_run: calling GOCART aerosols driver ...'
        call gocart_aerosols_driver(ktau,dtstep,t_phy,moist,  &
          chem,rho_phy,dz8w,p8w,dxy,grvity,         &
@@ -607,7 +604,6 @@ write(0,*),'zlzlg4',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
          its,ite, jts,jte, kts,kte                                         )
      print *,'gocart_run: done GOCART aerosols driver'
     endif
-write(0,*),'zlzlg5',ktau,maxval(chem(:,:,:,:)),minval(chem(:,:,:,:))
 
     if (call_radiation) then
      print *,'gocart_run: calling radiation ...'
