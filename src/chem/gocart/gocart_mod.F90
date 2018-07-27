@@ -330,9 +330,9 @@ contains
     end if
 
     ! -- set numerical parameters
-    dust_alpha = 1.0_CHEM_KIND_R4
+    dust_alpha = 0.5_CHEM_KIND_R4
     !dust_gamma = 1.6_CHEM_KIND_R4 !lzhang
-    dust_gamma = 2.0_CHEM_KIND_R4
+    dust_gamma = 1.0_CHEM_KIND_R4
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)

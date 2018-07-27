@@ -834,7 +834,7 @@ CONTAINS
        dd_massdetr(i,k)=0.
        hcd(i,k)=hes_cup(i,k)
        dbyd(i,k)=0.
-       mentrd_rate_2d(i,k)=entr_rate(i)
+       mentrd_rate_2d(i,k)=entr_rate(i) 
         if(ipr(i).eq.1)write(20,*)'go into pdf routine',kdet(i),jmin(i),kpbli(i),ierr(i)
       enddo
       enddo
