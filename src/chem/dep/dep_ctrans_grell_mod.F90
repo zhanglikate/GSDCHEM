@@ -1005,7 +1005,9 @@ CONTAINS
     if(nv.gt. numgas .or. nv.eq.p_sulf) then
     alpha = .5    ! scavenging factor
       ! if(nv.le. numgas .and. nv.ne.p_sulf)cycle
-       if(nv.eq.p_bc1 .or. nv.eq.p_oc1 .or. nv.eq.p_dms) alpha=0.
+       !if(nv.eq.p_bc1 .or. nv.eq.p_oc1 .or. nv.eq.p_dms) alpha=0.
+       if(nv.eq.p_bc1 .or. nv.eq.p_oc1) alpha=0.2 !lzhang
+       if(nv.eq.p_dms) alpha=0.
        if(nv.eq.p_sulf .or. nv.eq.p_seas_1 .or. nv.eq.p_seas_2 .or. &
           nv.eq.p_seas_3 .or. nv.eq.p_seas_4)alpha=1.
        !if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.8
