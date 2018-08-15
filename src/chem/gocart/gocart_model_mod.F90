@@ -61,7 +61,7 @@ contains
     integer, optional, intent(out) :: rc
 
     ! -- local variables
-    integer :: localrc
+    integer :: localrc,tile
     integer :: de, deCount
     integer :: advanceCount, julday, mm, tz
     integer :: is, ie, js, je, ni, nl
@@ -74,7 +74,7 @@ contains
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
-    call chem_model_get(deCount=deCount, rc=localrc)
+    call chem_model_get(deCount=deCount, rc=localrc) 
     if (chem_rc_check(localrc, msg="Failed to retrieve model", &
       file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -89,7 +89,7 @@ contains
 
     do de = 0, deCount-1
       call chem_model_get(de=de, config=config, data=data, &
-        stateIn=stateIn, stateOut=stateOut, rc=localrc)
+        stateIn=stateIn, stateOut=stateOut, tile=tile, rc=localrc)
       if (chem_rc_check(localrc, msg="Failed to retrieve model on local DE", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
@@ -192,7 +192,7 @@ contains
         lon, lat, &
         is, ie, js, je, 1, nl, &
         is, ie, js, je, 1, ni, &
-        rc=localrc)
+        tile,rc=localrc)
 
         if (chem_rc_check(localrc, msg="Failure advancing GOCART", &
           file=__FILE__, line=__LINE__, rc=rc)) return

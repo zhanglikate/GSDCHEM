@@ -87,7 +87,8 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
         rain_clw(i,j)=rain(j)/dt
 ! total cloud water
 !
-        do k=1,kte-1
+        !do k=1,kte-1
+        do k=1,kte !lzhang
            dvar=max(0.,moist(i,k,j,p_qc)*rho(i,k,j)*vvel(i,k,j)*dz8w(i,k,j))
            var_sum_clw(i,j)=var_sum_clw(i,j)+dvar
            var_sum(i,j)=var_sum(i,j)+var(i,k,j,nv)*rho(i,k,j)
@@ -108,7 +109,8 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
     do i=its,ite
     do j=jts,jte
      if(rain(j).gt.1.e-3 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
-       do k=kts,kte-2
+       !do k=kts,kte-2  !lzhang
+       do k=kts,kte
         if(var(i,k,j,nv).gt.1.e-08 .and. moist(i,k,j,p_qc).gt.1.e-8)then
         factor = max(0.,frc(i,j)*rho(i,k,j)*dz8w(i,k,j)*vvel(i,k,j))
 !       print *,'var before ',k,km,var(i,k,j,nv),factor

@@ -52,7 +52,7 @@ contains
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
     num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
     its, ite, jts, jte, kts, kte, &
-    ims, ime, jms, jme, kms, kme, rc)
+    ims, ime, jms, jme, kms, kme, tile,rc)
 
     logical,            intent(in) :: readrestart
     integer,            intent(in) :: chem_opt
@@ -79,6 +79,7 @@ contains
                                       num_emis_dust, num_emis_seas
     integer,            intent(in) :: num_asym_par, num_bscat_coef, num_ext_coef
     integer,            intent(in) :: numgas
+    integer,            intent(in) :: tile !lzhang
     integer, optional, intent(out) :: rc
 
     real(CHEM_KIND_R8), intent(in) :: dts
@@ -556,12 +557,13 @@ contains
         u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w,&
         pbl,xlv,cp,grvity,rv,z_at_w,cu_co_ten, &
         numgas,chem_opt,                   &
-        num_chem,num_moist,                &
+        num_chem,num_moist,tile,           &
         ids,ide, jds,jde, kds,kde,         &
         ims,ime, jms,jme, kms,kme,         &
         its,ite, jts,jte, kts,kte)
      print *,'gocart_run: done grelldrvct ...'
      endif
+
      print *,'gocart_run: calling dry_dep_driver ...'
      call dry_dep_driver(ktau,dt,julday,current_month,t_phy,p_phy,&
        moist,p8w,rmol,rri,gmt,t8w,rcav,                           &
