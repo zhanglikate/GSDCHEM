@@ -409,13 +409,13 @@ contains
 
 
   subroutine chem_model_domain_get(de, &
-   ids, ide, jds, jde,  &
-   its, ite, jts, jte,  &
-   ims, ime, jms, jme,  &
+   ids, ide, jds, jde,   &
+   its, ite, jts, jte,   &
+   ims, ime, jms, jme,   &
    ni,  nl,  nt,  tile, &
    lon, lat, rc)
     integer, optional, intent(in)  :: de
-    integer, optional, intent(out) :: ids, ide, jds, jde
+    integer, optional, intent(out) :: ids, ide, jds, jde 
     integer, optional, intent(out) :: its, ite, jts, jte
     integer, optional, intent(out) :: ims, ime, jms, jme
     integer, optional, intent(out) :: ni, nl, nt

@@ -25,10 +25,11 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: de, deCount
-    integer :: ids, ide, jds, jde
+    integer :: ids, ide, jds, jde,kds,kde !lzhang
     type(chem_data_type),   pointer :: data   => null()
     type(chem_config_type), pointer :: config => null()
-
+    kds=1
+    kde=65
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
@@ -78,6 +79,22 @@ contains
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % ero3 = 0._CHEM_KIND_R4
       end if
+      !-- save last time step precip.
+      if (.not.allocated(data % rcav_save)) then
+        allocate(data % rcav_save(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % rcav_save = 0._CHEM_KIND_R4
+      end if !lzhang
+      if (.not.allocated(data % rnav_save)) then
+        allocate(data % rnav_save(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % rnav_save = 0._CHEM_KIND_R4
+      end if !lzhang
+      if (.not.allocated(data % ebu_save)) then
+        allocate(data % ebu_save(ids:ide,kds:kde,jds:jde,config % num_ebu_in), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % ebu_save = 0._CHEM_KIND_R4
+      end if !lzhang
 
       ! -- chemical species background
       if (.not.allocated(data % h2o2_backgd)) then

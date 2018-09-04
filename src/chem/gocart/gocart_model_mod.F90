@@ -127,6 +127,9 @@ contains
         data % plumestuff, &
         data % sandfrac, &
         data % th_pvsrf, &
+        data % rcav_save, &
+        data % rnav_save, &
+        data % ebu_save, &
         ! -- imported atmospheric fields
         stateIn % area, &
         stateIn % hf2d, &

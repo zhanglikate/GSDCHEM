@@ -27,6 +27,9 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: plumestuff        ! fire info
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: sandfrac          ! sand fraction (AFWA dust scheme)
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: th_pvsrf
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: rcav_save !lzhang
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: rnav_save !lzhang
+    real(CHEM_KIND_R4), dimension(:,:,:,:), allocatable :: ebu_save !lzhang
     ! -- output
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: emi_d1
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: emi_d2
@@ -151,6 +154,18 @@ contains
       deallocate(data % th_pvsrf, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
+    if (allocated(data % rcav_save)) then
+      deallocate(data % rcav_save, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if !lzhang
+    if (allocated(data % rnav_save)) then
+      deallocate(data % rnav_save, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if !lzhang
+    if (allocated(data % ebu_save)) then
+      deallocate(data % ebu_save, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if !lzhang
     if (allocated(data % emi_d1)) then
       deallocate(data % emi_d1, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return

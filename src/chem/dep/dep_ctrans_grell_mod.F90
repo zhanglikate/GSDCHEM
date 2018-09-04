@@ -177,19 +177,21 @@ CONTAINS
 !
 !---- CALL NON_RESOLVED CONVECTIVE TRANSPORT
       ipr(:)=0
-# if 0
+#if 0
       DO I=ITS,ITF
-         if(pret(i)*3600. .gt.4)then
-         if(j.eq.85 .and. (i.eq.87 ) .and. (itimestep .eq.8).and.(tile.eq.2))then
-           write(20,*)'tile,j,i,pret(i),ter11(i) = ',tile,j,i,itimestep,pret(i)
+         !if(pret(i)*3600. .gt.4) then
+          !write(20,*)'zl0',tile,j,i,itimestep,pret(i)
+           !write(20,*)'zl0'
+         if(pret(i)*3600. .gt.4.and.j.eq.76 .and. (i.eq.87 ) .and. (itimestep .eq.8).and.(tile.eq.2)) then
+           write(20,*)'zltile,j,i,pret(i),ter11(i) = ',tile,j,i,itimestep,pret(i)
            DO K=kts,ktf
-              write(20,123)k,p(i,k),t(i,k),q(i,k),tracer(i,k,p_bc2)
+              write(20,123)k,p(i,k),t(i,k),q(i,k),tracer(i,k,16)
            ENDDO
            ipr(i)=1
          endif
-         endif
+         !endif
 
-       ENDDO
+      ENDDO
 #endif
 
 123  format(1x,i3,f7.1,1x,f6.1,2(1x,e13.4))
@@ -200,13 +202,10 @@ CONTAINS
            rho,xlv,r_v,cp,g,ipr,its,ite,itf,kts,kte,ktf,csum,xmb )
 #if 0
       DO I=ITS,ITF
-      !if(ipr(i).eq.1)then
-      if(pret(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.(itimestep .eq.8))then
-!        if(pret(i)*3600. .gt. 2.)then
-!         if(j.eq.31 .and. (i.eq.92 .or. i.eq.93))then
-           !write(20,*)'zl9,j,i,pret(i),xmb(i) = ',j,i,itimestep,xmb(i)
+      if(pret(i)*3600. .gt. 4.and.j.eq.76.and.i.eq.87.and.tile.eq.2.and.(itimestep .eq.8))then
+           write(20,*)'zl9,j,i,pret(i),xmb(i) =,ktop(i)',j,i,itimestep,tile,xmb(i),ktop(i),pret(i)
            DO K=kts,ktf
-              write(20,124)k,p(i,k),tracert(i,k,p_bc2),trdep(i,p_bc2)
+              write(20,124)k,p(i,k),tracert(i,k,p_bc2),trdep(i,16)
            ENDDO
        endif
        enddo
@@ -228,7 +227,7 @@ CONTAINS
 
            do i=its,itf
              trdep(i,1)=pret(i)
-             trdep(i,2)=maxval(tracert(i,:,p_bc2))
+             trdep(i,2)=maxval(tracert(i,:,16))
            enddo
 
 
@@ -579,9 +578,9 @@ CONTAINS
       CALL cup_MAXIMI(HE_CUP,1,KBMAX,K22,ierr, &
            itf,ktf, its,ite,  kts,kte)
        DO 36 i=its,itf
-          if (pre(i)*3600. .gt.4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
-!            write(20,*)'zl12,i,k22,kbmax = ',i,k22(i),kbmax(i),ierr(i)
-          endif
+          !if (pre(i)*3600. .gt.4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
+          !  write(20,*)'zl12,i,k22,kbmax = ',i,k22(i),kbmax(i),ierr(i)
+          !endif
          IF(ierr(I).eq.0.)THEN
          IF(K22(I).GE.KBMAX(i))then
            ierr(i)=2
@@ -608,12 +607,11 @@ CONTAINS
            itf,ktf, &
            its,ite,  kts,kte, &
            z_cup,entr_rate,he,0)
-      do i=its,itf
-          !if (ipr(i).eq.1)then
-          if (pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
-            !write(20,*)'zl13,i,k22,kbcon = ',i,k22(i),kbcon(i),ierr(i)
-          endif
-       enddo
+      !do i=its,itf
+      !    if (pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
+      !      write(20,*)'zl13,i,k22,kbcon = ',i,k22(i),kbcon(i),ierr(i)
+      !    endif
+      ! enddo
 !
 !--- increase detrainment in stable layers
 !
@@ -652,7 +650,7 @@ CONTAINS
            kstabi,k22,kbcon,its,ite,itf,kts,kte,ktf,zu,kpbli,ktopdby,csum)
       do i=its,itf
           !if (ipr(i).eq.1)then
-          if (pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
+          if (ipr(i).eq.1.and.pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
             write(20,*)'ktop,ierr,kpbli,csum,kstabi = ',ktop(i),ierr(i),kpbli(i),csum(i),kstabi(i)
             do k=kts,ktf
               write(20,*)k,z_cup(i,k),zu(i,k)
@@ -761,7 +759,7 @@ CONTAINS
          if(ierr(i).eq.0)then
             zktop=(z_cup(i,ktop(i))-z1(i))*.6
             zktop=min(zktop+z1(i),zcutdown+z1(i))
-             !if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl14',zktop,z_cup(i,ktop(i))
+            ! if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl14',zktop,z_cup(i,ktop(i))
             do k=kts,ktf
               if(z_cup(i,k).gt.zktop)then
                  kzdown(i)=k
@@ -777,7 +775,7 @@ CONTAINS
       call cup_minimi(HEs_cup,K22,kzdown,JMIN,ierr, &
            itf,ktf, its,ite,  kts,kte)
       DO 100 i=its,itf
-         !if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl15,minim',kzdown(i),jmin(i),ierr(i)
+        ! if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl15,minim',kzdown(i),jmin(i),ierr(i)
          IF(ierr(I).eq.0.)THEN
 !
 !--- check whether it would have buoyancy, if there where
@@ -821,7 +819,7 @@ CONTAINS
 !     and cloud top.
 !
       do i=its,itf
-         !if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl16,jmin = ',jmin(i),i
+        ! if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl16,jmin = ',jmin(i),i
          IF(ierr(I).eq.0.)THEN
             if ( jmin(i) - 1 .lt. kdet(i)   ) kdet(i) = jmin(i)-1
             IF(-z_cup(I,KBCON(I))+z_cup(I,KTOP(I)).LT.depth_min)then
@@ -902,9 +900,9 @@ CONTAINS
           if(zd(i,ki+1).gt.0.)cdd(i,ki)= dd_massdetr(i,ki)/(dzo*zd(i,ki+1))
         enddo
 
-        do k=kts,jmin(i)
-         if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl2',k,jmin(i),zd(i,k),hcd(i,jmin(i)),hes_cup(i,jmin(i))
-        enddo
+        !do k=kts,jmin(i)
+        ! if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)'zl2',k,jmin(i),zd(i,k),hcd(i,jmin(i)),hes_cup(i,jmin(i))
+        !enddo
         do k=kts,ktop(i)+1
           if(p_cup(i,k).gt.600.)then
             c1d(i,k)=0.
@@ -982,11 +980,9 @@ CONTAINS
            if(numc.gt.0)then
              do i=its,itf
                if(ierr(i).eq.0)then
-                 !if(ipr(i).eq.1)write(0,*)"zl,pwdper",pwev(i),pwav(i),edtc(i,1)
                  !if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)"zl4,pwdper",pwev(i),pwav(i),edtc(i,1)
                 do k=kts,jmin(i)
                  pwdper(i,k)=-edtc(i,1)*pwd(i,k)/pwav(i)
-                 !if(ipr(i).eq.1)write(0,*)"zl,pwdper",k,pwd(i,k)
                  !if(pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)write(20,*)"zl5,pwdper",k,pwd(i,k)
                 enddo
                 edt(i)=edtc(i,1)
@@ -1084,17 +1080,17 @@ CONTAINS
                 enddo
 !
               enddo ! numc
-                 !if(ipr(i).eq.1 .and.nv.eq.7)then
+#if 0
                  if(pre(i)*3600. .gt. 4.and.i.eq.87 .and.tile.eq.2.and.ktau.eq.8)then
                    nv=p_bc2
                    do k=kts,ktop(i)
-                   !write(20,*)"zl6,chem_up",k,chem(i,k,7),chem_up(i,k,7),chem_pw(i,k,7)
+                   write(20,*)"zl6,chem_up",k,chem(i,k,16),chem_up(i,k,16),chem_pw(i,k,16)
                    enddo
                    do k=kts,jmin(i)
-                   !write(20,*)"zl7,chem_down",k,chem_down(i,k,7),chem_pwd(i,k,7)
+                   write(20,*)"zl7,chem_down",k,chem_down(i,k,16),chem_pwd(i,k,16)
                    enddo
                  endif
-
+#endif
             endif ! ierr=0
           enddo ! i
         endif ! numc=0
@@ -1165,7 +1161,7 @@ CONTAINS
             ! these three are only used at or near mass detrainment and/or
             ! entrainment levels
 	    G_rain=  0.5*(chem_pw (i,k,nv)+chem_pw (i,k+1,nv))*g/dp
-	    E_dn  =  0.5*(chem_pwd(i,k,nv)+chem_pwd(i,k+1,nv))*g/dp ! pwdo < 0 and E_dn must > 0
+	    E_dn  =  0.5*(chem_pwd(i,k,nv)+chem_pwd(i,k+1,nv))*g/dp  ! pwdo < 0 and E_dn must > 0
             !-- condensation source term = detrained + flux divergence of
             !-- cloud liquid water (qrco) + converted to rain
 	
@@ -1175,15 +1171,19 @@ CONTAINS
                dellac(i,k,nv) =-(zu(i,k+1)*(chem_up(i,k+1,nv)-chem_cup(i,k+1,nv) ) - &
                     zu(i,k  )*(chem_up (i,k,nv  )-chem_cup(i,k,nv  ) ) )*g/dp &
                     +(zd(i,k+1)*(chem_down(i,k+1,nv)-chem_cup(i,k+1,nv) ) - &
-                    zd(i,k  )*(chem_down(i,k,nv  )-chem_cup(i,k,nv)))*g/dp*edt(i) &
+                    zd(i,k  )*(chem_down(i,k,nv  )-chem_cup(i,k,nv)))*g/dp*edt(i) & 
                          - g_rain + E_dn
-  !    if(pre(i)*3600. .gt. 4.and.i.eq.87 .and.tile.eq.2.and.ktau.eq.8.and.nv.eq.7)then
-  !    write (20,*),'zln8',zu(i,k+1),chem_up(i,k+1,nv),chem_cup(i,k+1,nv)
-  !    write (20,*),'zln9',zu(i,k  ),chem_up(i,k,nv),chem_cup(i,k,nv),zd(i,k+1)
-  !    write (20,*),'zln10',chem_down(i,k+1,nv),chem_cup(i,k+1,nv),zd(i,k  )
-  !    write (20,*),'zln11',chem_down(i,k,nv  ),chem_cup(i,k,nv),g/dp,edt(i)
-  !    write (20,*),'zln12',dellac(i,k,nv),g_rain,E_dn
-  !    endif
+#if 0
+      if(pre(i)*3600. .gt. 4.and.i.eq.87 .and.tile.eq.2.and.ktau.eq.8.and.nv.eq.16)then
+      write (20,*),'zln8',zu(i,k+1),chem_up(i,k+1,nv),chem_cup(i,k+1,nv)
+      write (20,*),'zln9',zu(i,k  ),chem_up(i,k,nv),chem_cup(i,k,nv),zd(i,k+1)
+      write (20,*),'zln10',chem_down(i,k+1,nv),chem_cup(i,k+1,nv),zd(i,k  )
+      write (20,*),'zln11',chem_down(i,k,nv  ),chem_cup(i,k,nv),g/dp,edt(i)
+      write (20,*),'zln12',dellac(i,k,nv),g_rain,E_dn
+      write (20,*),'zln13',pre(i),pwav(i)+edt(i)*pwev(i),xmb(i)
+      endif
+#endif
+
             enddo
 
          endif ! ierr
@@ -1209,10 +1209,9 @@ CONTAINS
               enddo
              endif ! numc
       do i=its,itf
-          !if (ipr(i).eq.1)then
-          if (pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
-            write(20,*)'zl8,ierr(i) = ',ierr(i),xmb(i)
-          endif
+         ! if (pre(i)*3600. .gt. 4.and.i.eq.87.and.tile.eq.2.and.ktau.eq.8)then
+         !   write(20,*)'zl8,ierr(i) = ',ierr(i),xmb(i)
+         ! endif
        enddo
 
 

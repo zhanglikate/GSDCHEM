@@ -42,6 +42,7 @@ contains
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
     emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3,     &
     h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
+    rcav_save, rnav_save,ebu_save,& !lzhang
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trdp, &
@@ -98,6 +99,9 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: clayfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: sandfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: th_pvsrf
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rcav_save
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rnav_save
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: ebu_save
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: h2o2_backgd
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: no3_backgd
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: oh_backgd
@@ -280,7 +284,7 @@ contains
     logical :: store_arrays
 
     integer :: localrc
-    integer :: nbegin, nv, nvv
+    integer :: nbegin, nv, nvv,call_biomass_fre,numphr
     integer :: i, ip, j, jp, jps, k, kp
     integer :: ids, ide, jds, jde, kds, kde
     real(CHEM_KIND_R4) :: dt
@@ -290,7 +294,12 @@ contains
     real(CHEM_KIND_R4) :: factor, factor2
     real(CHEM_KIND_R4) :: dtstep, gmt
     real(CHEM_KIND_R4) :: dust_alpha,dust_gamma
-
+    
+    !real(CHEM_KIND_R4), allocatable,save :: ebu_save(:, :, :,:,:)
+    !if (.not. allocated(ebu_save)) allocate(ebu_save(ims:ime, kms:kme, jms:jme,1:num_ebu,6))
+    !real(CHEM_KIND_R4), dimension(384, 65, 384, 7, 6), save ::ebu_save=0._CHEM_KIND_R4
+    !real(CHEM_KIND_R4), dimension(384, 384,6), save :: rcav_save=0._CHEM_KIND_R4
+    !real(CHEM_KIND_R4), dimension(384, 384,6), save :: rnav_save=0._CHEM_KIND_R4
     ! -- begin
     print *,'gocart_run: entering ...', chem_opt, ims, ime, jms, jme, num_chem
 
@@ -317,10 +326,14 @@ contains
     tr_fall    = 0._CHEM_KIND_R4
     emis_dust  = 0._CHEM_KIND_R4
     emis_seas  = 0._CHEM_KIND_R4
+    rcav       = 0._CHEM_KIND_R4
+    rnav       = 0._CHEM_KIND_R4
+    ebu        = 0._CHEM_KIND_R4
     ! -- volume to mass fraction conversion table (ppm -> ug/kg)
     ppm2ugkg         = 1._CHEM_KIND_R4
     ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_CHEM_KIND_R4 * mw_so4_aer / mwdry
+!  
 
     ! -- set run parameters
     ! -- nbegin is the start address (-1) of the first chem variable in tr3d
@@ -339,24 +352,27 @@ contains
     dt = real(dts, kind=CHEM_KIND_R4)
     curr_secs = ktau * dts
     gmt = real(tz)
+    numphr            = nint(3600./dts) 
+    call_biomass_fre=  max(1,numphr*(int(call_biomass+.01)*60)/3600)
 
     ! -- set control flags
     call_plume       = (biomass_burn_opt > 0) .and. &
-                      ((mod(ktau, call_biomass  ) == 0) .or. (ktau == 1) .or. firstfire)
+                      ((mod(ktau, call_biomass_fre  ) == 0) .or. (ktau == 1) .or. firstfire)
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
     call_radiation   = (mod(ktau, call_rad) == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
     print *,'gocart_run: control flags set'
 
     print *,'gocart_run: set control flags ...'
-    print *,'gocart_run: set control flags ...', biomass_burn_opt
-    print *,'gocart_run: set control flags ...', call_biomass
-    print *,'gocart_run: set control flags ...', call_chemistry
-    print *,'gocart_run: set control flags ...', call_radiation
-    print *,'gocart_run: set control flags ...', ktau, firstfire
+    print *,'gocart_run: biomass_burn_opt ...', biomass_burn_opt
+    print *,'gocart_run: call_biomass_fre ...', call_biomass_fre
+    print *,'gocart_run: call_chemistry ...', call_chemistry
+    print *,'gocart_run: call_radiation ...', call_radiation
+    print *,'gocart_run: ktau, firstfire ...', ktau, firstfire
 
     ! -- start working
     if (ktau <= 1) then
+     ebu_save(:, :,:,:)  =  0._CHEM_KIND_R4 
       dtstep = dt
         jp=0
         do j=jts, jte
@@ -370,17 +386,21 @@ contains
         enddo
     else
       dtstep = call_chemistry * dt
+     ebu(:, :,:,:)  = ebu_save(:,:,:,:)
         jp=0
         do j=jts, jte
         jp = jp + 1
           ip = 0
          do i= its, ite
             ip = ip + 1     
-      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav(i,j))
-      rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav(i,j))
+      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav_save(i,j))
+      rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav_save(i,j))
          enddo
         enddo
     end if
+    rcav_save(:,:)=rc2d(:,:)*1000.
+    rnav_save(:,:)=(rn2d(:,:)-rc2d(:,:))*1000.
+     
 
     ! -- get ready for chemistry run
     print *,'gocart_run: entering gocart_prep ...,katu=',ktau
@@ -463,7 +483,8 @@ contains
     end if
 
     if (call_plume) then
-      print *,'gocart_run: calling plume'
+      !print *,'gocart_run: calling plume'
+      print *,'gocart_run: calling plume',call_plume,ktau,tile
       firstfire = .false.
       call plumerise_driver (ktau,dtstep,num_chem,num_moist,num_ebu, &
         num_ebu_in,ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
@@ -475,7 +496,9 @@ contains
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
       print *,'gocart_run: calling plume done'
+        ebu_save(:,:,:,:)=ebu(:, :,:,:)
     end if
+
 
     if (dmsemis_opt == 1) then
       print *,'gocart_run: calling dmsemis ...'
@@ -553,7 +576,7 @@ contains
      print *,'gocart_run: calling grelldrvct ...'
     if (chem_conv_tr == 2 )then
       call grelldrvct(dt,ktau,             &
-        rho_phy,raincv_b,chem,tr_fall,     &
+        rho_phy,rcav,chem,tr_fall,     &
         u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w,&
         pbl,xlv,cp,grvity,rv,z_at_w,cu_co_ten, &
         numgas,chem_opt,                   &

@@ -104,7 +104,6 @@ module chem_config_mod
     logical :: call_gocart     = .false.
 
     type(chem_species_type), pointer :: species => null()
-
   end type chem_config_type
 
   private
@@ -251,7 +250,7 @@ contains
     EMISS_OPT         = 5
     BIO_EMISS_OPT     = 0
     BIOMASS_BURN_OPT  = 1
-    PLUMERISEFIRE_FRQ = 60
+    PLUMERISEFIRE_FRQ = 30
     EMISS_INPT_OPT    = 1
     GAS_BC_OPT        = 1
     GAS_IC_OPT        = 1
@@ -389,6 +388,7 @@ contains
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
+    config%call_biomass=config%PLUMERISEFIRE_FRQ
 
     config % ntrb = 0
 
