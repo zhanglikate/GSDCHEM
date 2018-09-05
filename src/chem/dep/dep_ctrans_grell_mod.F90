@@ -448,6 +448,7 @@ CONTAINS
       use_excess=0
       ztexec(:)=0.
       zqexec(:)=0.
+      cap_max_increment(i)=25.
 !srf- end
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -1199,7 +1200,7 @@ CONTAINS
               do i=its,itf
                  if(ierr(i).eq.0)then
                     denom=max(pre(i),pwav(i)+edt(i)*pwev(i))
-                    xmb(i)=pre(i)/denom
+                    xmb(i)=pre(i)/max(epsilc,denom)
                     do nv=1,numc
                       do k=kts,ktop(i)
                           outc(i,k,nv)=dellac(i,k,nv)*xmb(i)
@@ -1458,7 +1459,8 @@ CONTAINS
          qcd(i,ki)=(qcd(i,ki+1)*zd(i,ki+1)                          &
                   -.5*dd_massdetr(i,ki)*qcd(i,ki+1)+ &
                   dd_massentr(i,ki)*q(i,ki))   /            &
-                  (zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki))
+                  !(zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki))
+                  max(epsilc,(zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki)))
 !        write(0,*)'qcd in dd_moi = ',qcd(i,ki)
 
 !
