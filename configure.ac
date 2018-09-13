@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.63])
 AC_INIT([gsdchem], [0.1], [raffaele.montuoro@noaa.gov])
 AM_INIT_AUTOMAKE
 #AM_EXTRA_RECURSIVE_TARGETS([fortran nuopc])
@@ -79,7 +79,7 @@ AC_PROG_RANLIB
 AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
+# AC_CHECK_HEADER_STDBOOL (not supported by autoconf 2.63 on WCOSS)
 AC_TYPE_PID_T
 
 # Checks for library functions.

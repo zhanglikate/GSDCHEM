@@ -396,9 +396,14 @@ contains
     config % num_ebu    = 0
     config % num_ebu_in = 0
 
+    ! -- set number of atmospheric tracers
     if (config % gfdlmp_onoff == 1) then
-    config % ntra = 8
-    endif
+      ! -- FV3 GFDL microphysics use 7 active tracers
+      config % ntra = 7
+    else
+      ! -- default microphysics only uses 3 tracers
+      config % ntra = 3
+    end if
 
     if (config % mp_physics == 0) then
 
@@ -483,9 +488,17 @@ contains
 
     ! -- set pointers to predefined atmospheric tracers
     ! -- NOTE: this is model-dependent
-    config % species % p_atm_shum = 1
-    config % species % p_atm_cldq = 2
-    config % species % p_atm_o3mr = 3
+    if (config % gfdlmp_onoff == 1) then
+      ! -- FV3 GFDL microphysics
+      config % species % p_atm_shum = 1
+      config % species % p_atm_cldq = 2
+      config % species % p_atm_o3mr = 7
+    else
+      ! -- default microphysics
+      config % species % p_atm_shum = 1
+      config % species % p_atm_cldq = 2
+      config % species % p_atm_o3mr = 3
+    endif
 
     if (config % aer_ra_feedback == 1) then
       config % species % p_extcof3    = 1

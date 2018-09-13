@@ -25,7 +25,8 @@ module chem_comm_mod
                                                         ! the first is found)
   integer, parameter :: CHEM_COMM_MAXLOC  = MPI_MAXLOC  ! return the maximum and the location
   integer, parameter :: CHEM_COMM_REPLACE = MPI_REPLACE ! replace b with a
-  integer, parameter :: CHEM_COMM_NO_OP   = MPI_NO_OP   ! perform no operation
+  ! MPI_NO_OP not supported by MPI stack on WCOSS Phase2
+! integer, parameter :: CHEM_COMM_NO_OP   = MPI_NO_OP   ! perform no operation
 
 
   interface chem_comm_bcast
@@ -70,7 +71,7 @@ module chem_comm_mod
   public :: CHEM_COMM_MINLOC
   public :: CHEM_COMM_MAXLOC
   public :: CHEM_COMM_REPLACE
-  public :: CHEM_COMM_NO_OP
+! public :: CHEM_COMM_NO_OP
 
   public :: chem_comm_abort
   public :: chem_comm_allgather
