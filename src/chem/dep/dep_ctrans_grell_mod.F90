@@ -859,7 +859,7 @@ CONTAINS
           jmin(i)=jmin(i)-1
           if(zd(i,jmin(i)) .lt.1.e-8)then
              ierr(i)=876
-             exit
+             cycle
           endif
         endif
         do ki=jmin(i)  ,maxloc(zd(i,:),1),-1
