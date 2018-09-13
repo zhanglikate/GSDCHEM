@@ -458,6 +458,7 @@ CONTAINS
         xmb(i)=0.
         ierr(i)=0
         cap_max(i)=cap_maxs
+        cap_max_increment(i) = 20.
         ierrc(i)=" "
       enddo
 !
