@@ -28,7 +28,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
           INTENT(IN   ) :: rho,dz8w,vvel        
    REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ,1:num_chem),                        &
           INTENT(INOUT) :: var        
-   REAL,  DIMENSION( jms:jme ),                                  &
+   REAL,  DIMENSION( ims:ime, jms:jme ),                                  &
           INTENT(IN   ) :: rain
    REAL,  DIMENSION( ims:ime ,  jms:jme,num_chem ),                                  &
           INTENT(INOUT   ) :: var_rmv
@@ -81,10 +81,10 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
      var_rmvl(i,:,j)=0.
      frc(i,j)=0.
      rain_clw(i,j)=0.
-     if(rain(j).gt.1.e-3)then
+     if(rain(i,j).gt.1.e-3)then
 ! convert rain back to rate
 !
-        rain_clw(i,j)=rain(j)/dt
+        rain_clw(i,j)=rain(i,j)/dt
 ! total cloud water
 !
         do k=1,kte-1
@@ -107,7 +107,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !
     do i=its,ite
     do j=jts,jte
-     if(rain(j).gt.1.e-3 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
+     if(rain(i,j).gt.1.e-3 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
        do k=kts,kte-2
         if(var(i,k,j,nv).gt.1.e-08 .and. moist(i,k,j,p_qc).gt.1.e-8)then
         factor = max(0.,frc(i,j)*rho(i,k,j)*dz8w(i,k,j)*vvel(i,k,j))
