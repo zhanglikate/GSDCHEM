@@ -283,8 +283,7 @@ contains
         kp = k - kts + 1
         do i=its,ite
           ip = i - its + 1
-          dz8w(i,k,j)=(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))/g
-          if (dz8w(i,k,j) < 0.) dz8w(i,k,j)=-dz8w(i,k,j)
+          dz8w(i,k,j)=abs(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))/g
           z_at_w(i,k+1,j)=z_at_w(i,k,j)+dz8w(i,k,j)
         enddo
       enddo
