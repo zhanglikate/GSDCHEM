@@ -478,6 +478,7 @@ contains
 
     ! -- local variables
     integer :: localrc
+    integer :: p
 
     ! -- begin
     if (.not.associated(config % species)) then
@@ -626,6 +627,37 @@ contains
         return
 
     end select
+
+    ! -- initialize volcanic ash pointers
+    ! -- TODO: needs to be done for tracer pointers, too
+    do p = 1, config % num_emis_vol
+      select case (p)
+        case (1)
+          config % species % p_e_vash1 = p
+        case (2)
+          config % species % p_e_vash2 = p
+        case (3)
+          config % species % p_e_vash3 = p
+        case (4)
+          config % species % p_e_vash4 = p
+        case (5)
+          config % species % p_e_vash5 = p
+        case (6)
+          config % species % p_e_vash6 = p
+        case (7)
+          config % species % p_e_vash7 = p
+        case (8)
+          config % species % p_e_vash8 = p
+        case (9)
+          config % species % p_e_vash9 = p
+        case (10)
+          config % species % p_e_vash10 = p
+        case default
+          call chem_rc_set(CHEM_RC_FAILURE, msg="num_emis_vol larger than 10", &
+            file=__FILE__, line=__LINE__, rc=rc)
+          return
+      end select
+    end do
 
 
   contains
