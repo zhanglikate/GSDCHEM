@@ -3,7 +3,7 @@ noinst_LIBRARIES = libshr.a
 libshr_a_SOURCES = chem_clock_mod.F90 chem_comm_mod.F90 chem_config_mod.F90 chem_const_mod.F90 \
 	chem_data_mod.F90 chem_domain_mod.F90 chem_io_mod.F90 chem_iodata_mod.F90 chem_iolayout_mod.F90 \
 	chem_model_mod.F90 chem_rc_mod.F90 chem_species_mod.F90 \
-	chem_state_mod.F90 chem_tracers_mod.F90 chem_types_mod.F90 chem_vars_mod.F90
+	chem_state_mod.F90 chem_tracers_mod.F90 chem_types_mod.F90
 
 libshr_a_FCFLAGS = -I .
 
