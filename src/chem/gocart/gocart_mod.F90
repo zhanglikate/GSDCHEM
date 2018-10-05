@@ -295,142 +295,7 @@ contains
 
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
-    ! -- initialize output variables
-    aod2d    = 0._CHEM_KIND_R4
-    asymp    = 0._CHEM_KIND_R4
-    ebu_oc   = 0._CHEM_KIND_R4
-    emi_d1   = 0._CHEM_KIND_R4
-    emi_d2   = 0._CHEM_KIND_R4
-    emi_d3   = 0._CHEM_KIND_R4
-    emi_d4   = 0._CHEM_KIND_R4
-    emi_d5   = 0._CHEM_KIND_R4
-    ext_cof  = 0._CHEM_KIND_R4
-    h2o2_bg  = 0._CHEM_KIND_R4
-    intaer   = 0._CHEM_KIND_R4
-    intbc    = 0._CHEM_KIND_R4
-    intdust  = 0._CHEM_KIND_R4
-    intoc    = 0._CHEM_KIND_R4
-    intsea   = 0._CHEM_KIND_R4
-    intsulf  = 0._CHEM_KIND_R4
-    no3_bg   = 0._CHEM_KIND_R4
-    oh_bg    = 0._CHEM_KIND_R4
-    p10      = 0._CHEM_KIND_R4
-    pm25     = 0._CHEM_KIND_R4
-    sscal    = 0._CHEM_KIND_R4
-    tr3d_out = 0._CHEM_KIND_R8
-    trdp     = 0._CHEM_KIND_R4
-    wet_dep  = 0._CHEM_KIND_R4
-
     if (chem_opt == CHEM_OPT_NONE) return
-
-    ! -- initialize work arrays
-    ac3           = 0._CHEM_KIND_R4
-    ahno3         = 0._CHEM_KIND_R4
-    anh3          = 0._CHEM_KIND_R4
-    aod           = 0._CHEM_KIND_R4
-    ash_fall      = 0._CHEM_KIND_R4
-    asulf         = 0._CHEM_KIND_R4
-    asym_par      = 0._CHEM_KIND_R4
-    asympar       = 0._CHEM_KIND_R4
-    backg_h2o2    = 0._CHEM_KIND_R4
-    backg_no3     = 0._CHEM_KIND_R4
-    backg_oh      = 0._CHEM_KIND_R4
-    bscat_coeff   = 0._CHEM_KIND_R4
-    bscoefsw      = 0._CHEM_KIND_R4
-    chem          = 0._CHEM_KIND_R4
-    clayf         = 0._CHEM_KIND_R4
-    convfac       = 0._CHEM_KIND_R4
-    cor3          = 0._CHEM_KIND_R4
-    cu_co_ten     = 0._CHEM_KIND_R4
-    dep_vel_o3    = 0._CHEM_KIND_R4
-    dms_0         = 0._CHEM_KIND_R4
-    dusthelp      = 0._CHEM_KIND_R4
-    dxy           = 0._CHEM_KIND_R4
-    dz8w          = 0._CHEM_KIND_R4
-    e_co          = 0._CHEM_KIND_R4
-    ebu           = 0._CHEM_KIND_R4
-    ebu_in        = 0._CHEM_KIND_R4
-    emis_ant      = 0._CHEM_KIND_R4
-    emis_dust     = 0._CHEM_KIND_R4
-    emis_seas     = 0._CHEM_KIND_R4
-    emis_vol      = 0._CHEM_KIND_R4
-    erod          = 0._CHEM_KIND_R4
-    exch_h        = 0._CHEM_KIND_R4
-    ext_coeff     = 0._CHEM_KIND_R4
-    extt          = 0._CHEM_KIND_R4
-    firesize_agef = 0._CHEM_KIND_R4
-    firesize_aggr = 0._CHEM_KIND_R4
-    firesize_agsv = 0._CHEM_KIND_R4
-    firesize_agtf = 0._CHEM_KIND_R4
-    gaersw        = 0._CHEM_KIND_R4
-    gsw           = 0._CHEM_KIND_R4
-    h2o2_t        = 0._CHEM_KIND_R4
-    h2oai         = 0._CHEM_KIND_R4
-    h2oaj         = 0._CHEM_KIND_R4
-    hfx           = 0._CHEM_KIND_R4
-    isltyp        = 0
-    ivgtyp        = 0
-    l2aer         = 0._CHEM_KIND_R4
-    l3aer         = 0._CHEM_KIND_R4
-    l4aer         = 0._CHEM_KIND_R4
-    l5aer         = 0._CHEM_KIND_R4
-    l6aer         = 0._CHEM_KIND_R4
-    l7aer         = 0._CHEM_KIND_R4
-    mean_fct_agef = 0._CHEM_KIND_R4
-    mean_fct_aggr = 0._CHEM_KIND_R4
-    mean_fct_agsv = 0._CHEM_KIND_R4
-    mean_fct_agtf = 0._CHEM_KIND_R4
-    moist         = 0._CHEM_KIND_R4
-    no3_t         = 0._CHEM_KIND_R4
-    nu3           = 0._CHEM_KIND_R4
-    oh_t          = 0._CHEM_KIND_R4
-    p8w           = 0._CHEM_KIND_R4
-    p_phy         = 0._CHEM_KIND_R4
-    pbl           = 0._CHEM_KIND_R4
-    pm10          = 0._CHEM_KIND_R4
-    pm2_5_dry     = 0._CHEM_KIND_R4
-    pm2_5_dry_ec  = 0._CHEM_KIND_R4
-    raincv_b      = 0._CHEM_KIND_R4
-    rcav          = 0._CHEM_KIND_R4
-    relhum        = 0._CHEM_KIND_R4
-    rho_phy       = 0._CHEM_KIND_R4
-    rmol          = 0._CHEM_KIND_R4
-    rnav          = 0._CHEM_KIND_R4
-    rri           = 0._CHEM_KIND_R4
-    sandf         = 0._CHEM_KIND_R4
-    seashelp      = 0._CHEM_KIND_R4
-    smois         = 0._CHEM_KIND_R4
-    snowh         = 0._CHEM_KIND_R4
-    srce_dust     = 0._CHEM_KIND_R4
-    ssca          = 0._CHEM_KIND_R4
-    t8w           = 0._CHEM_KIND_R4
-    t_phy         = 0._CHEM_KIND_R4
-    tauaerlw      = 0._CHEM_KIND_R4
-    tauaersw      = 0._CHEM_KIND_R4
-    tcosz         = 0._CHEM_KIND_R4
-    tr_fall       = 0._CHEM_KIND_R4
-    tsk           = 0._CHEM_KIND_R4
-    ttday         = 0._CHEM_KIND_R4
-    u10           = 0._CHEM_KIND_R4
-    u_phy         = 0._CHEM_KIND_R4
-    ust           = 0._CHEM_KIND_R4
-    v10           = 0._CHEM_KIND_R4
-    v_phy         = 0._CHEM_KIND_R4
-    var_rmv       = 0._CHEM_KIND_R4
-    vegfra        = 0._CHEM_KIND_R4
-    vvel          = 0._CHEM_KIND_R4
-    waersw        = 0._CHEM_KIND_R4
-    xland         = 0._CHEM_KIND_R4
-    xlat          = 0._CHEM_KIND_R4
-    xlong         = 0._CHEM_KIND_R4
-    z_at_w        = 0._CHEM_KIND_R4
-    zmid          = 0._CHEM_KIND_R4
-    znt           = 0._CHEM_KIND_R4
-
-    ! -- volume to mass fraction conversion table (ppm -> ug/kg)
-    ppm2ugkg         = 1._CHEM_KIND_R4
-    ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
-    ppm2ugkg(p_sulf) = 1.e+03_CHEM_KIND_R4 * mw_so4_aer / mwdry
 
     ! -- set domain
     ids = ims
@@ -439,6 +304,22 @@ contains
     jde = jme
     kds = kms
     kde = kme
+
+    ! -- initialize local arrays
+    dep_vel_o3 = 0._CHEM_KIND_R4
+    e_co       = 0._CHEM_KIND_R4
+    raincv_b   = 0._CHEM_KIND_R4
+    cu_co_ten  = 0._CHEM_KIND_R4
+    dusthelp   = 0._CHEM_KIND_R4
+    seashelp   = 0._CHEM_KIND_R4
+    var_rmv    = 0._CHEM_KIND_R4
+    tr_fall    = 0._CHEM_KIND_R4
+    emis_dust  = 0._CHEM_KIND_R4
+    emis_seas  = 0._CHEM_KIND_R4
+    ! -- volume to mass fraction conversion table (ppm -> ug/kg)
+    ppm2ugkg         = 1._CHEM_KIND_R4
+    ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
+    ppm2ugkg(p_sulf) = 1.e+03_CHEM_KIND_R4 * mw_so4_aer / mwdry
 
     ! -- set run parameters
     ! -- nbegin is the start address (-1) of the first chem variable in tr3d

@@ -199,69 +199,6 @@ contains
     print *,'chem_prep: begin...'
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
-    ! -- initialize output arrays
-    backg_h2o2    = 0._CHEM_KIND_R4
-    backg_no3     = 0._CHEM_KIND_R4
-    backg_oh      = 0._CHEM_KIND_R4
-    chem          = 0._CHEM_KIND_R4
-    clayf         = 0._CHEM_KIND_R4
-    convfac       = 0._CHEM_KIND_R4
-    dms_0         = 0._CHEM_KIND_R4
-    dxy           = 0._CHEM_KIND_R4
-    dz8w          = 0._CHEM_KIND_R4
-    ebu_in        = 0._CHEM_KIND_R4
-    e_co          = 0._CHEM_KIND_R4
-    exch_h        = 0._CHEM_KIND_R4
-    firesize_agef = 0._CHEM_KIND_R4
-    firesize_aggr = 0._CHEM_KIND_R4
-    firesize_agsv = 0._CHEM_KIND_R4
-    firesize_agtf = 0._CHEM_KIND_R4
-    gsw           = 0._CHEM_KIND_R4
-    hfx           = 0._CHEM_KIND_R4
-    isltyp        = 0
-    ivgtyp        = 0
-    mean_fct_agef = 0._CHEM_KIND_R4
-    mean_fct_aggr = 0._CHEM_KIND_R4
-    mean_fct_agsv = 0._CHEM_KIND_R4
-    mean_fct_agtf = 0._CHEM_KIND_R4
-    moist         = 0._CHEM_KIND_R4
-    p8w           = 0._CHEM_KIND_R4
-    pbl           = 0._CHEM_KIND_R4
-    p_phy         = 0._CHEM_KIND_R4
-    raincv_b      = 0._CHEM_KIND_R4
-    rc            = 0._CHEM_KIND_R4
-    relhum        = 0._CHEM_KIND_R4
-    rho_phy       = 0._CHEM_KIND_R4
-    rmol          = 0._CHEM_KIND_R4
-    rri           = 0._CHEM_KIND_R4
-    sandf         = 0._CHEM_KIND_R4
-    smois         = 0._CHEM_KIND_R4
-    snowh         = 0._CHEM_KIND_R4
-    t8w           = 0._CHEM_KIND_R4
-    tcosz         = 0._CHEM_KIND_R4
-    t_phy         = 0._CHEM_KIND_R4
-    tsk           = 0._CHEM_KIND_R4
-    ttday         = 0._CHEM_KIND_R4
-    u10           = 0._CHEM_KIND_R4
-    u_phy         = 0._CHEM_KIND_R4
-    ust           = 0._CHEM_KIND_R4
-    v10           = 0._CHEM_KIND_R4
-    vegfra        = 0._CHEM_KIND_R4
-    v_phy         = 0._CHEM_KIND_R4
-    vvel          = 0._CHEM_KIND_R4
-    xland         = 0._CHEM_KIND_R4
-    xlat          = 0._CHEM_KIND_R4
-    xlong         = 0._CHEM_KIND_R4
-    z_at_w        = 0._CHEM_KIND_R4
-    zmid          = 0._CHEM_KIND_R4
-    znt           = 0._CHEM_KIND_R4
-
-    ! -- initialize local arrays
-    sza            = 0._CHEM_KIND_R4
-    cosszax        = 0._CHEM_KIND_R4
-    so2_mass       = 0._CHEM_KIND_R4
-    vert_mass_dist = 0._CHEM_KIND_R4
-
     ! -- sanity check for volcanic emissions
     if (num_emis_vol > 0) then
       select case (chem_opt)
@@ -284,10 +221,14 @@ contains
 
     real_time=float(ktau)*dtstep/60.
 
+    so2_mass = 0.
+
     if (ktau <= 1) then
-      emis_ant = 0._CHEM_KIND_R4
-      emis_vol = 0._CHEM_KIND_R4
+      emis_ant = 0.
+      emis_vol = 0.
     end if
+
+    e_co = 0.
 
     do j=jts,jte
       jp = j - jts + 1
