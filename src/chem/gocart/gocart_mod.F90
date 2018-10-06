@@ -36,7 +36,7 @@ contains
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
     biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, aer_ra_feedback, &
-    call_biomass, call_chemistry, call_rad, &
+    call_chemistry, call_rad, plumerisefire_frq, &
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
@@ -48,6 +48,7 @@ contains
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5,intaer, intbc, intoc, intsulf, intdust, intsea, &
     ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
+    rainl, rainc, eburn, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
     num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
@@ -63,9 +64,9 @@ contains
     integer,            intent(in) :: dust_opt
     integer,            intent(in) :: dmsemis_opt
     integer,            intent(in) :: aer_ra_feedback
-    integer,            intent(in) :: call_biomass
     integer,            intent(in) :: call_chemistry
     integer,            intent(in) :: call_rad
+    integer,            intent(in) :: plumerisefire_frq
     integer,            intent(in) :: kemit
     integer,            intent(in) :: ktau
     integer,            intent(in) :: current_month
@@ -160,6 +161,11 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: sscal
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, 1:nbands),  intent(out) :: asymp
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: trdp
+
+    ! -- buffers
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainl
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainc
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: eburn
 
     ! -- local variables
 
@@ -290,6 +296,8 @@ contains
     real(CHEM_KIND_R4) :: dtstep, gmt
     real(CHEM_KIND_R4) :: dust_alpha,dust_gamma
 
+    real(CHEM_KIND_R4), parameter :: m2mm = 1.e+03_CHEM_KIND_R4
+
     ! -- begin
     print *,'gocart_run: entering ...', chem_opt, ims, ime, jms, jme, num_chem
 
@@ -340,46 +348,46 @@ contains
     gmt = real(tz)
 
     ! -- set control flags
-    call_plume       = (biomass_burn_opt > 0) .and. &
-                      ((mod(ktau, call_biomass  ) == 0) .or. (ktau == 1) .or. firstfire)
+    call_plume       = (biomass_burn_opt > 0)
+    if (call_plume) &
+       call_plume    = (mod(ktau, max(1, int(60*plumerisefire_frq/dts))) == 0) &
+                        .or. (ktau == 1) .or. firstfire
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
-    call_radiation   = (mod(ktau, call_rad) == 0) .or. (ktau == 1)
+    call_radiation   = (mod(ktau, call_rad)       == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
     print *,'gocart_run: control flags set'
 
-    print *,'gocart_run: set control flags ...'
-    print *,'gocart_run: set control flags ...', biomass_burn_opt
-    print *,'gocart_run: set control flags ...', call_biomass
-    print *,'gocart_run: set control flags ...', call_chemistry
-    print *,'gocart_run: set control flags ...', call_radiation
-    print *,'gocart_run: set control flags ...', ktau, firstfire
+    print *,'gocart_run: biomass_burn_opt  ...', biomass_burn_opt
+    print *,'gocart_run: plumerisefire_frq ...', plumerisefire_frq
+    print *,'gocart_run: call_chemistry    ...', call_chemistry
+    print *,'gocart_run: call_radiation    ...', call_radiation
+    print *,'gocart_run: ktau, firstfire   ...', ktau, firstfire
 
-    ! -- start working
-    if (ktau <= 1) then
-      dtstep = dt
-        jp=0
-        do j=jts, jte
-        jp = jp + 1
-          ip = 0
-         do i= its, ite
-            ip = ip + 1      
-      rcav(i,j) = rc2d(ip,jp)*1000.
-      rnav(i,j) = (rn2d(ip,jp)-rc2d(ip,jp))*1000.
-         enddo
-        enddo
-    else
+    ! -- compute accumulated large-scale and convective rainfall since last call
+    if (ktau > 1) then
       dtstep = call_chemistry * dt
-        jp=0
-        do j=jts, jte
-        jp = jp + 1
-          ip = 0
-         do i= its, ite
-            ip = ip + 1     
-      rcav(i,j) = max(0.,rc2d(ip,jp)*1000.-rcav(i,j))
-      rnav(i,j) = max(0.,(rn2d(ip,jp)-rc2d(ip,jp))*1000.-rnav(i,j))
-         enddo
-        enddo
+      ! -- retrieve stored emissions
+      if (biomass_burn_opt > 0) ebu = eburn
+    else
+      dtstep = dt
+      ! -- initialize buffers
+      rainl = 0._CHEM_KIND_R4
+      rainc = 0._CHEM_KIND_R4
+      if (biomass_burn_opt > 0) eburn = 0._CHEM_KIND_R4
     end if
+
+    do j = jts, jte
+      jp = j - jts + 1
+      do i = its, ite
+        ip = i - its + 1
+        ! -- compute incremental large-scale and convective rainfall
+        rcav(i,j)  = max(m2mm * rc2d(ip,jp)                 - rainc(i,j), 0._CHEM_KIND_R4)
+        rnav(i,j)  = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)) - rainl(i,j), 0._CHEM_KIND_R4)
+        ! -- store to buffers
+        rainc(i,j) = m2mm * rc2d(ip,jp)
+        rainl(i,j) = m2mm * rn2d(ip,jp) - rainc(i,j)
+      end do
+    end do
 
     ! -- get ready for chemistry run
     print *,'gocart_run: entering gocart_prep ...,katu=',ktau
@@ -473,6 +481,8 @@ contains
         ids,ide, jds,jde, kds,kde,                               &
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
+      ! -- store current emissions to buffer
+      eburn = ebu
       print *,'gocart_run: calling plume done'
     end if
 

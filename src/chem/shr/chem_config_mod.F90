@@ -251,7 +251,7 @@ contains
     EMISS_OPT         = 5
     BIO_EMISS_OPT     = 0
     BIOMASS_BURN_OPT  = 1
-    PLUMERISEFIRE_FRQ = 60
+    PLUMERISEFIRE_FRQ = 30
     EMISS_INPT_OPT    = 1
     GAS_BC_OPT        = 1
     GAS_IC_OPT        = 1

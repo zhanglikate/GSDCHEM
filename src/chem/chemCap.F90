@@ -497,10 +497,21 @@ module CHM
     end if
 
     ! -- allocate memory for internal workspace
+    call chem_buffer_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model buffers", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+
+    ! -- allocate memory for background fields
     call chem_backgd_init(rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize I/O model subsystem", &
+        msg="Failed to initialize I/O model storage", &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)
@@ -511,25 +522,12 @@ module CHM
     call chem_backgd_read(rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize I/O model subsystem", &
+        msg="Failed to read background/emission values", &
         line=__LINE__, &
         file=__FILE__, &
         rcToReturn=rc)
       return  ! bail out
     end if
-
-#if 0
-    ! -- diagnostics: write out emission and background fields
-    call chem_backgd_write(rc=rc)
-    if (chem_rc_check(rc)) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize I/O model subsystem", &
-        line=__LINE__, &
-        file=__FILE__, &
-        rcToReturn=rc)
-      return  ! bail out
-    end if
-#endif
 
     ! -- connect import fields to model
     ! -- this can be done only once since remote fields are accessed by reference
