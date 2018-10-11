@@ -33,11 +33,11 @@ contains
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
-    call chem_model_get(deCount=deCount, rc=localrc)
+    call chem_model_get(deCount=deCount, config=config, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
     do de = 0, deCount-1
-      call chem_model_get(de=de, config=config, data=data, rc=localrc)
+      call chem_model_get(de=de, data=data, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
       call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, ni=ni, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
