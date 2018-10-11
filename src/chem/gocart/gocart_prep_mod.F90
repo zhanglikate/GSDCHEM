@@ -199,6 +199,10 @@ contains
     print *,'chem_prep: begin...'
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
+    ! -- initialize local arrays
+    so2_mass       = 0._CHEM_KIND_R4
+    vert_mass_dist = 0._CHEM_KIND_R4
+
     ! -- sanity check for volcanic emissions
     if (num_emis_vol > 0) then
       select case (chem_opt)
@@ -220,8 +224,6 @@ contains
     end if
 
     real_time=float(ktau)*dtstep/60.
-
-    so2_mass = 0.
 
     if (ktau <= 1) then
       emis_ant = 0.
