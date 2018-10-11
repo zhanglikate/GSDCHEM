@@ -496,17 +496,6 @@ module CHM
       return  ! bail out
     end if
 
-    ! -- allocate memory for internal workspace
-    call chem_buffer_init(rc=rc)
-    if (chem_rc_check(rc)) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize I/O model buffers", &
-        line=__LINE__, &
-        file=__FILE__, &
-        rcToReturn=rc)
-      return  ! bail out
-    end if
-
     ! -- allocate memory for background fields
     call chem_backgd_init(rc=rc)
     if (chem_rc_check(rc)) then
@@ -544,6 +533,17 @@ module CHM
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
+
+    ! -- allocate memory for internal workspace
+    call chem_buffer_init(rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize I/O model buffers", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
 
     ! -- initialize internal component (GOCART)
     call chem_comp_init(rc=rc)
