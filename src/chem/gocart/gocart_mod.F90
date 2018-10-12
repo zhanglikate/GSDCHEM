@@ -416,17 +416,6 @@ contains
     kds = kms
     kde = kme
 
-    ! -- initialize local arrays
-!   dep_vel_o3 = 0._CHEM_KIND_R4
-!   e_co       = 0._CHEM_KIND_R4
-!   raincv_b   = 0._CHEM_KIND_R4
-!   cu_co_ten  = 0._CHEM_KIND_R4
-!   dusthelp   = 0._CHEM_KIND_R4
-!   seashelp   = 0._CHEM_KIND_R4
-!   var_rmv    = 0._CHEM_KIND_R4
-!   tr_fall    = 0._CHEM_KIND_R4
-!   emis_dust  = 0._CHEM_KIND_R4
-!   emis_seas  = 0._CHEM_KIND_R4
     ! -- volume to mass fraction conversion table (ppm -> ug/kg)
     ppm2ugkg         = 1._CHEM_KIND_R4
     ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
