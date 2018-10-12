@@ -48,7 +48,7 @@ contains
     emi_d1, emi_d2, emi_d3, emi_d4, emi_d5,intaer, intbc, intoc, intsulf, intdust, intsea, &
     ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
-    rainl, rainc, eburn, &
+    rainl, rainc, ebu, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
     num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
@@ -165,7 +165,7 @@ contains
     ! -- buffers
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainc
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: eburn
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: ebu
 
     ! -- local variables
 
@@ -253,7 +253,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_bscat_coef) :: bscat_coeff
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: bscoefsw
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_chem)       :: chem
-    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu)        :: ebu
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kemit, jms:jme, 1:num_emis_ant) :: emis_ant
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_emis_vol)   :: emis_vol
     real(CHEM_KIND_R4), dimension(ims:ime,   1:1  , jms:jme, 1:num_emis_dust)  :: emis_dust
@@ -367,13 +366,12 @@ contains
     if (ktau > 1) then
       dtstep = call_chemistry * dt
       ! -- retrieve stored emissions
-      if (biomass_burn_opt > 0) ebu = eburn
     else
       dtstep = dt
       ! -- initialize buffers
       rainl = 0._CHEM_KIND_R4
       rainc = 0._CHEM_KIND_R4
-      if (biomass_burn_opt > 0) eburn = 0._CHEM_KIND_R4
+      ebu   = 0._CHEM_KIND_R4
     end if
 
     do j = jts, jte
@@ -482,7 +480,6 @@ contains
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
       ! -- store current emissions to buffer
-      eburn = ebu
       print *,'gocart_run: calling plume done'
     end if
 
