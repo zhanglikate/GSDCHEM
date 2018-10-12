@@ -28,8 +28,8 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
           INTENT(IN   ) :: rho,dz8w,vvel        
    REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ,1:num_chem),                        &
           INTENT(INOUT) :: var        
-   REAL,  DIMENSION(ims:ime , jms:jme ),                                  &
-          INTENT(IN   ) :: rain !lzhang
+   REAL,  DIMENSION( ims:ime, jms:jme ),                                  &
+          INTENT(IN   ) :: rain
    REAL,  DIMENSION( ims:ime ,  jms:jme,num_chem ),                                  &
           INTENT(INOUT   ) :: var_rmv
    REAL,  DIMENSION( its:ite ,  jts:jte ) :: var_sum

@@ -11,6 +11,7 @@ module chem_iodata_mod
 
   private
 
+  public :: chem_buffer_init
   public :: chem_backgd_init
   public :: chem_backgd_read
   public :: chem_backgd_write
@@ -19,17 +20,63 @@ module chem_iodata_mod
 
 contains
 
+  subroutine chem_buffer_init(rc)
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount
+    integer :: ids, ide, jds, jde, ni
+    type(chem_data_type),   pointer :: data   => null()
+    type(chem_config_type), pointer :: config => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    do de = 0, deCount-1
+      call chem_model_get(de=de, data=data, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, ni=ni, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      ! -- rain buffers
+      if (.not.allocated(data % rainl)) then
+        allocate(data % rainl(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % rainl = 0._CHEM_KIND_R4
+      end if
+
+      if (.not.allocated(data % rainc)) then
+        allocate(data % rainc(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % rainc = 0._CHEM_KIND_R4
+      end if
+
+      ! -- biomass burning emission buffers
+      if (.not.allocated(data % eburn)) then
+        allocate(data % eburn(ids:ide,1:ni,jds:jde,config % num_ebu), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % eburn = 0._CHEM_KIND_R4
+      end if
+
+    end do
+
+  end subroutine chem_buffer_init
+
+
   subroutine chem_backgd_init(rc)
     integer, optional, intent(out) :: rc
 
     ! -- local variables
     integer :: localrc
     integer :: de, deCount
-    integer :: ids, ide, jds, jde,kds,kde !lzhang
+    integer :: ids, ide, jds, jde
     type(chem_data_type),   pointer :: data   => null()
     type(chem_config_type), pointer :: config => null()
-    kds=1
-    kde=65
+
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
@@ -79,22 +126,6 @@ contains
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % ero3 = 0._CHEM_KIND_R4
       end if
-      !-- save last time step precip.
-      if (.not.allocated(data % rcav_save)) then
-        allocate(data % rcav_save(ids:ide,jds:jde), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % rcav_save = 0._CHEM_KIND_R4
-      end if !lzhang
-      if (.not.allocated(data % rnav_save)) then
-        allocate(data % rnav_save(ids:ide,jds:jde), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % rnav_save = 0._CHEM_KIND_R4
-      end if !lzhang
-      if (.not.allocated(data % ebu_save)) then
-        allocate(data % ebu_save(ids:ide,kds:kde,jds:jde,config % num_ebu_in), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % ebu_save = 0._CHEM_KIND_R4
-      end if !lzhang
 
       ! -- chemical species background
       if (.not.allocated(data % h2o2_backgd)) then

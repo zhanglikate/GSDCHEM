@@ -460,7 +460,7 @@ CONTAINS
         xmb(i)=0.
         ierr(i)=0
         cap_max(i)=cap_maxs
-        cap_max_increment(i)=20.
+        cap_max_increment(i) = 20.
         ierrc(i)=" "
       enddo
 !
@@ -869,8 +869,7 @@ CONTAINS
           jmin(i)=jmin(i)-1
           if(zd(i,jmin(i)) .lt.1.e-8)then
              ierr(i)=876
-           !  exit
-             cycle  !lzhang
+             cycle
           endif
         endif
         
@@ -1459,8 +1458,7 @@ CONTAINS
          qcd(i,ki)=(qcd(i,ki+1)*zd(i,ki+1)                          &
                   -.5*dd_massdetr(i,ki)*qcd(i,ki+1)+ &
                   dd_massentr(i,ki)*q(i,ki))   /            &
-                  !(zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki))
-                  max(epsilc,(zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki)))
+                  max(epsilc,zd(i,ki+1)-.5*dd_massdetr(i,ki)+dd_massentr(i,ki))
 !        write(0,*)'qcd in dd_moi = ',qcd(i,ki)
 
 !

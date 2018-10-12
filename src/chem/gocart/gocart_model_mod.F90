@@ -103,7 +103,7 @@ contains
         config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
         config % seas_opt, config % dust_opt, config % dmsemis_opt, &
         config % aer_ra_feedback, &
-        config % call_biomass, config % call_chemistry, config % call_radiation, &
+        config % call_chemistry, config % call_radiation, config % plumerisefire_frq, &
         config % kemit, &
         advanceCount, dts, mm, tz, julday, &
         ! -- background data 
@@ -127,9 +127,6 @@ contains
         data % plumestuff, &
         data % sandfrac, &
         data % th_pvsrf, &
-        data % rcav_save, &
-        data % rnav_save, &
-        data % ebu_save, &
         ! -- imported atmospheric fields
         stateIn % area, &
         stateIn % hf2d, &
@@ -181,6 +178,10 @@ contains
         data % h2o2_bg, &
         data % no3_bg, &
         data % wet_dep, &
+        ! -- buffers
+        data % rainl, &
+        data % rainc, &
+        data % eburn, &
         ! -- array size
         nl, ni, &
         config % ntra, config % ntrb, config % nvl_gocart, config % nbands, &
