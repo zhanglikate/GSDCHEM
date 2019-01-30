@@ -58,7 +58,8 @@ CONTAINS
   REAL(CHEM_KIND_R8)  :: dvel(1,1), drydf(1,1)
   do j=jts,jte
   do i=its,ite
-    do nv=numgas+1,num_chem
+    !do nv=numgas+1,num_chem
+    do nv=1,num_chem !lzhang
       ddvel(i,j,nv)=0.
     enddo
   enddo
@@ -90,7 +91,8 @@ CONTAINS
      airden, delz_sfc, pblz, ts, ustar, hflux, ilwi, &
      ps, z0, dvel, drydf,g)
 !   if(j.eq.681)write(6,*)numgas,num_chem,dvel(1,1)
-  do nv=numgas+1,num_chem
+  !do nv=numgas+1,num_chem
+  do nv=1,num_chem  !lzhang
       ddvel(i,j,nv)=dvel(1,1)
   enddo
   enddo

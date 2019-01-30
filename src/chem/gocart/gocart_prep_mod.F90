@@ -498,8 +498,8 @@ contains
                   chem(i,k,j,p_bc2)=0.1e-3
                   chem(i,k,j,p_oc1)=0.1e-3
                   chem(i,k,j,p_oc2)=0.1e-3
-                  chem(i,k,j,p_p25)=1.
-                  chem(i,k,j,p_p10)=1.
+                  chem(i,k,j,p_p25)=0.1e-3 !lzhang
+                  chem(i,k,j,p_p10)=0.1e-3 !lzhang
                 endif !chem_opt >= 300 .and. chem_opt <  500
 
                 if ((chem_opt == CHEM_OPT_GOCART_RACM) .or. (chem_opt == CHEM_OPT_RACM_SOA_VBS)) then  !added o3 background !lzhang
@@ -588,7 +588,7 @@ contains
      !   endif
 
 
-        chem(its:ite,kts:min(kte,kde-1),jts:jte,:)=max(chem(its:ite,kts:min(kte,kde-1),jts:jte,:),epsilc)
+        chem(its:ite,kts:kte,jts:jte,:)=max(chem(its:ite,kts:kte,jts:jte,:),epsilc)
 
        endif !ktau<=1.and.chem_opt=108
 #endif
@@ -611,7 +611,7 @@ if (first_init .and. chem_opt == CHEM_OPT_RACM_SOA_VBS) then
      end if
           call aerosols_soa_vbs_init_aercld_ptrs(                    &
                 num_chem, is_aerosol )
-chem(its:ite,kts:min(kte,kde-1),jts:jte,:)=max(chem(its:ite,kts:min(kte,kde-1),jts:jte,:),epsilc)
+chem(its:ite,kts:kte,jts:jte,:)=max(chem(its:ite,kts:kte,jts:jte,:),epsilc)
 endif
 #endif
 !
@@ -914,7 +914,8 @@ endif
             return
           end if
           do j = jts, jte
-            do k = kts, kte-2
+            !do k = kts, kte-2
+            do k = kts, kte !lzhangkte
               do i = its, ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
                 factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
@@ -938,7 +939,8 @@ endif
             return
           end if
           do j=jts,jte
-            do k=kts,kte-2
+            !do k=kts,kte-2
+            do k=kts,kte !lzhangkte
               do i=its,ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
                 factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
@@ -958,7 +960,8 @@ endif
             return
           end if
           do j=jts,jte
-            do k=kts,kte-2
+            !do k=kts,kte-2
+            do k=kts,kte
               do i=its,ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
                 factor=4.828e-4*dtstep*rri(i,k,j)/(60.*dz8w(i,k,j))
@@ -1032,7 +1035,8 @@ endif
               emis_ant(i,ko,j,p_e_tr2)=1./float(k_final)*emiss_tr_mass(j)
             enddo
             if (emiss_tr_dt(j) <= 0.) cycle
-            do k=kts,kte-2
+            !do k=kts,kte-2
+            do k=kts,kte !lzhangkte
               factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
               chem(i,k,j,p_tr2)=chem(i,k,j,p_tr2)+emis_ant(i,k,j,p_e_tr2)*factor2
               if(real_time > 360.) chem(i,k,j,p_tr1)=chem(i,k,j,p_tr1)+emis_ant(i,k,j,p_e_tr2)*factor2

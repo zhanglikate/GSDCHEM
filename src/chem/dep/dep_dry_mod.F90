@@ -201,6 +201,7 @@ contains
                 (chem_opt == 304          )) then
 !
 ! this does aerosol species (dust,seas, bc,oc) for gocart only
+! this does aerosol species (dust,seas, bc,oc,sulf) for gocart only
 !,
          call gocart_drydep_driver(numgas,                     &
                moist,p8w,chem,rho_phy,dz8w,ddvel,xland,hfx,    &
@@ -211,6 +212,8 @@ contains
                its,ite, jts,jte, kts,kte                       )
 !         ddvel(:,:,p_vash_1:num_chem) = 0.
           ddvel(:,:,p_dms) = 0.
+          ddvel(:,:,p_msa) = 0. !lzhang
+          ddvel(:,:,p_so2) = 0. !lzhang
        ELSE if (chem_opt == 501 ) then
 ! for caesium .1cm/s
 !
@@ -311,7 +314,8 @@ contains
 
          END SELECT mix_select
 
-         do k=kts,kte-1
+         !do k=kts,kte-1
+         do k=kts,kte !lzhangkte
 !           if(j.eq.681.and.nv.eq.10)then
 !             write(6,*)pblst(k)
 !           endif

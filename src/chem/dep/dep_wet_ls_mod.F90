@@ -11,13 +11,13 @@ module dep_wet_ls_mod
 contains
 
 subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
-         num_chem,numgas,p_qc,dz8w,vvel,chem_opt,             &
+         num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt,             &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
   IMPLICIT NONE
 
-   INTEGER,      INTENT(IN   ) :: num_chem,numgas,num_moist,p_qc,                          &
+   INTEGER,      INTENT(IN   ) :: num_chem,numgas,num_moist,p_qc, p_qi,             &
                                   chem_opt,ids,ide, jds,jde, kds,kde,               &
                                   ims,ime, jms,jme, kms,kme,               &
                                   its,ite, jts,jte, kts,kte
@@ -91,7 +91,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !
         !do k=1,kte-1
         do k=1,kte !lzhang
-           dvar=max(0.,moist(i,k,j,p_qc)*rho(i,k,j)*vvel(i,k,j)*dz8w(i,k,j))
+           dvar=max(0.,(moist(i,k,j,p_qc)+moist(i,k,j,p_qi))*rho(i,k,j)*vvel(i,k,j)*dz8w(i,k,j))
            var_sum_clw(i,j)=var_sum_clw(i,j)+dvar
            var_sum(i,j)=var_sum(i,j)+var(i,k,j,nv)*rho(i,k,j)
         enddo
@@ -100,7 +100,9 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !       (just like in convec. parameterization
            frc(i,j)=rain_clw(i,j)/var_sum_clw(i,j)
 !    print *,'frc ', frc(i,j),var_sum_clw(i,j),var_sum(i,j)
-           frc(i,j)=max(1.e-6,min(frc(i,j),.004))
+           frc(i,j)=max(1.e-6,min(frc(i,j),.004)) 
+          !frc(i,j)=max(1.e-6,min(frc(i,j),.008)) !lzhang, testing tuning factor
+     
         endif
      endif
     enddo
@@ -113,7 +115,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
      if(rain(i,j).gt.1.e-3 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
        !do k=kts,kte-2  !lzhang
        do k=kts,kte
-        if(var(i,k,j,nv).gt.1.e-08 .and. moist(i,k,j,p_qc).gt.1.e-8)then
+        if(var(i,k,j,nv).gt.1.e-08 .and. (moist(i,k,j,p_qc)+moist(i,k,j,p_qi)).gt.1.e-8)then
         factor = max(0.,frc(i,j)*rho(i,k,j)*dz8w(i,k,j)*vvel(i,k,j))
 !       print *,'var before ',k,km,var(i,k,j,nv),factor
 !       dvar=.05*alpha*factor/(1+factor)*var(i,k,j,nv)

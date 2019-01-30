@@ -419,7 +419,7 @@ contains
 
     ! -- volume to mass fraction conversion table (ppm -> ug/kg)
     ppm2ugkg         = 1._CHEM_KIND_R4
-    ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
+  !  ppm2ugkg(p_so2 ) = 1.e+03_CHEM_KIND_R4 * mw_so2_aer / mwdry
     ppm2ugkg(p_sulf) = 1.e+03_CHEM_KIND_R4 * mw_so4_aer / mwdry
 !  
 
@@ -432,9 +432,10 @@ contains
     end if
 
     ! -- set numerical parameters
-    dust_alpha = 0.5_CHEM_KIND_R4
-    !dust_gamma = 1.6_CHEM_KIND_R4 !lzhang
-    dust_gamma = 1.0_CHEM_KIND_R4
+    !dust_alpha = 1.0_CHEM_KIND_R4  !FIM-Chem
+    dust_alpha = 0.5_CHEM_KIND_R4  !HRRR-Chem
+    !dust_gamma = 1.6_CHEM_KIND_R4 !FIM-Chem
+    dust_gamma = 1.0_CHEM_KIND_R4  !HRRR-Chem
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
@@ -453,6 +454,7 @@ contains
 
     print *,'gocart_run: biomass_burn_opt  ...', biomass_burn_opt
     print *,'gocart_run: plumerisefire_frq ...', plumerisefire_frq
+    print *,'gocart_run: call_plume ...',   call_plume
     print *,'gocart_run: call_chemistry    ...', call_chemistry
     print *,'gocart_run: call_radiation    ...', call_radiation
     print *,'gocart_run: ktau, firstfire   ...', ktau, firstfire
@@ -521,7 +523,6 @@ contains
         its,ite, jts,jte, kts,kte)
     endif
     print *,'gocart_run: exit sea salt ...'
-
     print *,'gocart_run: check dust ...', dust_opt
     store_arrays = .false.
     select case (dust_opt)
@@ -561,7 +562,6 @@ contains
       emi_d5(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,5)
       print *,'gocart_run: storing arrays done'
     end if
-
     if (call_plume) then
       !print *,'gocart_run: calling plume'
       print *,'gocart_run: calling plume',call_plume,ktau,tile
@@ -578,7 +578,6 @@ contains
       ! -- store current emissions to buffer
       print *,'gocart_run: calling plume done'
     end if
-
 
     if (dmsemis_opt == 1) then
       print *,'gocart_run: calling dmsemis ...'
@@ -629,10 +628,10 @@ contains
       print *,'gocart_run: calling vashshort_settling_driver done'
 !     ashfall = ash_fall !!!!!!!!!!!!!!!!!! WARNING: rewrites ashfall if chem_opt = 316
       print *,'gocart_run: ashfall done'
+
 #if 0
     end if
 #endif
-
     ! -- add biomass burning emissions at every timestep
     if (biomass_burn_opt == 1) then
       print *,'gocart_run: set chem: biomass_burn_opt ...'
@@ -684,7 +683,7 @@ contains
      ! -- ls wet deposition
      print *,'gocart_run: calling wetdep_ls ...'
      call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,num_moist, &
-         num_chem,numgas,p_qc,dz8w,vvel,chem_opt,        &
+         num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt,        &
          ids,ide, jds,jde, kds,kde,                               &
          ims,ime, jms,jme, kms,kme,                               &
          its,ite, jts,jte, kts,kte)
@@ -825,8 +824,8 @@ contains
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           if (k==1) then
-          !wet_dep(i,j,nv) = var_rmv(i,j,nv)   !largescale
-          wet_dep(i,j,nv) = tr_fall(i,j,nv)    !convetive 
+          !wet_dep(i,j,nv) = max(0.,var_rmv(i,j,nv))   !largescale
+          wet_dep(i,j,nv) = max(0.,tr_fall(i,j,nv))    !convetive 
           endif
           end do
         end do

@@ -63,7 +63,8 @@ CONTAINS
        chmlos = 0.
        bchmlos = 0.
        do j=jts,jte
-       do k=kts,kte-1
+       !do k=kts,kte-1
+       do k=kts,kte !lzhangkte
        do i=its,ite
           airmas(1,1,1)=-(p8w(i,k+1,j)-p8w(i,k,j))*area(i,j)/g
           pc2(1,1,1,1)=0.

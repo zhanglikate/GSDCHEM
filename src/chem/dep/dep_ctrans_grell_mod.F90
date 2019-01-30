@@ -999,10 +999,9 @@ CONTAINS
                     alpha = 0.
    if(chem_opt >= 300 .and. chem_opt < 500)then
     if(nv.gt. numgas .or. nv.eq.p_sulf) then
-    alpha = .5    ! scavenging factor
-      ! if(nv.le. numgas .and. nv.ne.p_sulf)cycle
+     alpha = .5    ! scavenging factor
        !if(nv.eq.p_bc1 .or. nv.eq.p_oc1 .or. nv.eq.p_dms) alpha=0.
-       if(nv.eq.p_bc1 .or. nv.eq.p_oc1) alpha=0.2 !lzhang
+       if(nv.eq.p_bc1 .or. nv.eq.p_oc1) alpha=0.4 !lzhang
        if(nv.eq.p_dms) alpha=0.
        if(nv.eq.p_sulf .or. nv.eq.p_seas_1 .or. nv.eq.p_seas_2 .or. &
           nv.eq.p_seas_3 .or. nv.eq.p_seas_4)alpha=1.
@@ -1154,7 +1153,8 @@ CONTAINS
             G_rain=  0.5*(chem_pw (i,1,nv)+chem_pw (i,2,nv))*g/dp
             E_dn  =  0.5*(chem_pwd(i,1,nv)+chem_pwd(i,2,nv))*g/dp
             dellac(i,1,nv)=(edt(i)*zd(i,2)*chem_down(i,2,nv)   &
-                     -edt(i)*zd(i,2)*chem_cup(i,2,nv))*g/dp &
+                     -edt(i)*zd(i,2)*chem_cup(i,2,nv)&
+                     -zu(i,2)*(chem_up(i,2,nv)-chem_cup(i,2,nv)) )*g/dp &
                          - g_rain + E_dn
             do k=kts+1,ktop(i)
                dp=100.*(p_cup(i,k)-p_cup(i,k+1))

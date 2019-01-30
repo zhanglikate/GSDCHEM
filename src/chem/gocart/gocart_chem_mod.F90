@@ -91,7 +91,8 @@ contains
         CALL szangle(1, 1, julday, gmtp, sza, cosszax,xlonn,rlat)
         cossza(1,1)=cosszax(1,1)
 !
-       do k=kts,kte-1
+       !do k=kts,kte-1
+       do k=kts,kte !lzhangkte
        chldms_oh=0.
        chldms_no3=0.
        chldms_x=0.
@@ -164,7 +165,8 @@ endif
         xlonn=xlong(i,j)
         CALL szangle(1, 1, julday, gmtp, sza, cosszax,xlonn,rlat)
         cossza(1,1)=cosszax(1,1)
-       do k=kts,kte-1
+       !do k=kts,kte-1
+       do k=kts,kte !lzhangkte
        chldms_oh=0.
        chldms_no3=0.
        chldms_x=0.
