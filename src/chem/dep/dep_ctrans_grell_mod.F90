@@ -998,6 +998,7 @@ CONTAINS
 
                     alpha = 0.
    if(chem_opt >= 300 .and. chem_opt < 500)then
+# if 0
     if(nv.gt. numgas .or. nv.eq.p_sulf) then
      alpha = .5    ! scavenging factor
        !if(nv.eq.p_bc1 .or. nv.eq.p_oc1 .or. nv.eq.p_dms) alpha=0.
@@ -1008,6 +1009,8 @@ CONTAINS
        !if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.8
        if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.5  !lzhang
      endif
+# endif
+    alpha = 1. 
    endif
 
 !    if(chem_opt == 301 .or. chem_opt==108 ) then

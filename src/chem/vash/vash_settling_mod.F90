@@ -39,10 +39,6 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
 
   REAL, INTENT(IN   ) :: dt,g
   integer :: nmx,i,j,k,kk,lmx,iseas,idust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0) :: tmp,airden,airmas,p_mid,delz,rh
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,5) :: dust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,4) :: sea_salt
-  !lzhangkte
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,4) :: sea_salt
@@ -75,19 +71,15 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
        conver=1.e-9
        converi=1.e9
        lmx=kte-kts+1
-       !lmx=kte-kts !lzhangkte
        do j=jts,jte
        do i=its,ite
           kk=0
           are=area(i,j)
       bstl_ash(:)=0.
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
-          !p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
-          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) !lzhangkte
-          !delz(1,1,kk)=dz8w(i,kte-k+kts-1,j)
-          delz(1,1,kk)=dz8w(i,kte-k+kts,j) !lzhangkte
+          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) 
+          delz(1,1,kk)=dz8w(i,kte-k+kts,j) 
           airmas(1,1,kk)=-(p8w(i,k+1,j)-p8w(i,k,j))/g
           airden(1,1,kk)=rho_phy(i,k,j)
           tmp(1,1,kk)=t_phy(i,k,j)
@@ -217,16 +209,11 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
 
   REAL, INTENT(IN   ) :: dt,g
   integer :: nmx,i,j,k,kk,lmx,iseas,idust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0) :: tmp,airden,airmas,p_mid,delz,rh
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,5) :: dust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,4) :: sea_salt
-!lzhangkte
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,4) :: sea_salt
 !srf
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,10) :: ash
-  real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,10) :: ash !lzhangkte
+  real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,10) :: ash 
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_ash(4)=(/2500.,2500.,2500.,2500. /)
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_ash(4)=(/ 11.719D-6,&!
                               05.859D-6,&!
@@ -247,19 +234,15 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
        conver=1.e-9
        converi=1.e9
        lmx=kte-kts+1
-       !lmx=kte-kts lzhangkte
        do j=jts,jte
        do i=its,ite
           kk=0
           are=area(i,j)
       bstl_ash(:)=0.
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
-          !p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
-          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) !lzhangkte
-          !delz(1,1,kk)=dz8w(i,kte-k+kts-1,j)
-          delz(1,1,kk)=dz8w(i,kte-k+kts,j) !lzhangkte
+          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) 
+          delz(1,1,kk)=dz8w(i,kte-k+kts,j) 
           airmas(1,1,kk)=-(p8w(i,k+1,j)-p8w(i,k,j))/g
           airden(1,1,kk)=rho_phy(i,k,j)
           tmp(1,1,kk)=t_phy(i,k,j)
@@ -306,8 +289,7 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
           if(p_vash_4.gt.1)then
           kk=0
 !         write(0,*)'1',chem(i,1,j,p_dust_4)
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
           if(chem(i,k,j,p_vash_1).le.1.e-10)chem(i,k,j,p_vash_1)=0.
           if(chem(i,k,j,p_vash_2).le.1.e-10)chem(i,k,j,p_vash_2)=0.
@@ -327,8 +309,7 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
 !
           else if(p_bc2.gt.1)then
              kk=0
-             !do k=kts,kte-1
-             do k=kts,kte !lzhangkte
+             do k=kts,kte 
                 kk=kk+1
                 ash(1,1,kk,1)=0.
                 ash(1,1,kk,4)=chem(i,k,j,p_p25)*conver

@@ -914,8 +914,7 @@ endif
             return
           end if
           do j = jts, jte
-            !do k = kts, kte-2
-            do k = kts, kte !lzhangkte
+            do k = kts, kte 
               do i = its, ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
                 factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
@@ -939,8 +938,7 @@ endif
             return
           end if
           do j=jts,jte
-            !do k=kts,kte-2
-            do k=kts,kte !lzhangkte
+            do k=kts,kte 
               do i=its,ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
                 factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
@@ -1035,8 +1033,7 @@ endif
               emis_ant(i,ko,j,p_e_tr2)=1./float(k_final)*emiss_tr_mass(j)
             enddo
             if (emiss_tr_dt(j) <= 0.) cycle
-            !do k=kts,kte-2
-            do k=kts,kte !lzhangkte
+            do k=kts,kte 
               factor2=dtstep*rri(i,k,j)/dz8w(i,k,j)
               chem(i,k,j,p_tr2)=chem(i,k,j,p_tr2)+emis_ant(i,k,j,p_e_tr2)*factor2
               if(real_time > 360.) chem(i,k,j,p_tr1)=chem(i,k,j,p_tr1)+emis_ant(i,k,j,p_e_tr2)*factor2

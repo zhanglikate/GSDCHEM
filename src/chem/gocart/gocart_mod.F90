@@ -435,7 +435,8 @@ contains
     !dust_alpha = 1.0_CHEM_KIND_R4  !FIM-Chem
     dust_alpha = 0.5_CHEM_KIND_R4  !HRRR-Chem
     !dust_gamma = 1.6_CHEM_KIND_R4 !FIM-Chem
-    dust_gamma = 1.0_CHEM_KIND_R4  !HRRR-Chem
+    !dust_gamma = 1.0_CHEM_KIND_R4  !HRRR-Chem
+    dust_gamma = 1.3_CHEM_KIND_R4  !FV3-Chem
 
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
@@ -513,11 +514,11 @@ contains
 
     ! -- compute sea salt
     print *,'gocart_run: entering sea salt ...'
-    if (seas_opt == SEAS_OPT_DEFAULT) then
+    if (seas_opt >= SEAS_OPT_DEFAULT) then
       call gocart_seasalt_driver(ktau,dt,rri,t_phy,moist, &
-        u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,p8w,        &
+        u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,&
         xland,xlat,xlong,dxy,grvity,emis_seas,           &
-        seashelp,num_emis_seas,num_moist,num_chem,        &
+        seashelp,num_emis_seas,num_moist,num_chem,seas_opt,&
         ids,ide, jds,jde, kds,kde,                        &
         ims,ime, jms,jme, kms,kme,                        &
         its,ite, jts,jte, kts,kte)
@@ -593,7 +594,7 @@ contains
 
     if ((dust_opt == DUST_OPT_GOCART) .or. &
         (dust_opt == DUST_OPT_AFWA  ) .or. &
-        (seas_opt == SEAS_OPT_DEFAULT)) then
+        (seas_opt >= SEAS_OPT_DEFAULT)) then
       print *,'gocart_run: calling settling ...'
       call gocart_settling_driver(dt,t_phy,moist,  &
         chem,rho_phy,dz8w,p8w,p_phy,   &

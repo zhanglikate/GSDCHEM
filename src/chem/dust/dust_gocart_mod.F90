@@ -348,7 +348,8 @@ contains
               ! Update dust mixing ratio at first model level.
 ! scale down dust by .6
               tc(i,j,1,n) = tc(i,j,1,n) + .7*dsrc / airmas(i,j,1)
-              bems(i,j,n) = .7*dsrc
+              !bems(i,j,n) = .7*dsrc
+              bems(i,j,n) = .7*dsrc/(dxy(j)*dt1) ! diagnostic (kg/m2/s)
            END DO
         END DO
      END DO

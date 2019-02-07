@@ -71,7 +71,6 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
        conver=1.e-9
        converi=1.e9
        lmx=kte-kts+1
-       !lmx=kte-kts !lzhangkte
 !        write(6,*)'in settle'
        select case (config % chem_opt)
        case (304, 316, 317)
@@ -86,13 +85,10 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 ! initialize met stuff
 !
           kk=0
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
-          !p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
-          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) !lzhangkte
-          !delz(1,1,kk)=dz8w(i,kte-k+kts-1,j)
-          delz(1,1,kk)=dz8w(i,kte-k+kts,j)  !lzhangkte
+          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) 
+          delz(1,1,kk)=dz8w(i,kte-k+kts,j)  
           airmas(1,1,kk)=-(p8w(i,k+1,j)-p8w(i,k,j))*area(i,j)/g
           airden(1,1,kk)=rho_phy(i,k,j)
           tmp(1,1,kk)=t_phy(i,k,j)
@@ -117,8 +113,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
             enddo
           enddo
           kk=0
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
           if(k.eq.kts)then
              dust(1,1,kk,1)=(chem(i,k,j,p_dust_1)-.31*dusthelp(i,j))*conver
@@ -156,7 +151,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 !
 !
 !
-          if(config % seas_opt == 1 ) then
+          if(config % seas_opt >= 1 ) then
           iseas=1
           idust=0
           maxseas(:)=0.
@@ -168,8 +163,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
              enddo
           enddo
           kk=0
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
              kk=kk+1
              if(k.eq.kts)then
                 sea_salt(1,1,kk,1)=(chem(i,k,j,p_seas_1)-.75*seashelp(i,j))*conver
@@ -202,7 +196,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
             chem(i,k,j,p_seas_1)=0.
             chem(i,k,j,p_seas_2)=0.
           enddo
-          endif ! seas_opt == 1
+          endif ! seas_opt >= 1
 !
 !
 !
@@ -221,13 +215,10 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
           kk=0
           bstl_dust(:)=0.
           bstl_seas(:)=0.
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
-          !p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts-1,j)
-          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) !lzhangkte
-          !delz(1,1,kk)=dz8w(i,kte-k+kts-1,j)
-          delz(1,1,kk)=dz8w(i,kte-k+kts,j) !lzhangkte
+          p_mid(1,1,kk)=.01*p_phy(i,kte-k+kts,j) 
+          delz(1,1,kk)=dz8w(i,kte-k+kts,j) 
           airmas(1,1,kk)=-(p8w(i,k+1,j)-p8w(i,k,j))*area(i,j)/g
           airden(1,1,kk)=rho_phy(i,k,j)
           tmp(1,1,kk)=t_phy(i,k,j)
@@ -252,8 +243,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
              enddo
           enddo
           kk=0
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
             kk=kk+1
             dust(1,1,kk,1)=chem(i,k,j,p_dust_1)*conver
             dust(1,1,kk,2)=chem(i,k,j,p_dust_2)*conver
@@ -291,12 +281,11 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 !
 !
 !
-          if(config % seas_opt == 1 ) then
+          if(config % seas_opt >= 1 ) then
           iseas=1
           idust=0
           kk=0
-          !do k=kts,kte-1
-          do k=kts,kte !lzhangkte
+          do k=kts,kte 
           kk=kk+1
              sea_salt(1,1,kk,1)=chem(i,k,j,p_seas_1)*conver
              sea_salt(1,1,kk,2)=chem(i,k,j,p_seas_2)*conver

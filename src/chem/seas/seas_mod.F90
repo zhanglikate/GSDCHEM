@@ -16,11 +16,14 @@ module seas_mod
 
   public :: gocart_seasalt_driver
 
+   real, parameter    :: r80fac = 1.65     ! ratio of radius(RH=0.8)/radius(RH=0.) [Gerber]
+   real, parameter    :: rhop = 2200.      ! dry seasalt density [kg m-3]
+   !real, parameter    :: pi = 3.1415       ! ratio of circumference to diameterof circle
 CONTAINS
   subroutine gocart_seasalt_driver(ktau,dt,alt,t_phy,moist,u_phy,  &
-         v_phy,chem,rho_phy,dz8w,u10,v10,p8w,                  &
+         v_phy,chem,rho_phy,dz8w,u10,v10,ustar,p8w,tsk,            &
          xland,xlat,xlong,area,g,emis_seas, &
-         seashelp,num_emis_seas,num_moist,num_chem,  &
+         seashelp,num_emis_seas,num_moist,num_chem,seas_opt,  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
@@ -34,7 +37,7 @@ CONTAINS
      INTEGER,      INTENT(IN   ) :: ktau,num_emis_seas,num_moist,num_chem,   &
                                     ids,ide, jds,jde, kds,kde,               &
                                     ims,ime, jms,jme, kms,kme,               &
-                                    its,ite, jts,jte, kts,kte
+                                    its,ite, jts,jte, kts,kte,seas_opt
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
            INTENT(IN ) ::                                   moist
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
@@ -46,6 +49,7 @@ CONTAINS
             INTENT(IN   ) ::                                                 &
                                                        u10,                  &
                                                        v10,                  &
+                                                       ustar,tsk,            &
                                                        xland,                &
                                                        xlat,                 &
                                                        xlong,area
@@ -62,16 +66,17 @@ CONTAINS
 !
 ! local variables
 !
-    integer :: ipr,nmx,i,j,k,ndt,imx,jmx,lmx
+    integer :: ipr,nmx,i,j,k,ndt,imx,jmx,lmx,n
     integer,dimension (1,1) :: ilwi
     real(CHEM_KIND_R8), DIMENSION (4) :: tc,bems
-    real(CHEM_KIND_R8), dimension (1,1) :: w10m,gwet,airden,airmas
+    real(CHEM_KIND_R8), dimension (1,1) ::w10m,uustar,gwet,airden,airmas,tskin
     real(CHEM_KIND_R8), dimension (1) :: dxy
-    real(CHEM_KIND_R8) conver,converi
+    real(CHEM_KIND_R8) conver,converi,fsstemis,tskin_c
 
     real(CHEM_KIND_R8), dimension(1,1,1) :: airmas1
     real(CHEM_KIND_R8), dimension(1,1,1,4) :: tc1
     real(CHEM_KIND_R8), dimension(1,1,4) :: bems1
+    
     conver=1.d-9
     converi=1.d9
 !
@@ -102,6 +107,8 @@ CONTAINS
               tc(3)=chem(i,kts,j,p_seas_2)*conver
               tc(4)=1.d-30
               w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+              uustar(1,1)=ustar(i,j)
+              tskin(1,1)=tsk(i,j)
               airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
 !
 ! we donṫ trust the u10,v10 values, is model layers are very thin near surface
@@ -144,7 +151,24 @@ CONTAINS
               tc(3)=chem(i,kts,j,p_seas_3)*conver
               tc(4)=chem(i,kts,j,p_seas_4)*conver
               w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+              uustar(1,1)=ustar(i,j)
+              tskin(1,1)=tsk(i,j)
               airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
+!NGAC SST correction:
+
+              fsstemis = 0.0
+
+              tskin_c  = tskin(1,1) - 273.15
+
+              if(tskin_c < -0.1) tskin_c = -0.1    ! temperature range (0, 36) C 
+              if(tskin_c > 36.0) tskin_c = 36.0    !
+
+           fsstemis = (-1.107211 -0.010681*tskin_c -0.002276*tskin_c**2 + &
+                      60.288927*1.0/(40.0 - tskin_c))
+           if(fsstemis < 0.0) fsstemis = 0.0
+           if(fsstemis > 7.0) fsstemis = 7.0
+
+!------------------------------------------------------------------------------
 !
 ! we donṫ trust the u10,v10 values, is model layers are very thin near surface
 !
@@ -157,8 +181,17 @@ CONTAINS
               airmas1(1,1,1) = airmas(1,1)
               tc1(1,1,1,:) = tc
               bems1(1,1,:) = bems
-!             call source_ss( imx,jmx,lmx,nmx, dt, tc,ilwi, dxy, w10m, airmas, bems,ipr)
+            if (seas_opt == 1) then
               call source_ss( imx,jmx,lmx,nmx, dt, tc1,ilwi, dxy, w10m, airmas1, bems1,ipr)
+            endif
+
+            if (seas_opt == 2) then            
+            do n=1,nmx
+              call SeasaltEmission ( imx,jmx,lmx,dt,tc1(1,1,1,n),ra(n), rb(n), 3, dxy,w10m,uustar, &
+                                airmas1, bems1(1,1,n), fsstemis,ipr )
+            enddo !nmx
+            endif !over sea
+
               tc = tc1(1,1,1,:)
 !    if(j.eq.2558)write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
 !    write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
@@ -167,11 +200,14 @@ CONTAINS
               chem(i,kts,j,p_seas_3)=tc(3)*converi
               chem(i,kts,j,p_seas_4)=tc(4)*converi
 ! for output diagnostics
-!    emis_seas(i,1,j,p_edust1)=bems(1)
-!    emis_seas(i,1,j,p_edust2)=bems(2)
-!    emis_seas(i,1,j,p_edust3)=bems(3)
-!    emis_seas(i,1,j,p_edust4)=bems(4)
+    emis_seas(i,1,j,p_seas_1)=bems(1)
+    emis_seas(i,1,j,p_seas_2)=bems(2)
+    emis_seas(i,1,j,p_seas_3)=bems(3)
+    emis_seas(i,1,j,p_seas_4)=bems(4)
             endif
+
+
+
           enddo
         enddo
 
@@ -336,12 +372,154 @@ CONTAINS
                 ELSE
                    src = 0.0
                 END IF
-                bems(i,j,n) = bems(i,j,n) + src*fudge_fac
+                bems(i,j,n) = bems(i,j,n) + src*fudge_fac/(dxy(j)*dt1) !kg/m2/s
              END DO  ! i
           END DO ! j
        END DO ! ir
     END DO ! n
 
   END SUBROUTINE source_ss
+
+   
+   subroutine SeasaltEmission ( imx,jmx,lmx,dt,tc,rLow, rUp, method,dxy, w10m, ustar, &
+                                airmas, memissions,fsstemis,rc )
+
+! !DESCRIPTION: Calculates the seasalt mass emission flux every timestep.
+!  The particular method (algorithm) used for the calculation is based
+!  on the value of "method" passed on input.  Mostly these algorithms are
+!  a function of wind speed and particle size (nominally at 80% RH).
+!  Routine is called once for each size bin, passing in the edge radii
+!  "rLow" and "rUp" (in dry radius, units of um).  Returned in the emission
+!  mass flux [kg m-2 s-1].  A sub-bin assumption is made to break (possibly)
+!  large size bins into a smaller space.
+!
+! !USES:
+
+  implicit NONE
+
+! !INPUT PARAMETERS:
+
+   real(CHEM_KIND_R8), intent(in)                  :: rLow, rUp,fsstemis   ! Dry particle bin edge radii [um]
+   INTEGER, INTENT(IN)                             :: imx,jmx,lmx     !1d 
+   real(CHEM_KIND_R8), intent(in)                  :: dxy(jmx)     !grid cell[m-2] 
+   real(CHEM_KIND_R8), intent(in)          :: w10m(imx,jmx)   ! 10-m wind speed [m s-1]
+   real(CHEM_KIND_R8), intent(in)          :: ustar(imx,jmx)  ! friction velocity [m s-1]
+   real(CHEM_KIND_R8), intent(in)          :: airmas(imx,jmx,lmx)  ! 
+   REAL(CHEM_KIND_R8),    INTENT(INOUT) :: tc(imx,jmx,lmx)
+   REAL(CHEM_KIND_R8),    INTENT(INOUT) :: memissions(imx,jmx)! Mass EmissionsFlux [kg m-2 s-1]
+   integer, intent(in)               :: method      ! Algorithm to use
+   real, intent(in)                        :: dt                   !timestep[s]
+
+! !OUTPUT PARAMETERS:
+
+   real  nemissions      ! Number Emissions Flux [m-2 s-1]
+   integer, intent(out)          :: rc              ! Error return code:
+                                                    !  0 - all is well
+                                                    !  1 - 
+! !Local Variables
+   integer       :: ir,i,j
+   real          :: w                          ! Intermediary wind speed [ms-1]
+   real          :: r, dr                           ! sub-bin radius spacing(dry, um)
+   real          :: rwet, drwet                     ! sub-bin radius spacing(rh=80%, um)
+   real          :: aFac, bFac, scalefac, rpow, exppow, wpow
+
+   integer, parameter :: nr = 10                    ! Number of (linear)sub-size bins
+   real, parameter :: emission_scale= 0.875      ! emission scale in NGAC namelist
+
+!   character(len=*), parameter :: myname = 'SeasaltEmission'
+
+!  Define the sub-bins (still in dry radius)
+   !dr = (rUp - rLow)/nr
+   dr = (rUp - rLow)/nr
+   r  = rLow + 0.5*dr
+
+    do i=1,imx
+      do j=1,jmx
+!  Loop over size bins
+   nemissions = 0.
+   memissions = 0.
+
+   do ir = 1, nr
+    rwet  = r80fac * r
+    drwet = r80fac * dr
+    select case(method)
+
+     case(1)  ! Gong 2003
+      aFac     = 4.7*(1.+30.*rwet)**(-0.017*rwet**(-1.44))
+      bFac     = (0.433-log10(rwet))/0.433
+      scalefac = 1.
+      rpow     = 3.45
+      exppow   = 1.607
+      wpow     = 3.41
+      w        = w10m(i,j)
+
+     case(2)  ! Gong 1997
+      aFac     = 3.
+      bFac     = (0.380-log10(rwet))/0.650
+      scalefac = 1.
+      rpow     = 1.05
+      exppow   = 1.19
+      wpow     = 3.41
+      w        = w10m (i,j)
+
+     case(3)  ! GEOS5 2012
+      aFac     = 4.7*(1.+30.*rwet)**(-0.017*rwet**(-1.44))
+      bFac     = (0.433-log10(rwet))/0.433
+      scalefac = 33.0e3
+      rpow     = 3.45
+      exppow   = 1.607
+      wpow     = 3.41 - 1.
+      w        = ustar (i,j)
+
+     case default
+      !if(MAPL_AM_I_ROOT()) print *, 'SeasaltEmission missing algorithm method'
+      rc = 1
+      return
+
+    end select
+
+
+!   Number emissions flux (# m-2 s-1)
+    nemissions = nemissions + SeasaltEmissionGong( rwet, drwet, w, scalefac,aFac, bFac, rpow, exppow, wpow )
+!   Mass emissions flux (kg m-2 s-1)
+    scalefac = scalefac * 4./3.*pi*rhop*r**3.*1.e-18
+    memissions(i,j) = memissions(i,j) + emission_scale*fsstemis*SeasaltEmissionGong( rwet, drwet, w, scalefac,aFac, bFac, rpow, exppow, wpow )
+
+    tc(i,j,1)=memissions(i,j)*dxy(j)*dt/airmas(i,j,1)  !kg/kg
+    r = r + dr
+
+   end do
+
+    enddo !j
+    enddo !i
+   rc = 0
+
+  end subroutine SeasaltEmission
+
+! Function to compute sea salt emissions following the Gong style
+! parameterization.  Functional form is from Gong 2003:
+!  dN/dr = scalefac * 1.373 * (w^wpow) * (r^-aFac) * (1+0.057*r^rpow) *
+!  10^(exppow*exp(-bFac^2))
+! where r is the particle radius at 80% RH, dr is the size bin width at 80% RH,
+! and w is the wind speed
+
+  function SeasaltEmissionGong ( r, dr, w, scalefac, aFac, bFac, rpow, exppow, wpow )
+
+   real, intent(in)    :: r, dr     ! Wet particle radius, bin width [um]
+   real, intent(in)    :: w    ! Grid box mean wind speed [m s-1](10-m or ustar wind)
+   real, intent(in)    :: scalefac, aFac, bFac, rpow, exppow, wpow
+   real                :: SeasaltEmissionGong
+
+!  Initialize
+   SeasaltEmissionGong = 0.
+
+!  Particle size distribution function
+   SeasaltEmissionGong = scalefac * 1.373*r**(-aFac)*(1.+0.057*r**rpow) &
+                         *10**(exppow*exp(-bFac**2.))*dr
+!  Apply wind speed function
+   SeasaltEmissionGong = w**wpow * SeasaltEmissionGong
+
+  end function SeasaltEmissionGong
+
 
 end module seas_mod

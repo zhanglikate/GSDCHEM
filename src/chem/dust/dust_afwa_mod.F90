@@ -457,7 +457,8 @@ end subroutine gocart_dust_afwa_driver
       ! Update dust mixing ratio at first model level.
         tc(i,j,1,n) = tc(i,j,1,n) + dsrc / airmas(i,j,1) ! (kg/kg)
      !   bems(i,j,n) = dsrc  ! diagnostic
-        bems(i,j,n) = 1000.*dsrc/(dxy(j)*dt1) ! diagnostic (g/m2/s)
+        !bems(i,j,n) = 1000.*dsrc/(dxy(j)*dt1) ! diagnostic (g/m2/s)
+        bems(i,j,n) = dsrc/(dxy(j)*dt1) ! diagnostic (kg/m2/s)
      END DO
    END DO
  END DO

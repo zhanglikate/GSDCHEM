@@ -44,6 +44,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
     do nv=1,num_chem
     alpha = 0.
    if(chem_opt >= 300 .and. chem_opt < 500)then
+#if 0
     if(nv.gt. numgas .or. nv.eq.p_sulf) then
     alpha = .5    ! scavenging factor
       ! if(nv.le. numgas .and. nv.ne.p_sulf)cycle
@@ -55,6 +56,8 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
        !if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.8
        if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.5  !lzhang
      endif
+#endif 
+    alpha = 1.
     endif
 
 !    if(chem_opt == 301 .or. chem_opt==108 ) then
@@ -83,7 +86,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
      var_rmvl(i,:,j)=0.
      frc(i,j)=0.
      rain_clw(i,j)=0.
-     if(rain(i,j).gt.1.e-3)then
+     if(rain(i,j).gt.1.e-6)then
 ! convert rain back to rate
 !
         rain_clw(i,j)=rain(i,j)/dt
@@ -100,8 +103,9 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !       (just like in convec. parameterization
            frc(i,j)=rain_clw(i,j)/var_sum_clw(i,j)
 !    print *,'frc ', frc(i,j),var_sum_clw(i,j),var_sum(i,j)
-           frc(i,j)=max(1.e-6,min(frc(i,j),.004)) 
+          ! frc(i,j)=max(1.e-6,min(frc(i,j),.004)) 
           !frc(i,j)=max(1.e-6,min(frc(i,j),.008)) !lzhang, testing tuning factor
+           frc(i,j)=0.1 !lzhang, testing tuning factor
      
         endif
      endif
@@ -112,7 +116,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !
     do i=its,ite
     do j=jts,jte
-     if(rain(i,j).gt.1.e-3 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
+     if(rain(i,j).gt.1.e-6 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
        !do k=kts,kte-2  !lzhang
        do k=kts,kte
         if(var(i,k,j,nv).gt.1.e-08 .and. (moist(i,k,j,p_qc)+moist(i,k,j,p_qi)).gt.1.e-8)then
