@@ -135,9 +135,6 @@ endif
               ! cossza) > 0.0)
               xno3(1,1,1) = backg_no3(i,k,j) / (1.0 - TTDAY(i,j)/86400.)
            END IF
-!         if(i.eq.19.and.j.eq.19.and.k.eq.kts)then
-!          write(0,*)backg_oh(i,k,j),backg_no3(i,k,j),ttday(i,j),tcosz(i,j)
-!         endif
 
           call chmdrv_su( imx,jmx,lmx,&
                nmx, dt, tmp, airden, airmas, &

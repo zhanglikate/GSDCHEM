@@ -315,14 +315,7 @@ contains
          END SELECT mix_select
 
          do k=kts,kte 
-!           if(j.eq.681.and.nv.eq.10)then
-!             write(6,*)pblst(k)
-!           endif
             chem(i,k,j,nv)=max(epsilc,pblst(k))
-!           if(j.eq.681.and.nv.eq.10)then
-!             write(6,*)dtstep,pblst(k),chem(i,k,j,nv)
-!           endif
-!           if(j.eq.75.and.nv.eq.16)write(6,*)zzfull(k),chem(i,k,j,nv),alt(i,k,j)
          enddo
       enddo
 100   continue

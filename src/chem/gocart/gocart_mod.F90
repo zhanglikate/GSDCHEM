@@ -80,7 +80,7 @@ contains
                                       num_emis_dust, num_emis_seas
     integer,            intent(in) :: num_asym_par, num_bscat_coef, num_ext_coef
     integer,            intent(in) :: numgas
-    integer,            intent(in) :: tile !lzhang
+    integer,            intent(in) :: tile
     integer, optional, intent(out) :: rc
 
     real(CHEM_KIND_R8), intent(in) :: dts

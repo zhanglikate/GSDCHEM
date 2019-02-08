@@ -17,9 +17,7 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
-! USE module_data_gocart_dust
-! USE module_data_gocart_seas
-! USE module_initial_chem_namelists
+
   IMPLICIT NONE
    INTEGER,      INTENT(IN   ) ::                                          &
                                   ids,ide, jds,jde, kds,kde,               &
@@ -43,7 +41,6 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,4) :: sea_salt
 !srf
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,10) :: ash
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,10) :: ash
   real(CHEM_KIND_R8), DIMENSION (10), PARAMETER :: den_ash(10)=(/2500.,2500.,2500.,2500.,2500., &
                                                      2500.,2500.,2500.,2500.,2500. /)
@@ -88,9 +85,6 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
                (3.80*exp(17.27*(t_phy(i,k,j)-273.)/ &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
-!         if(j.eq.803)then
-!           write(6,*)'0++',p_mid(1,1,kk),delz(1,1,kk),airmas(1,1,kk)
-!         endif
           enddo
 
 !ash settling
@@ -108,8 +102,6 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
       iash =1
 
           kk=0
-!         write(0,*)'1',chem(i,1,j,p_dust_4)
-          !do k=kts,kte-1
           do k=kts,kte
           kk=kk+1
           if(chem(i,k,j,p_vash_1).le.1.e-10)chem(i,k,j,p_vash_1)=0.
@@ -132,19 +124,13 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
           ash(1,1,kk,8)=chem(i,k,j,p_vash_8)*conver
           ash(1,1,kk,9)=chem(i,k,j,p_vash_9)*conver
           ash(1,1,kk,10)=chem(i,k,j,p_vash_10)*conver
-!         if(j.eq.803)then
-!           write(6,*)'1++',kk,ash(1,1,kk,7)
-!         endif
-!         if(j.eq.8487)print *,chem(i,k,j,p_vash_10)
           enddo
           iprt=0
-!         if(j.eq.803)iprt=1
           call vsettling(iprt,1, 1, lmx, 10, g,are,&
                     ash, tmp, p_mid, delz, airmas, &
                     den_ash, reff_ash, dt, bstl_ash, rh, idust, iseas,iash)
           kk=0
           ash_fall(i,j)=ash_fall(i,j)+sum(bstl_ash(1:10))
-          !do k=kts,kte-2
           do k=kts,kte
           kk=kk+1
             chem(i,k,j,p_vash_1)=min(maxash(1),ash(1,1,kk,1)*converi)
@@ -167,10 +153,6 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
           if(chem(i,k,j,p_vash_8).le.1.e-10)chem(i,k,j,p_vash_8)=0.
           if(chem(i,k,j,p_vash_9).le.1.e-10)chem(i,k,j,p_vash_9)=0.
           if(chem(i,k,j,p_vash_10).le.1.e-10)chem(i,k,j,p_vash_10)=0.
-!         if(j.eq.803)then
-!           write(6,*)'2++',kk,ash(1,1,kk,7)
-!         endif
-!         if(j.eq.8487)print *,chem(i,k,j,p_vash_10),ash_fall(i,j)
           enddo
 
 !ash settling end
@@ -181,22 +163,21 @@ SUBROUTINE vash_settling_driver(dt,t_phy,moist,                            &
        enddo
        enddo
 END SUBROUTINE vash_settling_driver
-SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            &
+
+SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                       &
          chem,rho_phy,dz8w,p8w,p_phy,area,                                 &
-         ash_fall,g,num_moist,num_chem,                                 &
+         ash_fall,g,num_moist,num_chem,                                    &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
-! USE module_data_gocart_dust
-! USE module_data_gocart_seas
-! USE module_initial_chem_namelists
+
   IMPLICIT NONE
    INTEGER,      INTENT(IN   ) ::                                          &
                                   ids,ide, jds,jde, kds,kde,               &
                                   ims,ime, jms,jme, kms,kme,               &
                                   its,ite, jts,jte, kts,kte,               &
                                   num_chem,num_moist
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),               &
          INTENT(IN ) ::                                   moist
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
          INTENT(INOUT ) ::                                   chem
@@ -251,9 +232,6 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
                (3.80*exp(17.27*(t_phy(i,k,j)-273.)/ &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
-!         if(j.eq.803)then
-!           write(6,*)'0++',p_mid(1,1,kk),delz(1,1,kk),airmas(1,1,kk)
-!         endif
           enddo
      
 
@@ -288,7 +266,6 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
 
           if(p_vash_4.gt.1)then
           kk=0
-!         write(0,*)'1',chem(i,1,j,p_dust_4)
           do k=kts,kte 
           kk=kk+1
           if(chem(i,k,j,p_vash_1).le.1.e-10)chem(i,k,j,p_vash_1)=0.
@@ -299,10 +276,6 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
           ash(1,1,kk,2)=chem(i,k,j,p_vash_2)*conver
           ash(1,1,kk,3)=chem(i,k,j,p_vash_3)*conver
           ash(1,1,kk,4)=chem(i,k,j,p_vash_4)*conver
-!         if(j.eq.803)then
-!           write(6,*)'1++',kk,ash(1,1,kk,7)
-!         endif
-!         if(j.eq.8487)print *,chem(i,k,j,p_vash_10)
           enddo
 !
 ! volc ash for gocart, this is crude
@@ -321,14 +294,12 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
              enddo
           endif
              iprt=0
-!         if(j.eq.803)iprt=1
           call vsettling(iprt,1, 1, lmx, 4, g,are,&
                     ash, tmp, p_mid, delz, airmas, &
                     den_ash, reff_ash, dt, bstl_ash, rh, idust, iseas,iash)
           ash_fall(i,j)=ash_fall(i,j)+sum(bstl_ash(1:4))
           if(p_vash_4.gt.1)then
           kk=0
-          !do k=kts,kte-2
           do k=kts,kte
           kk=kk+1
             chem(i,k,j,p_vash_1)=min(maxash(1),ash(1,1,kk,1)*converi)
@@ -342,7 +313,6 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
           enddo
           else if(p_bc2.gt.1)then
           kk=0
-          !do k=kts,kte-2
           do k=kts,kte
           kk=kk+1
 !           chem(i,k,j,p_p25)=min(maxash(1),ash(1,1,kk,4)*converi)
@@ -354,11 +324,9 @@ SUBROUTINE vashshort_settling_driver(dt,t_phy,moist,                            
 
 !ash settling end
 
-
-
-
        enddo
        enddo
+
 END SUBROUTINE vashshort_settling_driver
 
 
@@ -435,10 +403,8 @@ END SUBROUTINE vashshort_settling_driver
      ! limit maximum number of iterations
 !    IF (ndt_settl(k) > 12) ndt_settl(k) = 12
      IF (ndt_settl(k) > 12) then
-!        print *,g0,den(k),reff(k),growth_fac,dyn_visc
          ndt_settl(k) = 12
          vsettl_max(k)=dzmin*ndt_settl(k)/dt
-!        print *,'k,vsettl,vs_max= ',k,vsettl,vsettl_max
      endif
      dt_settl(k) = REAL(ntdt) / REAL(ndt_settl(k))
 
@@ -450,9 +416,6 @@ END SUBROUTINE vashshort_settling_driver
           ratio_r(k) = 1.0
           rho(k) = den(k)
       endif
-!     if(k.eq.7 .and. iprt.eq.1)then
-!      print *,vsettl,vsettl_max,ndt_settl(k)
-!     endif
   END DO
 
   ! Solve the bidiagonal matrix (l,l)
@@ -537,7 +500,6 @@ END SUBROUTINE vashshort_settling_driver
               IF (addmass(l,n).gt.mass_above)then
                tc(i,j,l,n)=mass_above/airmas(i,j,l) + tc1(i,j,l,n)
                IF (tc(i,j,l,n) < 0.0) tc(i,j,l,n) = 1.0D-32
-!              print *,'addmass',addmass(l,n),mass_above,tc(i,j,l,n),tc1(i,j,l,n)
                addmass(l,n)=mass_above
               endif
            END DO

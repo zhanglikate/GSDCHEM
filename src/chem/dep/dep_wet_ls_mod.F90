@@ -92,8 +92,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
         rain_clw(i,j)=rain(i,j)/dt
 ! total cloud water
 !
-        !do k=1,kte-1
-        do k=1,kte !lzhang
+        do k=1,kte
            dvar=max(0.,(moist(i,k,j,p_qc)+moist(i,k,j,p_qi))*rho(i,k,j)*vvel(i,k,j)*dz8w(i,k,j))
            var_sum_clw(i,j)=var_sum_clw(i,j)+dvar
            var_sum(i,j)=var_sum(i,j)+var(i,k,j,nv)*rho(i,k,j)
@@ -102,7 +101,6 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
 !        assuming that frc is onstant, it is my conversion factor 
 !       (just like in convec. parameterization
            frc(i,j)=rain_clw(i,j)/var_sum_clw(i,j)
-!    print *,'frc ', frc(i,j),var_sum_clw(i,j),var_sum(i,j)
           ! frc(i,j)=max(1.e-6,min(frc(i,j),.004)) 
           !frc(i,j)=max(1.e-6,min(frc(i,j),.008)) !lzhang, testing tuning factor
            frc(i,j)=0.1 !lzhang, testing tuning factor
@@ -117,11 +115,9 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
     do i=its,ite
     do j=jts,jte
      if(rain(i,j).gt.1.e-6 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
-       !do k=kts,kte-2  !lzhang
        do k=kts,kte
         if(var(i,k,j,nv).gt.1.e-08 .and. (moist(i,k,j,p_qc)+moist(i,k,j,p_qi)).gt.1.e-8)then
         factor = max(0.,frc(i,j)*rho(i,k,j)*dz8w(i,k,j)*vvel(i,k,j))
-!       print *,'var before ',k,km,var(i,k,j,nv),factor
 !       dvar=.05*alpha*factor/(1+factor)*var(i,k,j,nv)
         dvar=max(0.,alpha*factor/(1+factor)*var(i,k,j,nv))
         dvar=min(dvar,var(i,k,j,nv))
@@ -133,7 +129,6 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
            var(i,k,j,nv)=var(i,k,j,nv)-dvar
         endif
         var_rmv(i,j,nv)=var_rmv(i,j,nv)+var_rmvl(i,k,j)
-!       print *,'var after ',km,var(i,k,j,nv),dvar
         endif
        enddo
 !      var_rmv(i,j)=var_rmv(i,j)+var_rmvl(i,j)

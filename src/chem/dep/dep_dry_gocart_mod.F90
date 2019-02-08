@@ -9,60 +9,55 @@ module dep_dry_gocart_mod
   public :: gocart_drydep_driver
 
 CONTAINS
-         subroutine gocart_drydep_driver(numgas,               &
-               moist,p8w,chem,rho_phy,dz8w,ddvel,xland,hfx,    &
-               ivgtyp,tsk,pbl,ust,znt,g,                       &
-               num_moist,num_chem,                      &
-               ids,ide, jds,jde, kds,kde,                      &
-               ims,ime, jms,jme, kms,kme,                      &
-               its,ite, jts,jte, kts,kte                       )
-! USE module_model_constants
-! USE module_configure
-! USE module_state_description
+
+subroutine gocart_drydep_driver(numgas,        &
+  moist,p8w,chem,rho_phy,dz8w,ddvel,xland,hfx, &
+  ivgtyp,tsk,pbl,ust,znt,g,                    &
+  num_moist,num_chem,                          &
+  ids,ide, jds,jde, kds,kde,                   &
+  ims,ime, jms,jme, kms,kme,                   &
+  its,ite, jts,jte, kts,kte                    )
+
   IMPLICIT NONE
 
-   INTEGER,      INTENT(IN   ) :: ids,ide, jds,jde, kds,kde,    &
-                                  ims,ime, jms,jme, kms,kme,    &
-                                  num_moist,num_chem,           &
-                                  its,ite, jts,jte, kts,kte,numgas
-   REAL, INTENT(IN   ) ::  g
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),        &
-         INTENT(IN ) ::                                   moist
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),         &
-         INTENT(INOUT ) ::                                 chem
-   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme )         ,    &
-          INTENT(IN   ) ::                                      &
-                                                      dz8w,     &
-                                              p8w,rho_phy
-    INTEGER,DIMENSION( ims:ime , jms:jme )                  ,    &
-          INTENT(IN   ) ::                                      &
-                                                     ivgtyp
-   REAL,  DIMENSION( ims:ime , jms:jme )                   ,    &
-          INTENT(INOUT) ::                                      &
-                                                     tsk,       &
-                                                     pbl,       &
-                                                     ust,       &
-                                                  xland,znt,hfx
+  INTEGER, INTENT(IN   ) :: ids,ide, jds,jde, kds,kde,       &
+                            ims,ime, jms,jme, kms,kme,       &
+                            num_moist,num_chem,              &
+                            its,ite, jts,jte, kts,kte,numgas
+  REAL,    INTENT(IN   ) :: g
+  REAL,    DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),&
+           INTENT(IN   ) :: moist
+  REAL,    DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ) ,&
+           INTENT(INOUT) :: chem
+  REAL,    DIMENSION( ims:ime , kms:kme , jms:jme )         ,&
+           INTENT(IN   ) :: dz8w, p8w,rho_phy
+  INTEGER, DIMENSION( ims:ime , jms:jme )                   ,&
+           INTENT(IN   ) :: ivgtyp
+  REAL,    DIMENSION( ims:ime , jms:jme )                   ,&
+           INTENT(INOUT) :: tsk,                             &
+                            pbl,                             &
+                            ust,                             &
+                            xland,znt,hfx
 
 !! .. Local Scalars ..
 
-      INTEGER :: iland, iprt, iseason, jce, jcs,  &
-                 n, nr, ipr, jpr, nvr,   &
-                 idrydep_onoff,imx,jmx,lmx
+  INTEGER :: iland, iprt, iseason, jce, jcs,  &
+             n, nr, ipr, jpr, nvr,            &
+             idrydep_onoff,imx,jmx,lmx
+  integer :: ii,jj,kk,i,j,k,nv
+  integer,            dimension (1,1) :: ilwi
+  real(CHEM_KIND_R8), DIMENSION (5)   :: tc,bems
+  real(CHEM_KIND_R8), dimension (1,1) :: z0,w10m,gwet,airden,airmas,&
+                                         delz_sfc,hflux,ts,pblz,ustar,&
+                                         ps,dvel,drydf
+  REAL,    DIMENSION( its:ite, jts:jte, num_chem ) :: ddvel
 
-   REAL, DIMENSION( its:ite, jts:jte, num_chem ) ::   ddvel
-     integer :: ii,jj,kk,i,j,k,nv
-  integer,dimension (1,1) :: ilwi
-  real(CHEM_KIND_R8), DIMENSION (5) :: tc,bems
-  real(CHEM_KIND_R8), dimension (1,1) :: z0,w10m,gwet,airden,airmas,delz_sfc,hflux,ts,pblz,ustar,ps
-  REAL(CHEM_KIND_R8)  :: dvel(1,1), drydf(1,1)
-  do j=jts,jte
-  do i=its,ite
-    !do nv=numgas+1,num_chem
-    do nv=1,num_chem !lzhang
-      ddvel(i,j,nv)=0.
+  do nv=1,num_chem
+    do j=jts,jte
+      do i=its,ite
+        ddvel(i,j,nv)=0.
+      enddo
     enddo
-  enddo
   enddo
   imx=1
   jmx=1
@@ -84,17 +79,12 @@ CONTAINS
      z0(1,1)=znt(i,j)
      ts(1,1)=tsk(i,j)
 
-!    if(j.eq.681)then
-!     write(6,*)'in drydepdriver_gocart',ust(i,j),hfx(i,j),znt(i,j),ivgtyp(i,j)
-!    endif
      call depvel_gocart(ii,imx,jmx,lmx,&
      airden, delz_sfc, pblz, ts, ustar, hflux, ilwi, &
      ps, z0, dvel, drydf,g)
-!   if(j.eq.681)write(6,*)numgas,num_chem,dvel(1,1)
-  !do nv=numgas+1,num_chem
-  do nv=1,num_chem  !lzhang
+     do nv=1,num_chem
       ddvel(i,j,nv)=dvel(1,1)
-  enddo
+     enddo
   enddo
   enddo
 end subroutine gocart_drydep_driver

@@ -21,14 +21,8 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
-! USE module_configure
-! USE module_state_description
-! USE module_initial_chem_namelists
-! USE module_data_gocart_dust
-! USE module_data_gocart_seas
-! USE module_model_constants, ONLY: mwdry
+
   IMPLICIT NONE
-!  TYPE(grid_config_rec_type),  INTENT(IN   )    :: config_flags
 
    INTEGER,      INTENT(IN   ) ::                      &
                                   num_moist,num_chem,                      &
@@ -48,9 +42,6 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 
   REAL, INTENT(IN   ) :: dt,g
   integer :: nv,nmx,i,j,k,kk,lmx,iseas,idust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0) :: tmp,airden,airmas,p_mid,delz,rh
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,5) :: dust
-  !real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+0,4) :: sea_salt
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,4) :: sea_salt
