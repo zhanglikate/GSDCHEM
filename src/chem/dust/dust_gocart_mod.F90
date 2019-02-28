@@ -35,10 +35,10 @@ contains
            INTENT(IN ) ::                                   moist
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
            INTENT(INOUT ) ::                                   chem
-     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL,&
+     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),                    &
            INTENT(INOUT ) ::                                                 &
            emis_dust
-     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL,&
+     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),                    &
            INTENT(INOUT ) ::                                                 &
            srce_dust  
     REAL, DIMENSION( ims:ime, num_soil_layers, jms:jme ) ,      &

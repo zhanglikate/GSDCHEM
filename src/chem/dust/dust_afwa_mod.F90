@@ -18,7 +18,7 @@ contains
   subroutine gocart_dust_afwa_driver(ktau,dt,alt,t_phy,moist,u_phy,        &
          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,                   &
          ivgtyp,isltyp,vegfra,xland,xlat,xlong,gsw,area,g,emis_dust,       &
-         srce_dust,dustin,ust,znt,clay,sand,alpha,gamma,                    &
+         srce_dust,dustin,ust,znt,clay,sand,alpha,gamma,                   &
          num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
@@ -38,10 +38,10 @@ contains
          INTENT(IN ) ::                              moist
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
          INTENT(INOUT ) ::                           chem
-   REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL,           &
+   REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),                    &
          INTENT(INOUT ) ::                                                 &
          emis_dust
-   REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL,&
+   REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),                    &
          INTENT(INOUT ) ::                                                 &
          srce_dust
    REAL, DIMENSION( ims:ime, num_soil_layers, jms:jme ) ,     &

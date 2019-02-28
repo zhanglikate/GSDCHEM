@@ -147,8 +147,7 @@ SUBROUTINE wesely_driver(  ktau, dtstep, current_month,  &
                                                      znt
    REAL, intent(inout) ::                            aer_res_def(its:ite,jts:jte)
    REAL, intent(inout) ::                            aer_res_zcen(its:ite,jts:jte)
-   REAL,  optional, INTENT(IN)  ::                   snowh(ims:ime,jms:jme)
-!  TYPE(grid_config_rec_type),  INTENT(IN) ::        config_flags
+   REAL, INTENT(IN)    ::                            snowh(ims:ime,jms:jme)
 
 !--------------------------------------------------
 ! .. Local Scalars
