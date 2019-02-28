@@ -734,6 +734,7 @@ module chem_tracers_mod
   INTEGER            ::     P_eseas2 = 1
   INTEGER            ::     P_eseas3 = 1
   INTEGER            ::     P_eseas4 = 1
+  INTEGER            ::     P_eseas5 = 1
 
   INTEGER            ::     P_extcof106 = 1
   INTEGER            ::     P_extcof3 = 1
@@ -1292,6 +1293,7 @@ contains
     p_eseas2       = config % species % p_eseas2
     p_eseas3       = config % species % p_eseas3
     p_eseas4       = config % species % p_eseas4
+    p_eseas5       = config % species % p_eseas5
     p_ete          = config % species % p_ete
     p_eth          = config % species % p_eth
     p_extcof106    = config % species % p_extcof106
@@ -1362,6 +1364,7 @@ contains
     p_seas_2       = config % species % p_seas_2
     p_seas_3       = config % species % p_seas_3
     p_seas_4       = config % species % p_seas_4
+    p_seas_5       = config % species % p_seas_5
     p_sesq         = config % species % p_sesq
     p_so2          = config % species % p_so2
     p_so4ai        = config % species % p_so4ai

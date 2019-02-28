@@ -1341,6 +1341,9 @@ contains
             call chem_io_write('s4ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_4), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('s5ea', stateOut % tr3d(:,:,:,config % ntra + s % p_seas_5), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
             call chem_io_write('pbc1', stateOut % tr3d(:,:,:,config % ntra + s % p_bc1), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
@@ -1455,6 +1458,9 @@ contains
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             call chem_io_write('wse4', data % wet_dep(:,:,s % p_seas_4), &
+              path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            call chem_io_write('wse5', data % wet_dep(:,:,s % p_seas_5), &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 

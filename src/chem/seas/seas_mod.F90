@@ -1,14 +1,19 @@
 module seas_mod
 
   use chem_const_mod,   only : pi => pi_r8
+  use chem_rc_mod,      only : chem_rc_test
   use chem_types_mod,   only : CHEM_KIND_R8
   use chem_tracers_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, p_seas_5, &
                                config => chem_config
   use seas_data_mod
+  use seas_ngac_mod
 
   implicit none
 
   integer, parameter :: SEAS_OPT_DEFAULT = 1
+
+  ! -- NGAC parameters
+  integer, parameter :: emission_scheme = 3    ! GEOSS 2012
 
   private
 
@@ -16,10 +21,8 @@ module seas_mod
 
   public :: gocart_seasalt_driver
 
-   real, parameter    :: r80fac = 1.65     ! ratio of radius(RH=0.8)/radius(RH=0.) [Gerber]
-   real, parameter    :: rhop = 2200.      ! dry seasalt density [kg m-3]
-   !real, parameter    :: pi = 3.1415       ! ratio of circumference to diameterof circle
 CONTAINS
+
   subroutine gocart_seasalt_driver(ktau,dt,alt,t_phy,moist,u_phy,  &
          v_phy,chem,rho_phy,dz8w,u10,v10,ustar,p8w,tsk,            &
          xland,xlat,xlong,area,g,emis_seas, &
@@ -27,12 +30,6 @@ CONTAINS
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
          its,ite, jts,jte, kts,kte                                         )
-!   USE module_initial_chem_namelists
-! USE module_configure
-! USE module_state_description
-! USE module_model_constants, ONLY: mwdry
-! IMPLICIT NONE
-!  TYPE(grid_config_rec_type),  INTENT(IN   )    :: config_flags
 
      INTEGER,      INTENT(IN   ) :: ktau,num_emis_seas,num_moist,num_chem,   &
                                     ids,ide, jds,jde, kds,kde,               &
@@ -42,7 +39,7 @@ CONTAINS
            INTENT(IN ) ::                                   moist
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
            INTENT(INOUT ) ::                                   chem
-     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_seas),OPTIONAL,&
+     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_seas),                    &
            INTENT(INOUT ) ::                                                 &
            emis_seas
      REAL,  DIMENSION( ims:ime , jms:jme )                   ,               &
@@ -66,34 +63,34 @@ CONTAINS
 !
 ! local variables
 !
-    integer :: ipr,nmx,i,j,k,ndt,imx,jmx,lmx,n
+    integer :: ipr,i,j,imx,jmx,lmx,n,rc
     integer,dimension (1,1) :: ilwi
-    real(CHEM_KIND_R8), DIMENSION (4) :: tc,bems
-    real(CHEM_KIND_R8), dimension (1,1) ::w10m,uustar,gwet,airden,airmas,tskin
+    real               :: fsstemis, memissions, nemissions, tskin_c, ws10m
+    real(CHEM_KIND_R8) :: delp
+    real(CHEM_KIND_R8), DIMENSION (number_ss_bins) :: tc,bems
+    real(CHEM_KIND_R8), dimension (1,1) ::w10m,airmas,tskin
     real(CHEM_KIND_R8), dimension (1) :: dxy
-    real(CHEM_KIND_R8) conver,converi,fsstemis,tskin_c
 
     real(CHEM_KIND_R8), dimension(1,1,1) :: airmas1
-    real(CHEM_KIND_R8), dimension(1,1,1,4) :: tc1
-    real(CHEM_KIND_R8), dimension(1,1,4) :: bems1
+    real(CHEM_KIND_R8), dimension(1,1,1,number_ss_bins) :: tc1
+    real(CHEM_KIND_R8), dimension(1,1,number_ss_bins) :: bems1
     
-    conver=1.d-9
-    converi=1.d9
+!
+! local parameters
+!
+    real(CHEM_KIND_R8), parameter :: conver  = 1.e-9_CHEM_KIND_R8
+    real(CHEM_KIND_R8), parameter :: converi = 1.e+9_CHEM_KIND_R8
 !
 ! number of dust bins
 !
     imx=1
     jmx=1
     lmx=1
-    nmx=4
-    k=kts
-! p_seas_1=1
-! p_seas_2=2
-! p_seas_3=3
-! p_seas_4=4
-!    write(6,*)'call seasalt'
+
     select case (config % chem_opt)
+
       case (304, 316, 317)
+
         seashelp(:,:)=0.
         do j=jts,jte
           do i=its,ite
@@ -103,13 +100,13 @@ CONTAINS
             if(xland(i,j).lt.0.5)then
               ilwi(1,1)=0
               tc(1)=chem(i,kts,j,p_seas_1)*conver
-              tc(2)=1.d-30
+              tc(2)=1.e-30_CHEM_KIND_R8
               tc(3)=chem(i,kts,j,p_seas_2)*conver
-              tc(4)=1.d-30
+              tc(4)=1.e-30_CHEM_KIND_R8
               w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-              uustar(1,1)=ustar(i,j)
               tskin(1,1)=tsk(i,j)
-              airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
+              delp = p8w(i,kts,j)-p8w(i,kts+1,j)
+              airmas(1,1)=area(i,j) * delp / g
 !
 ! we donṫ trust the u10,v10 values, is model layers are very thin near surface
 !
@@ -118,15 +115,12 @@ CONTAINS
               dxy(1)=area(i,j)
               ipr=0
 
-!    if(j.eq.2478)write(6,*)'call seasalt ',w10m(1,1),airmas(1,1),tc(1),tc(2)
               airmas1(1,1,1) = airmas(1,1)
               tc1(1,1,1,:) = tc
               bems1(1,1,:) = bems
 !             call source_ss( imx,jmx,lmx,nmx, dt, tc,ilwi, dxy, w10m, airmas, bems,ipr)
-              call source_ss( imx,jmx,lmx,nmx, dt, tc1,ilwi, dxy, w10m, airmas1, bems1,ipr)
+              call source_ss( imx, jmx, lmx, number_ss_bins, dt, tc1,ilwi, dxy, w10m, airmas1, bems1,ipr)
               tc = tc1(1,1,1,:)
-!    if(j.eq.2558)write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
-!    write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
               chem(i,kts,j,p_seas_1)=(tc(1)+.75*tc(2))*converi
               chem(i,kts,j,p_seas_2)=(tc(3)+.25*tc(2))*converi
               seashelp(i,j)=tc(2)*converi
@@ -139,77 +133,116 @@ CONTAINS
         enddo
 
       case default
-        do j=jts,jte
-          do i=its,ite
-!
-! donṫ do dust over water!!!
-!
-            if(xland(i,j).lt.0.5)then
-              ilwi(1,1)=0
-              tc(1)=chem(i,kts,j,p_seas_1)*conver
-              tc(2)=chem(i,kts,j,p_seas_2)*conver
-              tc(3)=chem(i,kts,j,p_seas_3)*conver
-              tc(4)=chem(i,kts,j,p_seas_4)*conver
-              w10m(1,1)=sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
-              uustar(1,1)=ustar(i,j)
-              tskin(1,1)=tsk(i,j)
-              airmas(1,1)=-(p8w(i,kts+1,j)-p8w(i,kts,j))*area(i,j)/g
-!NGAC SST correction:
 
-              fsstemis = 0.0
+        select case (seas_opt)
+          case (1)
+            ! -- original GOCART sea salt scheme
+            do j = jts, jte
+              do i = its, ite
 
-              tskin_c  = tskin(1,1) - 273.15
+                ! -- only use sea salt scheme over water
+                if (xland(i,j) < 0.5) then
 
-              if(tskin_c < -0.1) tskin_c = -0.1    ! temperature range (0, 36) C 
-              if(tskin_c > 36.0) tskin_c = 36.0    !
+                  ! -- compute auxiliary variables
+                  delp = p8w(i,kts,j)-p8w(i,kts+1,j)
+                  if (dz8w(i,kts,j) < 12.) then
+                    w10m = sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
+                  else
+                    w10m = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+                  end if
 
-           fsstemis = (-1.107211 -0.010681*tskin_c -0.002276*tskin_c**2 + &
-                      60.288927*1.0/(40.0 - tskin_c))
-           if(fsstemis < 0.0) fsstemis = 0.0
-           if(fsstemis > 7.0) fsstemis = 7.0
+                  ilwi(1,1)=0
+                  tc = 0.
+                  tskin(1,1)=tsk(i,j)
+                  airmas(1,1)=area(i,j) * delp / g
+                  dxy(1)=area(i,j)
+                  ipr=0
 
-!------------------------------------------------------------------------------
-!
-! we donṫ trust the u10,v10 values, is model layers are very thin near surface
-!
-              if(dz8w(i,kts,j).lt.12.)w10m=sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
-!
-              dxy(1)=area(i,j)
-              ipr=0
+                  airmas1(1,1,1) = airmas(1,1)
+                  tc1(1,1,1,:) = tc
+                  bems1(1,1,:) = bems
+                  call source_ss( imx,jmx,lmx,number_ss_bins, dt, tc1, ilwi, dxy, w10m, airmas1, bems1,ipr)
+                  tc   = tc1(1,1,1,:)
+                  bems = bems1(1,1,:)
 
-!    if(j.eq.2478)write(6,*)'call seasalt ',w10m(1,1),airmas(1,1),tc(1),tc(2)
-              airmas1(1,1,1) = airmas(1,1)
-              tc1(1,1,1,:) = tc
-              bems1(1,1,:) = bems
-            if (seas_opt == 1) then
-              call source_ss( imx,jmx,lmx,nmx, dt, tc1,ilwi, dxy, w10m, airmas1, bems1,ipr)
-            endif
+                  ! -- add sea salt emission increments to existing airborne concentrations
+                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
+                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
+                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
+                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
+                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
 
-            if (seas_opt == 2) then            
-            do n=1,nmx
-              call SeasaltEmission ( imx,jmx,lmx,dt,tc1(1,1,1,n),ra(n), rb(n), 3, dxy,w10m,uustar, &
-                                airmas1, bems1(1,1,n), fsstemis,ipr )
-            enddo !nmx
-            endif !over sea
+                  ! for output diagnostics
+                  emis_seas(i,1,j,p_seas_1) = bems(1)
+                  emis_seas(i,1,j,p_seas_2) = bems(2)
+                  emis_seas(i,1,j,p_seas_3) = bems(3)
+                  emis_seas(i,1,j,p_seas_4) = bems(4)
+                  emis_seas(i,1,j,p_seas_5) = bems(5)
 
-              tc = tc1(1,1,1,:)
-!    if(j.eq.2558)write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
-!    write(6,*)'call seasalt after',tc(1),tc(2),bems(1)
-              chem(i,kts,j,p_seas_1)=tc(1)*converi
-              chem(i,kts,j,p_seas_2)=tc(2)*converi
-              chem(i,kts,j,p_seas_3)=tc(3)*converi
-              chem(i,kts,j,p_seas_4)=tc(4)*converi
-! for output diagnostics
-    emis_seas(i,1,j,p_seas_1)=bems(1)
-    emis_seas(i,1,j,p_seas_2)=bems(2)
-    emis_seas(i,1,j,p_seas_3)=bems(3)
-    emis_seas(i,1,j,p_seas_4)=bems(4)
-            endif
+                end if
 
+              end do
+            end do
 
+          case (2)
+            ! -- NGAC sea salt scheme
+            do j = jts, jte
+              do i = its, ite
 
-          enddo
-        enddo
+                ! -- only use sea salt scheme over water
+                if (xland(i,j) < 0.5) then
+
+                  ! -- compute auxiliary variables
+                  delp = p8w(i,kts,j)-p8w(i,kts+1,j)
+                  if (dz8w(i,kts,j) < 12.) then
+                    ws10m = sqrt(u_phy(i,kts,j)*u_phy(i,kts,j)+v_phy(i,kts,j)*v_phy(i,kts,j))
+                  else
+                    ws10m = sqrt(u10(i,j)*u10(i,j)+v10(i,j)*v10(i,j))
+                  end if
+
+                  ! -- compute NGAC SST correction
+                  tskin_c  = tsk(i,j) - 273.15
+                  tskin_c  = min(max(tskin_c, -0.1), 36.0)    ! temperature range (0, 36) C
+
+                  fsstemis = -1.107211 &
+                             - tskin_c*(0.010681+0.002276*tskin_c) &
+                             + 60.288927/(40.0 - tskin_c)
+                  fsstemis = min(max(fsstemis, 0.0), 7.0)
+
+                  do n = 1, number_ss_bins
+                    memissions = 0.
+                    nemissions = 0.
+                    call SeasaltEmission( ra(n), rb(n), emission_scheme, &
+                                          ws10m, ustar(i,j), memissions, nemissions, rc )
+                    if (chem_rc_test((rc /= 0), msg="Error in NGAC sea salt scheme", &
+                      file=__FILE__, line=__LINE__)) return
+
+                    bems(n) = emission_scale(n) * fsstemis * memissions
+                    tc(n) = bems(n) * dt * g / delp
+                  end do
+
+                  ! -- add sea salt emission increments to existing airborne concentrations
+                  chem(i,kts,j,p_seas_1) = chem(i,kts,j,p_seas_1) + tc(1)*converi
+                  chem(i,kts,j,p_seas_2) = chem(i,kts,j,p_seas_2) + tc(2)*converi
+                  chem(i,kts,j,p_seas_3) = chem(i,kts,j,p_seas_3) + tc(3)*converi
+                  chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
+                  chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
+
+                  ! for output diagnostics
+                  emis_seas(i,1,j,p_seas_1) = bems(1)
+                  emis_seas(i,1,j,p_seas_2) = bems(2)
+                  emis_seas(i,1,j,p_seas_3) = bems(3)
+                  emis_seas(i,1,j,p_seas_4) = bems(4)
+                  emis_seas(i,1,j,p_seas_5) = bems(5)
+                end if
+
+              end do
+            end do
+
+          case default
+          ! -- no sea salt scheme
+
+        end select
 
     end select
 
@@ -333,14 +366,12 @@ CONTAINS
     fudge_fac= .25 !lzhang
 !
     DO n = 1,nmx
-!    if(ipr.eq.1)write(0,*)'in seasalt',n,ipr,ilwi
        bems(:,:,n) = 0.0
        rho_d = den_seas(n)
        r0 = ra(n)*frh
        r1 = rb(n)*frh
        r = r0
        nr = INT((r1-r0)/dr+.001)
-!    if(ipr.eq.1.and.n.eq.1)write(0,*)'in seasalt',nr,r1,r0,dr,rho_d
        DO ir = 1,nr
           r_w = r + dr*0.5
           r = r + dr
@@ -368,7 +399,6 @@ CONTAINS
                    src = dfm*dxy(j)*w10m(i,j)**c0(2)
 !                 src = ch_ss(n,dt(1)%mn)*dfm*dxy(j)*w10m(i,j)**c0(2)
                    tc(i,j,1,n) = tc(i,j,1,n) + fudge_fac*src/airmas(i,j,1)
-!                if(ipr.eq.1)write(0,*)n,dfm,c0(2),dxy(j),w10m(i,j),src,airmas(i,j,1)
                 ELSE
                    src = 0.0
                 END IF
@@ -379,147 +409,5 @@ CONTAINS
     END DO ! n
 
   END SUBROUTINE source_ss
-
-   
-   subroutine SeasaltEmission ( imx,jmx,lmx,dt,tc,rLow, rUp, method,dxy, w10m, ustar, &
-                                airmas, memissions,fsstemis,rc )
-
-! !DESCRIPTION: Calculates the seasalt mass emission flux every timestep.
-!  The particular method (algorithm) used for the calculation is based
-!  on the value of "method" passed on input.  Mostly these algorithms are
-!  a function of wind speed and particle size (nominally at 80% RH).
-!  Routine is called once for each size bin, passing in the edge radii
-!  "rLow" and "rUp" (in dry radius, units of um).  Returned in the emission
-!  mass flux [kg m-2 s-1].  A sub-bin assumption is made to break (possibly)
-!  large size bins into a smaller space.
-!
-! !USES:
-
-  implicit NONE
-
-! !INPUT PARAMETERS:
-
-   real(CHEM_KIND_R8), intent(in)                  :: rLow, rUp,fsstemis   ! Dry particle bin edge radii [um]
-   INTEGER, INTENT(IN)                             :: imx,jmx,lmx     !1d 
-   real(CHEM_KIND_R8), intent(in)                  :: dxy(jmx)     !grid cell[m-2] 
-   real(CHEM_KIND_R8), intent(in)          :: w10m(imx,jmx)   ! 10-m wind speed [m s-1]
-   real(CHEM_KIND_R8), intent(in)          :: ustar(imx,jmx)  ! friction velocity [m s-1]
-   real(CHEM_KIND_R8), intent(in)          :: airmas(imx,jmx,lmx)  ! 
-   REAL(CHEM_KIND_R8),    INTENT(INOUT) :: tc(imx,jmx,lmx)
-   REAL(CHEM_KIND_R8),    INTENT(INOUT) :: memissions(imx,jmx)! Mass EmissionsFlux [kg m-2 s-1]
-   integer, intent(in)               :: method      ! Algorithm to use
-   real, intent(in)                        :: dt                   !timestep[s]
-
-! !OUTPUT PARAMETERS:
-
-   real  nemissions      ! Number Emissions Flux [m-2 s-1]
-   integer, intent(out)          :: rc              ! Error return code:
-                                                    !  0 - all is well
-                                                    !  1 - 
-! !Local Variables
-   integer       :: ir,i,j
-   real          :: w                          ! Intermediary wind speed [ms-1]
-   real          :: r, dr                           ! sub-bin radius spacing(dry, um)
-   real          :: rwet, drwet                     ! sub-bin radius spacing(rh=80%, um)
-   real          :: aFac, bFac, scalefac, rpow, exppow, wpow
-
-   integer, parameter :: nr = 10                    ! Number of (linear)sub-size bins
-   real, parameter :: emission_scale= 0.875      ! emission scale in NGAC namelist
-
-!   character(len=*), parameter :: myname = 'SeasaltEmission'
-
-!  Define the sub-bins (still in dry radius)
-   !dr = (rUp - rLow)/nr
-   dr = (rUp - rLow)/nr
-   r  = rLow + 0.5*dr
-
-    do i=1,imx
-      do j=1,jmx
-!  Loop over size bins
-   nemissions = 0.
-   memissions = 0.
-
-   do ir = 1, nr
-    rwet  = r80fac * r
-    drwet = r80fac * dr
-    select case(method)
-
-     case(1)  ! Gong 2003
-      aFac     = 4.7*(1.+30.*rwet)**(-0.017*rwet**(-1.44))
-      bFac     = (0.433-log10(rwet))/0.433
-      scalefac = 1.
-      rpow     = 3.45
-      exppow   = 1.607
-      wpow     = 3.41
-      w        = w10m(i,j)
-
-     case(2)  ! Gong 1997
-      aFac     = 3.
-      bFac     = (0.380-log10(rwet))/0.650
-      scalefac = 1.
-      rpow     = 1.05
-      exppow   = 1.19
-      wpow     = 3.41
-      w        = w10m (i,j)
-
-     case(3)  ! GEOS5 2012
-      aFac     = 4.7*(1.+30.*rwet)**(-0.017*rwet**(-1.44))
-      bFac     = (0.433-log10(rwet))/0.433
-      scalefac = 33.0e3
-      rpow     = 3.45
-      exppow   = 1.607
-      wpow     = 3.41 - 1.
-      w        = ustar (i,j)
-
-     case default
-      !if(MAPL_AM_I_ROOT()) print *, 'SeasaltEmission missing algorithm method'
-      rc = 1
-      return
-
-    end select
-
-
-!   Number emissions flux (# m-2 s-1)
-    nemissions = nemissions + SeasaltEmissionGong( rwet, drwet, w, scalefac,aFac, bFac, rpow, exppow, wpow )
-!   Mass emissions flux (kg m-2 s-1)
-    scalefac = scalefac * 4./3.*pi*rhop*r**3.*1.e-18
-    memissions(i,j) = memissions(i,j) + emission_scale*fsstemis*SeasaltEmissionGong( rwet, drwet, w, scalefac,aFac, bFac, rpow, exppow, wpow )
-
-    tc(i,j,1)=memissions(i,j)*dxy(j)*dt/airmas(i,j,1)  !kg/kg
-    r = r + dr
-
-   end do
-
-    enddo !j
-    enddo !i
-   rc = 0
-
-  end subroutine SeasaltEmission
-
-! Function to compute sea salt emissions following the Gong style
-! parameterization.  Functional form is from Gong 2003:
-!  dN/dr = scalefac * 1.373 * (w^wpow) * (r^-aFac) * (1+0.057*r^rpow) *
-!  10^(exppow*exp(-bFac^2))
-! where r is the particle radius at 80% RH, dr is the size bin width at 80% RH,
-! and w is the wind speed
-
-  function SeasaltEmissionGong ( r, dr, w, scalefac, aFac, bFac, rpow, exppow, wpow )
-
-   real, intent(in)    :: r, dr     ! Wet particle radius, bin width [um]
-   real, intent(in)    :: w    ! Grid box mean wind speed [m s-1](10-m or ustar wind)
-   real, intent(in)    :: scalefac, aFac, bFac, rpow, exppow, wpow
-   real                :: SeasaltEmissionGong
-
-!  Initialize
-   SeasaltEmissionGong = 0.
-
-!  Particle size distribution function
-   SeasaltEmissionGong = scalefac * 1.373*r**(-aFac)*(1.+0.057*r**rpow) &
-                         *10**(exppow*exp(-bFac**2.))*dr
-!  Apply wind speed function
-   SeasaltEmissionGong = w**wpow * SeasaltEmissionGong
-
-  end function SeasaltEmissionGong
-
 
 end module seas_mod

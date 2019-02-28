@@ -92,7 +92,7 @@ module chem_config_mod
     integer :: num_bscat_coef  = 3
     integer :: num_asym_par    = 3
     INTEGER :: num_emis_dust   = 5
-    INTEGER :: num_emis_seas   = 4
+    INTEGER :: num_emis_seas   = 5
     INTEGER :: num_plumestuff  = 8
     INTEGER :: ne_area         = 41
     INTEGER :: nmegan          = 1
@@ -409,7 +409,7 @@ contains
 
       select case (config % chem_opt)
         case(CHEM_OPT_GOCART)
-          config % num_chem            = 19
+          config % num_chem            = 20
           config % num_ebu             = 7
           config % num_ebu_in          = 7
           config % num_emis_ant        = 7
@@ -518,8 +518,8 @@ contains
     select case (config % chem_opt)
       case (CHEM_OPT_GOCART)
         ! -- gocart simple
-        if (chem_rc_test((config % num_chem    /= 19), &
-          msg="num_chem is not equal to 19", &
+        if (chem_rc_test((config % num_chem    /= 20), &
+          msg="num_chem is not equal to 20", &
           file=__FILE__, line=__LINE__, rc=rc)) return
         if (chem_rc_test((config % num_emis_ant < 4), &
           msg="num_emis_ant smaller than 4", &
@@ -549,7 +549,8 @@ contains
         config % species % p_seas_2=16
         config % species % p_seas_3=17
         config % species % p_seas_4=18
-        config % species % p_p10   =19
+        config % species % p_seas_5=19
+        config % species % p_p10   =20
         config % species % p_e_bc  =1
         config % species % p_e_oc  =2
         config % species % p_e_sulf=3
@@ -584,11 +585,12 @@ contains
         config % species % p_eseas2=2
         config % species % p_eseas3=3
         config % species % p_eseas4=4
+        config % species % p_eseas5=5
 
       case (CHEM_OPT_GOCART_RACM)
         ! -- gocart + racm
-        if (chem_rc_test((config % num_chem    /= 66), &
-          msg="num_chem is not equal to 66", &
+        if (chem_rc_test((config % num_chem    /= 67), &
+          msg="num_chem is not equal to 67", &
           file=__FILE__, line=__LINE__, rc=rc)) return
         if (chem_rc_test((config % num_emis_ant < 25), &
           msg="num_emis_ant smaller than 25", &
@@ -739,7 +741,8 @@ contains
       config % species % p_seas_2  = 63
       config % species % p_seas_3  = 64
       config % species % p_seas_4  = 65
-      config % species % p_p10  = 66
+      config % species % p_seas_5  = 66
+      config % species % p_p10  = 67
 ! emissions
 !package   ecptec          emiss_opt==5                   -
 !emis_ant:e_iso,e_so2,e_no,e_no2,e_co,e_eth,e_hc3,e_hc5,e_hc8,e_xyl,e_ol2,e_olt,e_oli,e_tol,e_csl,e_hcho,e_ald,e_ket,e_ora2,e_nh3,e_pm_25,e_pm_10,e_oc,e_sulf,e_bc
@@ -833,6 +836,7 @@ contains
       config % species % p_eseas2=2
       config % species % p_eseas3=3
       config % species % p_eseas4=4
+      config % species % p_eseas5=5
 
     end subroutine gocartracm_pointers_init
 !

@@ -2,7 +2,7 @@ module gocart_aerosols_mod
 
   use chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
                              p_dust_1,p_dust_2,p_dust_3,p_dust_4,p_dust_5,&
-                             p_seas_1,p_seas_2,p_seas_3,p_seas_4, &
+                             p_seas_1,p_seas_2,p_seas_3,p_seas_4,p_seas_5,&
                              p_sulf,p_p25,p_so2,p_vash_1
 
   use chem_const_mod, only : airmw
@@ -149,13 +149,15 @@ end subroutine gocart_aerosols_driver
             enddo
             if(chem_opt.eq.300.or.chem_opt.eq.301)then
                pm2_5_dry(i,k,j) = pm2_5_dry(i,k,j)+chem(i,k,j,p_dust_2)*d_2_5     &
-                                            +chem(i,k,j,p_seas_1)           &        
-                                            +chem(i,k,j,p_seas_2)*s_2_5     &
+                                            +chem(i,k,j,p_seas_1)           &
+                                            +chem(i,k,j,p_seas_2)           &
+                                            +chem(i,k,j,p_seas_3)*s_2_5     &
                                             +sulfate
             else if(chem_opt .eq. 317) then
                pm2_5_dry(i,k,j) = pm2_5_dry(i,k,j)+chem(i,k,j,p_dust_2)*d_2_5     &
-                                            +chem(i,k,j,p_seas_1)           &        
-                                            +chem(i,k,j,p_seas_2)*s_2_5     &
+                                            +chem(i,k,j,p_seas_1)           &
+                                            +chem(i,k,j,p_seas_2)           &
+                                            +chem(i,k,j,p_seas_3)*s_2_5     &
                                             +chem(i,k,j,p_vash_1)           &
                                             +sulfate
             else
@@ -170,8 +172,7 @@ end subroutine gocart_aerosols_driver
       enddo
       maxd=max(p_dust_2,p_dust_3)
       maxp=max(p_dust_2,p_dust_4)
-      maxs=max(p_seas_2,p_seas_3)
-!     print *,'maxd,maxp,maxs = ',maxd,maxp,maxs
+      maxs=p_seas_4
       do j=jts,jte
          do k=kts,kte
             do i=its,ite
@@ -185,11 +186,9 @@ end subroutine gocart_aerosols_driver
                pm10(i,k,j) = pm10(i,k,j) + sulfate                 &
                             +chem(i,k,j,maxp)*d_10
                pm10(i,k,j) = pm10(i,k,j)/ alt(i,k,j)
-!              if(pm10(i,k,j).gt.10000)write(6,*)j,k,sulfate,pm10(i,k,j)
             enddo
          enddo
       enddo
-!     write(6,*)'in sumpm2 ',maxv,minv
 
 end subroutine sum_pm_gocart
 

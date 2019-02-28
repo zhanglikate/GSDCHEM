@@ -52,7 +52,7 @@ subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist, &
        if(nv.eq.p_bc1 .or. nv.eq.p_oc1) alpha=0.2 !lzhang
        if(nv.eq.p_dms) alpha=0.
        if(nv.eq.p_sulf .or. nv.eq.p_seas_1 .or. nv.eq.p_seas_2 .or. &
-          nv.eq.p_seas_3 .or. nv.eq.p_seas_4)alpha=1.
+          nv.eq.p_seas_3 .or. nv.eq.p_seas_4 .or. nv.eq.p_seas_5)alpha=1.
        !if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.8
        if(nv.eq.p_bc2 .or. nv.eq.p_oc2)alpha=0.5  !lzhang
      endif

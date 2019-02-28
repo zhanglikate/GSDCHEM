@@ -1,11 +1,17 @@
 module seas_data_mod
 
-  use chem_types_mod, only : CHEM_KIND_R8
+  use chem_types_mod, only : fp => CHEM_KIND_R8
 
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: ra        = (/   1.d-1,   5.d-1,   1.5d0,  5.0d0 /)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: rb        = (/   5.d-1,   1.5d0,    5.d0,   1.d1 /)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_seas  = (/   2.2d3,   2.2d3,   2.2d3,  2.2d3 /)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_seas = (/ 0.30D-6, 1.00D-6, 3.25D-6,7.50D-6 /)
-  REAL(CHEM_KIND_R8), dimension(4,12)          :: ch_ss     = 1.0_CHEM_KIND_R8
+  ! -- parameters from NGAC v2.4.0 (rev. d48932c)
+  integer,                             parameter :: number_ss_bins  = 5
+  ! -- lower/upper particle radii (um) for each bin
+  real,     dimension(number_ss_bins), parameter :: ra =             (/  0.03,   0.1,   0.5,   1.5,   5.0 /)
+  real,     dimension(number_ss_bins), parameter :: rb =             (/   0.1,   0.5,   1.5,   5.0,  10.0 /)
+  ! -- global scaling factors for sea salt emissions (originally 0.875)
+  real,     dimension(number_ss_bins), parameter :: emission_scale = (/ 0.400, 0.400, 0.400, 0.400, 0.400 /)
+  ! -- sea salt density
+  real(fp), dimension(number_ss_bins), parameter :: den_seas  = (/    2200._fp,    2200._fp,    2200._fp,    2200._fp,    2200._fp /)
+  ! -- particle effective radius (m)
+  real(fp), dimension(number_ss_bins), parameter :: reff_seas = (/ 0.079e-6_fp, 0.316e-6_fp, 1.119e-6_fp, 2.818e-6_fp, 7.772e-6_fp /)
 
 end module seas_data_mod

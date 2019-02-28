@@ -96,7 +96,7 @@ am__v_AR_1 =
 libseas_a_AR = $(AR) $(ARFLAGS)
 libseas_a_LIBADD =
 am_libseas_a_OBJECTS = libseas_a-seas_data_mod.$(OBJEXT) \
-	libseas_a-seas_mod.$(OBJEXT)
+	libseas_a-seas_mod.$(OBJEXT) libseas_a-seas_ngac_mod.$(OBJEXT)
 libseas_a_OBJECTS = $(am_libseas_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -251,7 +251,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libseas.a
-libseas_a_SOURCES = seas_data_mod.F90 seas_mod.F90
+libseas_a_SOURCES = seas_data_mod.F90 seas_mod.F90 seas_ngac_mod.F90
 libseas_a_FCFLAGS = -I ../shr/
 libseas_a_DEPENDENCIES = ../shr/libshr.a
 all: all-am
@@ -320,6 +320,12 @@ libseas_a-seas_mod.o: seas_mod.F90
 
 libseas_a-seas_mod.obj: seas_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libseas_a_FCFLAGS) $(FCFLAGS) -c -o libseas_a-seas_mod.obj `if test -f 'seas_mod.F90'; then $(CYGPATH_W) 'seas_mod.F90'; else $(CYGPATH_W) '$(srcdir)/seas_mod.F90'; fi`
+
+libseas_a-seas_ngac_mod.o: seas_ngac_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libseas_a_FCFLAGS) $(FCFLAGS) -c -o libseas_a-seas_ngac_mod.o `test -f 'seas_ngac_mod.F90' || echo '$(srcdir)/'`seas_ngac_mod.F90
+
+libseas_a-seas_ngac_mod.obj: seas_ngac_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libseas_a_FCFLAGS) $(FCFLAGS) -c -o libseas_a-seas_ngac_mod.obj `if test -f 'seas_ngac_mod.F90'; then $(CYGPATH_W) 'seas_ngac_mod.F90'; else $(CYGPATH_W) '$(srcdir)/seas_ngac_mod.F90'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -524,7 +530,7 @@ uninstall-am:
 clean-local:
 	-rm -f *.mod
 
-libseas_a-seas_mod.$(OBJEXT)   : libseas_a-seas_data_mod.$(OBJEXT)
+libseas_a-seas_mod.$(OBJEXT) : libseas_a-seas_data_mod.$(OBJEXT) libseas_a-seas_ngac_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

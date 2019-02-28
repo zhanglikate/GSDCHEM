@@ -863,7 +863,8 @@ contains
                 +.38*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
               intsulf(i,j)=intsulf(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_sulf)*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
-              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
+!             intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
+              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+tr3d_out(ip,jp,kp,nbegin+p_seas_2)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_3))*(pr3d(ip,jp,kp)&
                 -pr3d(ip,jp,kp+1))/grvity
             end if !chem_opt >= 300 .and. chem_opt < 500
 

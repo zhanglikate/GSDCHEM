@@ -512,7 +512,7 @@
 !  USE module_model_constants
 !  USE module_data_sorgam
 !  USE module_data_gocart_seas
-   USE seas_data_mod
+   USE seas_data_mod,  only: ra, rb
 !  USE module_data_gocart_chem, only: oc_mfac,nh4_mfac
    USE chem_const_mod, only: oc_mfac,nh4_mfac
 !  USE module_data_mosaic_asect, only: hygro_msa_aer
@@ -963,7 +963,7 @@
 ! Add in seasalt and dust from GOCART sectional distributions
        n = 0
        mass_seas = 0.0
-       do m =p_seas_1,  max(p_seas_1,p_seas_3) ! loop over seasalt size bins less than 10 um diam
+       do m =p_seas_1,  p_seas_4
        n = n+1
         mass_seas=mass_seas+seasfrc_goc8bin(n,isize)*chem(i,k,j,m)
        end do
