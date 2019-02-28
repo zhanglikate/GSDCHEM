@@ -120,10 +120,6 @@
                  ims,ime, jms,jme, kms,kme,                             &
                  its,ite, jts,jte, kts,kte                              )
 !----------------------------------------------------------------------------------
-!  USE module_configure
-!  USE module_state_description
-!   USE module_model_constants
-!  USE module_data_mosaic_therm, only: nbin_a, nbin_a_maxd      
 !
    INTEGER,      INTENT(IN   ) :: chem_opt,ids,ide, jds,jde, kds,kde,           &
                                   ims,ime, jms,jme, kms,kme,           &
@@ -139,10 +135,6 @@
 !
    REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                       &
          INTENT(IN ) ::  relhum,dz8w, alt, h2oai, h2oaj
-!   REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                       &
-!         INTENT(IN ) ::  relhum,dz8w, alt
-!  REAL, DIMENSION( ims:ime, kms:kme, jms:jme ),                       &
-!        OPTIONAL, INTENT(IN ) ::  h2oai, h2oaj
 !
 ! arrays that hold the aerosol optical properties
 !
@@ -156,7 +148,6 @@
          INTENT(INOUT ) ::                                             &
            l2aer, l3aer, l4aer, l5aer, l6aer, l7aer
 !
-!
 ! local variables
 !
    real, dimension( its:ite, kts:kte, jts:jte, 1:nbin_o ) ::           &
@@ -165,8 +156,6 @@
            radius_wet_col, number_bin_col, radius_core_col
    complex, dimension( its:ite, kts:kte, jts:jte, 1:nbin_o ) :: &   !for gocart
            refindx0, refindx_core0, refindx_shell0
-!  complex, dimension( 1:nbin_o, kts:kte) ::                           &
-!          refindx_col, refindx_core_col, refindx_shell_col
 
    complex, dimension( its:ite, kts:kte, jts:jte, 1:nbin_o,1:nspint) ::        &
            swrefindx, swrefindx_core, swrefindx_shell
@@ -179,17 +168,12 @@
    complex, dimension( 1:nbin_o, kts:kte,1:nlwbands) ::                           &
            lwrefindx_col, lwrefindx_core_col, lwrefindx_shell_col
 
-!  complex, dimension( its:ite, kts:kte, jts:jte, 1:nbin_o ) ::        &
-!          refindx, refindx_core, refindx_shell
-!  complex, dimension( 1:nbin_o, kts:kte) ::                           &
-!          refindx_col, refindx_core_col, refindx_shell_col
    real, dimension( kts:kte ) :: dz
 !
    integer ns,i,j,iclm, jclm, k, isize
    integer option_method, option_mie
    real, dimension( nspint, kts:kte ) ::                               &
            swsizeaer,swextaer,swwaer,swgaer,swtauaer,swbscoef
-!          sizeaer,extaer,waer,gaer,tauaer,bscoef
    real, dimension( 16 , kts:kte ) ::                               &
            lwtauaer,lwextaer
    real, dimension( nspint, kts:kte ) ::                               &
@@ -198,8 +182,6 @@
    real fv,vsum
         integer, dimension( its:ite, jts:jte ) :: iprt
    complex aa, bb
-!  save :: sizeaer,extaer,waer,gaer,tauaer,bscoef
-!  save :: l2,l3,l4,l5,l6,l7
 !----------------------------------------------------------------------------------
 !
 !  chem_select: SELECT CASE(config_flags%chem_opt)
@@ -282,8 +264,6 @@
      endif
      if (chem_opt == 108) then
      call optical_prep_modal_soa_vbs(iprt,nbin_o, chem, alt,           &
-!         h2oai, h2oaj, refindx, radius_wet, number_bin,               &
-!         radius_core, refindx_core, refindx_shell,                    &
           h2oai, h2oaj, radius_core,radius_wet, number_bin,            &
           swrefindx,swrefindx_core, swrefindx_shell,                   &
           lwrefindx,lwrefindx_core, lwrefindx_shell,                   &
@@ -345,10 +325,6 @@
           do isize = 1, nbin_o
           do ns=1,nspint
            fv = (radius_core_col(isize,k)/radius_wet_col(isize,k))**3 ! volume fraction
-!          aa=(refindx_core_col(isize,k)**2+2.0*refindx_shell(iclm,k,jclm,isize)**2)
-!          bb=fv*(refindx_core_col(isize,k)**2-refindx_shell(iclm,k,jclm,isize)**2)
-!          refindx_col(isize,k)= refindx_shell(iclm,k,jclm,isize)*sqrt((aa+2.0*bb)/(aa-bb))
-!          refr=real(refindx_col(isize,k))
            aa=(swrefindx_core_col(isize,k,ns)**2+2.0*swrefindx_shell(iclm,k,jclm,isize,ns)**2)
            bb=fv*(swrefindx_core_col(isize,k,ns)**2-swrefindx_shell(iclm,k,jclm,isize,ns)**2)
            swrefindx_col(isize,k,ns)= swrefindx_shell(iclm,k,jclm,isize,ns)*sqrt((aa+2.0*bb)/(aa-bb))
@@ -364,68 +340,31 @@
           do k = kts, kte
           do isize = 1, nbin_o
              radius_core_col(isize,k) = 0.0
-!            refindx_core_col(isize,k) = cmplx(0.0,0.0)
              swrefindx_core_col(isize,k,:) = cmplx(0.0,0.0)
              swrefindx_core_col1(isize,k) = cmplx(0.0,0.0)
            enddo
           enddo
       endif
 !
-!!$       if(id.eq.1.and.iclm.eq.84.and.jclm.eq.52) then
-!!$         print*,'jdf printout 1'
-!!$         do isize = 1, nbin_o
-!!$            write(*,888) isize,number_bin_col(isize,1),                &
-!!$                   radius_wet_col(isize,1),radius_core_col(isize,1),   &
-!!$                   real(refindx_col(isize,1)),                         &
-!!$                   imag(refindx_col(isize,1)),                         &
-!!$                   real(refindx_core_col(isize,1)),                    &
-!!$                   imag(refindx_core_col(isize,1)),dz(1)
-!!$         enddo
-!!$       endif
-!!$       if(id.eq.2.and.iclm.eq.59.and.jclm.eq.63) then
-!!$         print*,'jdf printout 2'
-!!$         do isize = 1, nbin_o
-!!$            write(*,888) isize,number_bin_col(isize,1),                &
-!!$                   radius_wet_col(isize,1),radius_core_col(isize,1),   &
-!!$                   real(refindx_col(isize,1)),                         &
-!!$                   imag(refindx_col(isize,1)),                         &
-!!$                   real(refindx_core_col(isize,1)),                    &
-!!$                   imag(refindx_core_col(isize,1)),dz(1)
-!!$         enddo
-!!$       endif
-!!$  888  format(i3,9e12.5)
-!
-!
        if (option_mie .eq. 1) then 
           call mieaer(1, iclm, jclm, nbin_o,                          &
-!            number_bin_col, radius_wet_col, refindx_col,              &
              number_bin_col, radius_wet_col,swrefindx_col,             &
              lwrefindx_col,     &
              dz, curr_secs, kts, kte,                                  &
-!            sizeaer, extaer, waer, gaer, tauaer,                      &
              swsizeaer,swextaer,swwaer,swgaer,swtauaer,                &
              lwextaer,lwtauaer,                &
              l2, l3, l4, l5, l6, l7,swbscoef                            )
        endif
        if (option_mie .ge. 2 .and. option_method .le. 2) then
           call mieaer_sc(1, iclm, jclm, nbin_o,                       &
-!            number_bin_col, radius_wet_col, refindx_col,              &
-!            radius_core_col, refindx_core_col,                        &
              number_bin_col, radius_wet_col, swrefindx_col1,              &
              radius_core_col, swrefindx_core_col1,                        &
              dz, curr_secs, kte,                                       &
-!            sizeaer, extaer, waer, gaer, tauaer,                      &
-!            l2, l3, l4, l5, l6, l7, bscoef                            )
              swsizeaer, swextaer, swwaer, swgaer, swtauaer,                      &
              l2, l3, l4, l5, l6, l7, swbscoef                            )
        endif
        if (option_mie .ge. 2 .and. option_method .eq. 3) then
           call mieaer_sc(1, iclm, jclm, nbin_o,                       &
-!            number_bin_col, radius_wet_col, refindx_shell_col,        &
-!            radius_core_col, refindx_core_col,                        &
-!            dz, curr_secs, kte,                                       &
-!            sizeaer, extaer, waer, gaer, tauaer,                      &
-!            l2, l3, l4, l5, l6, l7, bscoef                            )
              number_bin_col, radius_wet_col, swrefindx_shell_col1,        &
              radius_core_col, swrefindx_core_col1,                        &
              dz, curr_secs, kte,                                       &
@@ -434,9 +373,6 @@
        endif
 !
        do k=kts,kte
-!        if(iprt(iclm,jclm).eq.1)then
-!         print *,'k,tauae1-3 = ',k,tauaer(1,k),tauaer(2,k),tauaer(3,k)
-!        endif
          tauaersw(iclm,k,jclm,:) = swtauaer(:,k)
          gaersw(iclm,k,jclm,:)   = swgaer(:,k)
          waersw(iclm,k,jclm,:)   = swwaer(:,k)
@@ -449,35 +385,6 @@
          l7aer(iclm,k,jclm,:) = l7(:,k)
          tauaerlw(iclm,k,jclm,1:nlwbands) = lwtauaer(1:nlwbands,k)
        enddo
-!!$       if(id.eq.1.and.iclm.eq.84.and.jclm.eq.52) then
-!!$          write(*,889) sizeaer(1,1),sizeaer(2,1),sizeaer(3,1),sizeaer(4,1)
-!!$          write(*,889) extaer(1,1),extaer(2,1),extaer(3,1),extaer(4,1)
-!!$          write(*,889) waer(1,1),waer(2,1),waer(3,1),waer(4,1)
-!!$          write(*,889) gaer(1,1),gaer(2,1),gaer(3,1),gaer(4,1)
-!!$          write(*,889) tauaer(1,1),tauaer(2,1),tauaer(3,1),tauaer(4,1)
-!!$          write(*,889) bscoef(1,1),bscoef(2,1),bscoef(3,1),bscoef(4,1)
-!!$          write(*,889) l2(1,1),l2(2,1),l2(3,1),l2(4,1)
-!!$          write(*,889) l3(1,1),l3(2,1),l3(3,1),l3(4,1)
-!!$          write(*,889) l4(1,1),l4(2,1),l4(3,1),l4(4,1)
-!!$          write(*,889) l5(1,1),l5(2,1),l5(3,1),l5(4,1)
-!!$          write(*,889) l6(1,1),l6(2,1),l6(3,1),l6(4,1)
-!!$          write(*,889) l7(1,1),l7(2,1),l7(3,1),l7(4,1)
-!!$       endif
-!!$       if(id.eq.2.and.iclm.eq.59.and.jclm.eq.63) then
-!!$          write(*,889) sizeaer(1,1),sizeaer(2,1),sizeaer(3,1),sizeaer(4,1)
-!!$          write(*,889) extaer(1,1),extaer(2,1),extaer(3,1),extaer(4,1)
-!!$          write(*,889) waer(1,1),waer(2,1),waer(3,1),waer(4,1)
-!!$          write(*,889) gaer(1,1),gaer(2,1),gaer(3,1),gaer(4,1)
-!!$          write(*,889) tauaer(1,1),tauaer(2,1),tauaer(3,1),tauaer(4,1)
-!!$          write(*,889) bscoef(1,1),bscoef(2,1),bscoef(3,1),bscoef(4,1)
-!!$          write(*,889) l2(1,1),l2(2,1),l2(3,1),l2(4,1)
-!!$          write(*,889) l3(1,1),l3(2,1),l3(3,1),l3(4,1)
-!!$          write(*,889) l4(1,1),l4(2,1),l4(3,1),l4(4,1)
-!!$          write(*,889) l5(1,1),l5(2,1),l5(3,1),l5(4,1)
-!!$          write(*,889) l6(1,1),l6(2,1),l6(3,1),l6(4,1)
-!!$          write(*,889) l7(1,1),l7(2,1),l7(3,1),l7(4,1)
-!!$       endif
-!!$  889  format(4e12.5)
      enddo
      enddo
 !
@@ -507,22 +414,10 @@
 
      use aero_soa_vbs_data_mod
      use dust_data_mod, only:  ndust, reff_dust, den_dust
-!
-!  USE module_configure
-!  USE module_model_constants
-!  USE module_data_sorgam
-!  USE module_data_gocart_seas
+
    USE seas_data_mod,  only: ra, rb
-!  USE module_data_gocart_chem, only: oc_mfac,nh4_mfac
    USE chem_const_mod, only: oc_mfac,nh4_mfac
-!  USE module_data_mosaic_asect, only: hygro_msa_aer
-! real*8, DIMENSION (4), PARAMETER :: ra(4)=(/1.d-1,5.d-1,1.5d0,5.0d0/)
-! real*8, DIMENSION (4), PARAMETER :: rb(4)=(/5.d-1,1.5d0,5.d0,1.d1/)
-! real*8, DIMENSION (4), PARAMETER :: den_seas(4)=(/2.2d3,2.2d3,2.2d3,2.2d3/)
-! real*8, DIMENSION (4), PARAMETER :: reff_seas(4)=(/0.30D-6,1.00D-6,3.25D-6,7.50D-6/)
-!  USE module_data_gocart_dust, only:  ndust, reff_dust, den_dust
-!  real*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
-!  real*8, DIMENSION (5), PARAMETER :: reff_dust(5)=(/0.73D-6,1.4D-6,2.4D-6,4.5D-6,8.0D-6/)
+
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_ash(4)=(/2500.,2500.,2500.,2500. /)
   real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_ash(4)=(/ 11.719D-6,&!
                                                       05.859D-6,&!
@@ -541,9 +436,6 @@
    REAL, DIMENSION( its:ite, kts:kte, jts:jte, 1:nbin_o),              &
          INTENT(OUT ) ::                                               &
            radius_wet, number_bin, radius_core
-!  COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte, 1:nbin_o),           &
-!        INTENT(OUT ) ::                                               &
-!          refindx, refindx_core, refindx_shell
    COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte,1:nbin_o,nswbands),   &
          INTENT(OUT ) :: swrefindx, swrefindx_core, swrefindx_shell
    COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte,1:nbin_o,nlwbands),   &
@@ -655,21 +547,8 @@
             dlo_sectm(n) = exp( xlo + dxbin*(n-1) )
             dhi_sectm(n) = exp( xlo + dxbin*n )
         end do
-!  real, save :: seasfrc_goc8bin(4,nbin_o)   ! GOCART seasalt size distibution - mass fracs in MOSAIC 8-bins
-!  real, save :: dustfrc_goc8bin(ndust,nbin_o)   ! GOCART dust size distibution - mass fracs in MOSAIC 8-bins
-!  USE module_data_gocart_seas
-! real*8, DIMENSION (4), PARAMETER :: ra(4)=(/1.d-1,5.d-1,1.5d0,5.0d0/)
-! real*8, DIMENSION (4), PARAMETER :: rb(4)=(/5.d-1,1.5d0,5.d0,1.d1/)
-! real*8, DIMENSION (4), PARAMETER :: den_seas(4)=(/2.2d3,2.2d3,2.2d3,2.2d3/)
-! real*8, DIMENSION (4), PARAMETER :: reff_seas(4)=(/0.30D-6,1.00D-6,3.25D-6,7.50D-6/)
-!  USE module_data_gocart_dust, only:  ndust, reff_dust, den_dust
-!  real*8, DIMENSION (5), PARAMETER :: den_dust(5)=(/2500.,2650.,2650.,2650.,2650./)
-!  real*8, DIMENSION (5), PARAMETER :: reff_dust(5)=(/0.73D-6,1.4D-6,2.4D-6,4.5D-6,8.0D-6/)
 ! Seasalt bin mass fractions
         seasfrc_goc8bin=0.
-!      WRITE(*,*)'Seasalt mass fractions'
-!      WRITE(*,*)'         ','       ',(dlo_sectm(n),n=1,nbin_o)
-!      WRITE(*,*)'         ','       ',(dhi_sectm(n),n=1,nbin_o)
        do m =1, 4  ! loop over seasalt size bins
        dlogoc = ra(m)*2.E-6  ! low diameter limit (m)
        dhigoc = rb(m)*2.E-6  ! hi diameter limit (m)
@@ -677,12 +556,8 @@
         seasfrc_goc8bin(m,n)=max(DBLE(0.),min(DBLE(dhi_sectm(n)),dhigoc)- &
                              max(dlogoc,DBLE(dlo_sectm(n))) )/(dhigoc-dlogoc)
        end do
-!      WRITE(*,*)m,dlogoc,dhigoc,(seasfrc_goc8bin(m,n),n=1,nbin_o)
        end do
 ! Dust bin mass fractions
-!      WRITE(*,*)'Dust mass fractions'
-!      WRITE(*,*)'         ','       ',(dlo_sectm(n),n=1,nbin_o)
-!      WRITE(*,*)'         ','       ',(dhi_sectm(n),n=1,nbin_o)
         dustfrc_goc8bin=0.
         dlogoc=0.46*2.E-6 ! Begin lower dust bin, makes upper limit diam 20 micron diameter 
        do m =1, ndust  ! loop over dust size bins
@@ -700,7 +575,6 @@
        if(m.le.2.and.n.eq.5)dustfrc_goc8bin(m,n)=dustfrc_goc8bin(m,n)+.135*.458
 
        end do
-!      WRITE(*,*)m,dlogoc,dhigoc,(dustfrc_goc8bin(m,n),n=1,nbin_o)
        dlogoc=dhigoc
        end do
         kcall=kcall+1
@@ -985,18 +859,12 @@
        do m =p_vash_4, p_vash_1,-1
        n = n+1
         mass_soil=mass_soil+ashfrc_goc8bin(n,isize)*chem(i,k,j,m)
-!       if(iprt(i,j).eq.1)then
-!       write(6,*)'k,isize,p_vash_4,m = ',k,isize,p_vash_4,m
-!       write(6,*)'p_dust_1,pdust,n', p_dust_1,pdust,n
-!       write(6,*) chem(i,k,j,m),mass_soil,ashfrc_goc8bin(n,isize)
-!       endif
        end do
        endif
 
        mass_cl=mass_seas*conv1a*22.9897/58.4428
        mass_na=mass_seas*conv1a*35.4270/58.4428
        mass_soil=mass_soil*conv1a
-!         mass_h2o = 0.0 ! testing purposes only
           vol_so4 = mass_so4 / dens_so4
           vol_no3 = mass_no3 / dens_no3
           vol_nh4 = mass_nh4 / dens_nh4
@@ -1180,9 +1048,7 @@
 ! calculations
 ! in terms of other units.
 !
-  subroutine optical_prep_modal_soa_vbs(iprt,nbin_o, chem, alt,           &
-!       h2oai, h2oaj, refindx, radius_wet, number_bin,           &
-!       radius_core, refindx_core, refindx_shell,                &
+  subroutine optical_prep_modal_soa_vbs(iprt,nbin_o, chem, alt,  &
         h2oai, h2oaj, radius_core,radius_wet, number_bin,        &
         swrefindx, swrefindx_core, swrefindx_shell,              &
         lwrefindx, lwrefindx_core, lwrefindx_shell,              &
@@ -1190,13 +1056,7 @@
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
 !
-!   USE module_configure
-!  USE module_state_description
-!   USE module_model_constants
    USE chem_tracers_mod, only:  param_first_scalar
-!  USE module_initial_chem_namelists, only:  param_first_scalar
-!   USE module_data_sorgam
-!  USE module_data_soa_vbs
    USE aero_soa_vbs_data_mod
 !
    INTEGER, INTENT(IN   ) :: its,ite, jts,jte, kts,kte, nbin_o
@@ -1210,9 +1070,6 @@
    REAL, DIMENSION( its:ite, kts:kte, jts:jte, 1:nbin_o),              &
    INTENT(OUT ) ::                                               &
            radius_wet, number_bin, radius_core
-!  COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte, 1:nbin_o),           &
-!        INTENT(OUT ) ::                                               &
-!          refindx, refindx_core, refindx_shell
 COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte,1:nbin_o,nswbands),      &
          INTENT(OUT ) :: swrefindx, swrefindx_core, swrefindx_shell
    COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte,1:nbin_o,nlwbands),   &
@@ -1726,19 +1583,7 @@ COMPLEX, DIMENSION( its:ite, kts:kte, jts:jte,1:nbin_o,nswbands),      &
           vol_na  = mass_na  / dens_na
           vol_cl  = mass_cl  / dens_cl
           vol_h2o = mass_h2o / dens_h2o
-!!$          if(i.eq.50.and.j.eq.40.and.k.eq.1) then
-!!$            print*,'jdf print bin',isize
-!!$            print*,'so4',mass_so4,vol_so4
-!!$            print*,'no3',mass_no3,vol_no3
-!!$            print*,'nh4',mass_nh4,vol_nh4
-!!$            print*,'oin',mass_oin,vol_oin
-!!$!jdfcz      print*,'dust',mass_dust,vol_dust
-!!$            print*,'oc ',mass_oc,vol_oc
-!!$            print*,'bc ',mass_bc,vol_bc
-!!$            print*,'na ',mass_na,vol_na
-!!$            print*,'cl ',mass_cl,vol_cl
-!!$            print*,'h2o',mass_h2o,vol_h2o
-!!$          endif
+
           mass_dry_a = mass_so4 + mass_no3 + mass_nh4 + mass_oin + &
 !jdfcz                 mass_oc  + mass_bc  + mass_na  + mass_cl  + mass_dust
                        mass_oc  + mass_bc  + mass_na  + mass_cl
@@ -1937,9 +1782,6 @@ END subroutine optical_prep_modal_soa_vbs
               swsizeaer,swextaer,swwaer,swgaer,swtauaer,lwextaer,lwtauaer, & 
               l2,l3,l4,l5,l6,l7,swbscoef)  ! added bscoef JCB 2007/02/01
 
-!       USE module_data_mosaic_other, only : kmaxd
-!       USE module_data_mosaic_therm, ONLY: nbin_a_maxd
-!       USE opt_peg_util_mod, only:  peg_error_fatal, peg_message
         USE opt_peg_util_mod, only:  peg_error_fatal, peg_message
         
         IMPLICIT NONE
@@ -2531,10 +2373,6 @@ END subroutine optical_prep_modal_soa_vbs
         weighte=pext*pie*exp(x)**2 ! JCB, extinction cross section
         weights=pscat*pie*exp(x)**2 ! JCB, scattering cross section
         swtauaer(ns,klevel)=swtauaer(ns,klevel)+weighte*number_bin_col(m,klevel)  ! must be multiplied by deltaZ
-!      if (iclm==30.and.jclm==49.and.klevel==2.and.m==5) then 
-!      write(0,*) 'czhao check swtauaer calculation in MIE',ns,m,weighte,number_bin_col(m,klevel),swtauaer(ns,klevel)*dz(klevel)*100
-!      print*, 'czhao check swtauaer calculation in MIE',ns,m,weighte,number_bin_col(m,klevel),swtauaer(ns,klevel)*dz(klevel)*100
-!      endif
         swsizeaer(ns,klevel)=swsizeaer(ns,klevel)+exp(x)*10000.0*   &
         number_bin_col(m,klevel)
         swwaer(ns,klevel)=swwaer(ns,klevel)+weights*number_bin_col(m,klevel) !JCB
@@ -2748,12 +2586,9 @@ END subroutine optical_prep_modal_soa_vbs
       USE opt_peg_util_mod, only:  peg_message
 
       IMPLICIT NONE
-!      integer nmodes, nrows, maxm, ncoef
-!      parameter (nmodes=500,nrows=8)
+
       integer, intent(in) :: maxm, ncoef
 
-!      real rs(nmodes),yin(nmodes),coef(ncoef)
-!      real x(nmodes),y(nmodes)
       real, dimension(ncoef) :: coef
       real, dimension(:) :: rs, yin
       real x(size(rs)),y(size(yin))
@@ -2761,14 +2596,6 @@ END subroutine optical_prep_modal_soa_vbs
       integer m
       real xmin, xmax
       character*80 msg
-
-!!$      if(maxm.gt.nmodes)then
-!!$        write ( msg, '(a, 1x,i6)' )  &
-!!$           'FASTJ mie nmodes too small in fitcurv, '  //  &
-!!$           'maxm ', maxm
-!!$!        write(*,*)'nmodes too small in fitcurv',maxm
-!!$        call peg_error_fatal( lunerr, msg )
-!!$      endif
 
       do 100 m=1,maxm
       if (rs(m).ge.0.)then
@@ -2803,11 +2630,8 @@ END subroutine optical_prep_modal_soa_vbs
       USE opt_peg_util_mod, only:  peg_message
       IMPLICIT NONE
 
-!      integer nmodes, nrows, maxm, ncoef
-!      parameter (nmodes=500,nrows=8)
       integer, intent(in) :: maxm, ncoef
 
-!      real rs(nmodes),yin(nmodes),coef(ncoef)
       real, dimension(:) :: rs, yin
       real, dimension(ncoef) :: coef(ncoef)
       real x(size(rs)),y(size(yin))
@@ -2816,14 +2640,6 @@ END subroutine optical_prep_modal_soa_vbs
       real xmin, xmax
       character*80 msg
            
-!!$      if(maxm.gt.nmodes)then
-!!$        write ( msg, '(a,1x, i6)' )  &
-!!$           'FASTJ mie nmodes too small in fitcurv '  //  &
-!!$           'maxm ', maxm
-!!$!        write(*,*)'nmodes too small in fitcurv',maxm
-!!$        call peg_error_fatal( lunerr, msg )
-!!$      endif
-
       do 100 m=1,maxm
       x(m)=alog(rs(m))
       y(m)=yin(m) ! note, no "alog" here
@@ -4613,16 +4429,6 @@ END subroutine optical_prep_modal_soa_vbs
         sxroot2 = sx * sqrt( 2.0 )
         sumnum = 0.
         summas = 0.
-!       write(22,*)
-!       write(22,*) 'dgnum_um, sigmag = ', dgnum_um, sigmag
-!       write(22,*) 'drydens =', drydens
-!       write(22,*) 'ntot (#/cm3), mtot (ug/m3) = ', xntot, xmtot
-!        write(22,9220)
-!9220    format( /   &
-!        '  n   dlo(um)   dhi(um)       number         mass' / )
-!9225    format(   i3, 2f10.6, 2(1pe13.4) )
-!9230    format( / 'sum over all sections  ', 2(1pe13.4) )
-!9231    format(   'modal totals           ', 2(1pe13.4) )
         do n = 1, nbin
             xlo = alog( dlo_sect(n) )
             xhi = alog( dhi_sect(n) )
@@ -4644,11 +4450,7 @@ END subroutine optical_prep_modal_soa_vbs
             xmas_sect(n) = xmtot*dumfrac
             sumnum = sumnum + xnum_sect(n)
             summas = summas + xmas_sect(n)
-!           write(22,9225) n, 1.e4*dlo_sect(n), 1.e4*dhi_sect(n),   &
-!               xnum_sect(n), xmas_sect(n)
         end do
-!       write(22,9230) sumnum, summas
-!       write(22,9231) xntot, xmtot
 
       end subroutine  sect02
 !-----------------------------------------------------------------------
@@ -4726,32 +4528,21 @@ END subroutine optical_prep_modal_soa_vbs
               dz, curr_secs, lpar, &
               sizeaer,extaer,waer,gaer,tauaer,l2,l3,l4,l5,l6,l7,bscoef)  ! added bscoef JCB 2007/02/01
 !
-!USE module_data_mosaic_other, only : kmaxd
-!USE module_data_mosaic_therm, only : nbin_a_maxd
 	USE opt_peg_util_mod, only : peg_message
 
 
         IMPLICIT NONE
 !   subr arguments
-!jdf
-!       integer,parameter :: nspint = 4 ! Num of spectral intervals across
-                                        ! solar spectrum for FAST-J
         integer, intent(in) :: lpar
-!jdf    real, dimension (nspint, kmaxd+1),intent(out) :: sizeaer,extaer,waer,gaer,tauaer
-!jdf    real, dimension (nspint, kmaxd+1),intent(out) :: l2,l3,l4,l5,l6,l7
-!jdf    real, dimension (nspint, kmaxd+1),intent(out) :: bscoef  !JCB 2007/02/01
         real, dimension (nspint, lpar+1),intent(out) :: sizeaer,extaer,waer,gaer,tauaer
         real, dimension (nspint, lpar+1),intent(out) :: l2,l3,l4,l5,l6,l7
         real, dimension (nspint, lpar+1),intent(out) :: bscoef  !JCB 2007/02/01
         real, dimension (nspint),save :: wavmid !cm
         data wavmid     &
             / 0.30e-4, 0.40e-4, 0.60e-4 ,0.999e-04 /
-!jdf
+
     integer, intent(in) :: id, iclm, jclm, nbin_a
     real(kind=CHEM_KIND_R8), intent(in) :: curr_secs
-!jdf    real, intent(in), dimension(nbin_a, kmaxd) :: number_bin_col
-!jdf    real, intent(inout), dimension(nbin_a, kmaxd) :: radius_wet_col
-!jdf    complex, intent(in) :: refindx_col(nbin_a, kmaxd)
     real, intent(in), dimension(nbin_a, lpar+1) :: number_bin_col
     real, intent(inout), dimension(nbin_a, lpar+1) :: radius_wet_col, radius_core_col  ! jcb  2007/07/25
     complex, intent(in) :: refindx_col(nbin_a, lpar+1), refindx_core_col(nbin_a,lpar+1)  ! jcb  2007/07/25, 
@@ -4889,19 +4680,10 @@ END subroutine optical_prep_modal_soa_vbs
 		dp_core_a=2.0*radius_core_col(m,klevel)*1.0e04
 		vlambc=wavmid(ns)*1.0e04
 !
-!	write(6,*)dp_wet_a
-!	write(6,*)ri_shell_a
-!	write(6,*)vlambc
 		call miedriver(dp_wet_a,dp_core_a,ri_shell_a,ri_core_a, vlambc, &
          	qextc,qscatc,gscac,extc,scatc,qbackc,backc,pmom)
 ! check, note that pmom(1,1)/pmom(0,1) is indeed the asymmetry parameter as calculated by Tom's code, jcb, July 7, 2007
 ! correct in the Rayleigh limit, July 3, 2007: jcb
-!     	write(6,*)
-!     	do ii=0,7
-!	write(6,*)pmom(ii,1),pmom(ii,1)/pmom(0,1)
-!	enddo
-!   	write(6,*)qextc,qscatc,gscac,extc,scatc
-!	write(6,*)
 !
 	weighte=extc*1.0e-08 ! extinction cross section, converted to cm^2
 	weights=scatc*1.0e-08 ! scattering cross section, converted to cm^2
@@ -4931,7 +4713,6 @@ END subroutine optical_prep_modal_soa_vbs
 	l5(ns,klevel)=l5(ns,klevel)/waer(ns,klevel)
 	l6(ns,klevel)=l6(ns,klevel)/waer(ns,klevel)
 	l7(ns,klevel)=l7(ns,klevel)/waer(ns,klevel)
-!	write(6,*)ns,klevel,l4(ns,klevel)
 ! this is beta, not beta/(4*pie)
 	bscoef(ns,klevel)=bscoef(ns,klevel)*1.0e5 ! unit (km)^-1
 ! SSA checked by comparson with Travis and Hansen, get exact result
@@ -5787,17 +5568,9 @@ END subroutine optical_prep_modal_soa_vbs
 	momdim=7 ! dimension of pmom, pmom(0:7), jcb
 ! a, b = Mie coefficients
 ! pmom = output of Legendre coefficients, pmom(0:7)
-!	write(6,*)ntrm
-!	do ii=1,ntrm
-!	write(6,1030)ii,an(ii),bn(ii)
-1030	format(i5,4e15.6)
-!	enddo
 
 	call lpcoefjcb(ntrm,nmom,ipolzn,momdim,an,bn,pmom)
-!	do ii=0,7
-!	write(6,1040)ii,pmom(ii,1),pmom(ii,1)/pmom(0,1)
-!1040	format(i5,2e15.6)
-!	enddo
+
 !     /*--------------------------------------------------------*/
 !     /* FORMAT statements.                                     */
 !     /*--------------------------------------------------------*/

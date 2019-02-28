@@ -30,11 +30,9 @@ CONTAINS
                its,ite, jts,jte, kts,kte                                 )
 
 !------------------------------------------------------------------------
-!  USE module_configure
-!  USE module_state_description
-!  USE module_model_constants
+
    USE opt_averaging_mod
-!  USE module_data_mosaic_therm, only: nbin_a
+
    INTEGER,      INTENT(IN   ) :: chem_opt,num_chem,ids,ide,           &
                                            jds,jde, kds,kde,           &
                                   ims,ime, jms,jme, kms,kme,           &

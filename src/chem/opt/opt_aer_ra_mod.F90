@@ -43,7 +43,6 @@ CONTAINS
 ! or linear interpolation/extrapolation between 300 and 999 nm for assymetry coefficient
       do ib=1,nbands
       midbands(ib)=(1./wvnum1(ib)+1./wvnum2(ib))*.5e4
-!     write(6,*)'midband = ',midbands(ib)
       do j = jts,jte
       do k = kts,kte
       do i = its,ite
@@ -92,9 +91,6 @@ CONTAINS
       end do
       end do
 
-!     print *,'in aer_ra ',maxval(extt)
-!     print *,'in aer_ra ',maxval(ssca)
-!     print *,'in aer_ra ',maxval(asympar)
   END SUBROUTINE aer_ra
 END MODULE opt_aer_ra_mod
 

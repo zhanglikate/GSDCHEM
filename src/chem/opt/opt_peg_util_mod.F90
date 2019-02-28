@@ -37,8 +37,6 @@ contains
         if (lun .gt. 0) then
             write(lun,'(a)') str(1:n)
         else
-!    call wrf_debug( level, str(1:n) )
-!            write(6,*)level,str(1:n)
           call chem_comm_log( "WARNING: " // str(1:n) )
         end if
         return
@@ -62,8 +60,6 @@ contains
         if (lun .gt. 0) then
             write(lun,'(a)') str(1:n)
         else
-!    call wrf_message( str(1:n) )
-!         write(6,*)str(1:n)
           call chem_comm_log( "WARNING: " // str(1:n) )
         end if
         return

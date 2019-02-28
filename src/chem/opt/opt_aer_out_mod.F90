@@ -63,10 +63,6 @@ CONTAINS
            slopessa=(waersw(i,k,j,3)-waersw(i,k,j,2))/.2
            slopeg=(gaersw(i,k,j,3)-gaersw(i,k,j,2))/.2
       ext_coeff(i,k,j,p_extcof55)=tauaersw(i,k,j,2)*1.E3*((0.4/0.55)**ang)/dz8w(i,k,j)  ! 550nm ext. coeff. (1/km)
-!     if(j.eq.18072)then
-!       write(6,*)'in AEROPTOUT',k,j,ext_coeff(i,k,j,p_extcof55)
-!       write(6,*)tauaersw(i,k,j,1),tauaersw(i,k,j,2),tauaersw(i,k,j,4),dz8w(i,k,j)
-!     endif
       slope= slopessa*(0.55-.6)+waersw(i,k,j,3) ! slope is scratch variable, = single scat albedo at .55 micron
       slope=AMIN1(1.0,AMAX1(0.4,slope))   ! SSA has same limits as in PNNL
       bscat_coeff(i,k,j,p_bscof55)=ext_coeff(i,k,j,p_extcof55)*slope  ! 550nm scat. coeff. (1/km)
@@ -106,7 +102,6 @@ CONTAINS
         aodi(i,j)=aodi(i,j)+ext_coeff(i,k,j,p_extcof55)*dz8w(i,k,j)*1.e-3
         aod(i,j)=aod(i,j)+ext_coeff(i,k,j,p_extcof55)*dz8w(i,k,j)*1.e-3
        end do
-!      if(j.eq.18072)write(6,*)'aod = ',aod(i,j)
       end do
       end do
   END SUBROUTINE AER_OPT_OUT 

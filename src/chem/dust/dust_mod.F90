@@ -6,9 +6,6 @@ module dust_mod
 
   implicit none
 
-! integer, parameter :: DUST_OPT_GOCART = 1
-! integer, parameter :: DUST_OPT_AFWA   = 3
-
   public
 
 end module dust_mod

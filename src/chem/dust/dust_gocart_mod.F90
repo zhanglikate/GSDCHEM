@@ -229,74 +229,35 @@ contains
 ! *
 ! ****************************************************************************
 
-! USE module_data_gocart
-! USE module_data_gocart_dust
+  INTEGER,            INTENT(IN)    :: imx,jmx,lmx,nmx
+  INTEGER,            INTENT(IN)    :: ilwi(imx,jmx),month
 
-  
-
-  INTEGER, INTENT(IN)    :: nmx,imx,jmx,lmx
-  REAL(CHEM_KIND_R8),    INTENT(IN)    :: erod(imx,jmx,ndcls,ndsrc)
-  INTEGER, INTENT(IN)    :: ilwi(imx,jmx),month
-
-  REAL(CHEM_KIND_R8),    INTENT(IN)    :: w10m(imx,jmx), gwet(imx,jmx)
-  REAL(CHEM_KIND_R8),    INTENT(IN)    :: dxy(jmx)
-  REAL(CHEM_KIND_R8),    INTENT(IN)    :: airden(imx,jmx,lmx), airmas(imx,jmx,lmx)
-  REAL(CHEM_KIND_R8),    INTENT(INOUT) :: tc(imx,jmx,lmx,nmx)
-  REAL(CHEM_KIND_R8),    INTENT(OUT)   :: bems(imx,jmx,nmx) 
-  REAL(CHEM_KIND_R8),    INTENT(OUT)   :: srce_out(imx,jmx,nmx) !dust source
-
-  REAL(CHEM_KIND_R8)    :: den(nmx), diam(nmx)
-  REAL(CHEM_KIND_R8)    :: tsrc, u_ts0, cw, u_ts, dsrc, srce
-  REAL, intent(in)    :: g0
-  REAL    :: rhoa, g,dt1
-  INTEGER :: i, j, n, m, k, ipr
-
-
-  REAL(CHEM_KIND_R8)                  :: tcmw(nmx), ar(nmx), tcvv(nmx)
-  REAL(CHEM_KIND_R8)                  :: ar_wetdep(nmx), kc(nmx)
-  CHARACTER(LEN=20)     :: tcname(nmx), tcunits(nmx)
-  LOGICAL               :: aerosol(nmx)
-
-
-! REAL*8 :: tc1(imx,jmx,lmx,nmx)
-! REAL*8, TARGET :: tcms(imx,jmx,lmx,nmx) ! tracer mass (kg; kgS for sulfur case)
-! REAL*8, TARGET :: tcgm(imx,jmx,lmx,nmx) ! g/m3
+  REAL,               INTENT(IN)    :: dt1, g0
+  REAL(CHEM_KIND_R8), INTENT(IN)    :: erod(imx,jmx,ndcls,ndsrc)
+  REAL(CHEM_KIND_R8), INTENT(IN)    :: w10m(imx,jmx), gwet(imx,jmx)
+  REAL(CHEM_KIND_R8), INTENT(IN)    :: dxy(jmx)
+  REAL(CHEM_KIND_R8), INTENT(IN)    :: airden(imx,jmx,lmx), airmas(imx,jmx,lmx)
+  REAL(CHEM_KIND_R8), INTENT(INOUT) :: tc(imx,jmx,lmx,nmx)
+  REAL(CHEM_KIND_R8), INTENT(OUT)   :: bems(imx,jmx,nmx)
+  REAL(CHEM_KIND_R8), INTENT(OUT)   :: srce_out(imx,jmx,nmx) !dust source
+  INTEGER,            INTENT(OUT)   :: ipr
 
   !-----------------------------------------------------------------------  
-  ! sea salt specific
+  ! local variables
   !-----------------------------------------------------------------------  
-! REAL*8, DIMENSION(nmx) :: ssaltden, ssaltreff, ra, rb
-! REAL*8 :: ch_ss(nmx,12)
+  INTEGER            :: i, j, n, m, k
+  REAL               :: g
+  REAL(CHEM_KIND_R8) :: den(nmx), diam(nmx)
+  REAL(CHEM_KIND_R8) :: rhoa, tsrc, u_ts0, u_ts, dsrc, srce
+  REAL(CHEM_KIND_R8) :: tcmw(nmx), ar(nmx), tcvv(nmx)
+  REAL(CHEM_KIND_R8) :: ar_wetdep(nmx), kc(nmx)
+  CHARACTER(LEN=20)  :: tcname(nmx), tcunits(nmx)
+  LOGICAL            :: aerosol(nmx)
 
-  !-----------------------------------------------------------------------  
-  ! emissions (input)
-  !-----------------------------------------------------------------------  
-! REAL*8 :: e_an(imx,jmx,2,nmx), e_bb(imx,jmx,nmx), &
-!         e_ac(imx,jmx,lmx,nmx)
-
-  !-----------------------------------------------------------------------  
-  ! diagnostics (budget)
-  !-----------------------------------------------------------------------
-!  ! tendencies per time step and process
-!  REAL, TARGET :: bems(imx,jmx,nmx), bdry(imx,jmx,nmx), bstl(imx,jmx,nmx)
-!  REAL, TARGET :: bwet(imx,jmx,nmx), bcnv(imx,jmx,nmx)
-!
-!  ! integrated tendencies per process
-!  REAL, TARGET :: tems(imx,jmx,nmx), tstl(imx,jmx,nmx)
-!  REAL, TARGET :: tdry(imx,jmx,nmx), twet(imx,jmx,nmx), tcnv(imx,jmx,nmx)
-
-  ! global mass balance per time step 
-  REAL(CHEM_KIND_R8) :: tmas0(nmx), tmas1(nmx)
-  REAL(CHEM_KIND_R8) :: dtems(nmx), dttrp(nmx), dtdif(nmx), dtcnv(nmx)
-  REAL(CHEM_KIND_R8) :: dtwet(nmx), dtdry(nmx), dtstl(nmx)
-  REAL(CHEM_KIND_R8) :: dtems2(nmx), dttrp2(nmx), dtdif2(nmx), dtcnv2(nmx)
-  REAL(CHEM_KIND_R8) :: dtwet2(nmx), dtdry2(nmx), dtstl2(nmx)
-  real :: gthresh
-
-
+  REAL(CHEM_KIND_R8), PARAMETER :: gthresh = 0.5_CHEM_KIND_R8
 
   ! executable statemenst
-  gthresh=.5
+  ipr = 0
 
   DO n = 1, nmx
      ! Threshold velocity as a function of the dust density and the diameter
@@ -306,7 +267,7 @@ contains
      g = g0*1.0E2
      ! Pointer to the 3 classes considered in the source data files
      m = ipoint(n)
-     tsrc = 0.0
+     tsrc = 0.0_CHEM_KIND_R8
      DO k = 1, ndsrc
         ! No flux if wet soil 
         DO i = 1,imx
@@ -315,46 +276,33 @@ contains
               u_ts0 = 0.13*1.0D-2*SQRT(den(n)*g*diam(n)/rhoa)* &
                    SQRT(1.0+0.006/den(n)/g/(diam(n))**2.5)/ &
                    SQRT(1.928*(1331.0*(diam(n))**1.56+0.38)**0.092-1.0) 
-!             write(0,*)u_ts0,den(n),diam(n),rhoa,g
-              ! Fraction of emerged surfaces (subtract lakes, coastal ocean,..)
-!              cw = 1.0 - water(i,j)
               
               ! Case of surface dry enough to erode
               IF (gwet(i,j) < gthresh) THEN
-!              IF (gwet(i,j) < 0.5) THEN  !  Pete's modified value
                  u_ts = MAX(0.0D+0,u_ts0*(1.2D+0+2.0D-1*LOG10(MAX(1.0D-3, gwet(i,j)))))
               ELSE
                  ! Case of wet surface, no erosion
-                 u_ts = 100.0
+                 u_ts = 100.0_CHEM_KIND_R8
               END IF
               srce = frac_s(n)*erod(i,j,m,k)*dxy(j)  ! (m2)
               srce_out (i,j,k)=srce  ! output dust source
               IF (ilwi(i,j) == 1 ) THEN
                  dsrc = ch_dust(n,month)*srce*w10m(i,j)**2 &
                       * (w10m(i,j) - u_ts)*dt1  ! (kg)
-!                 IF (gwet(i,j) < 0.2 .and. ipr.eq.1)write(6,*)n,month,m,ch_dust(n,month),srce,w10m(i,j),u_ts,gwet(i,j)
-!                 IF (gwet(i,j) < 0.2 .and. ipr.eq.1)write(6,*)ipoint(m),den_dust(n),erod(i,j,m,k),dxy(j)
-!                 IF (gwet(i,j) < 0.2 .and. ipr.eq.1)write(6,*)srce,dsrc,frac_s(n)
-!                 IF (gwet(i,j) < 0.2 .and. ipr.eq.1)write(6,*)airmas(i,j,1),dt1
               ELSE 
-                 dsrc = 0.0
+                 dsrc = 0.0_CHEM_KIND_R8
               END IF
-!              dsrc = cw*ch_dust(k)*srce*w10m(i,j)**2 &
-!                   * (w10m(i,j) - u_ts)*dt1  ! (kg)
-!              dsrc = cw*ch_dust(n,dt(1)%mn)*srce*w10m(i,j)**2 &
-!                   * (w10m(i,j) - u_ts)*dt1  ! (kg)
-              IF (dsrc < 0.0) dsrc = 0.0
+              IF (dsrc < 0.0_CHEM_KIND_R8) dsrc = 0.0_CHEM_KIND_R8
               
               ! Update dust mixing ratio at first model level.
-! scale down dust by .6
+              ! scale down dust by .7
               tc(i,j,1,n) = tc(i,j,1,n) + .7*dsrc / airmas(i,j,1)
-              !bems(i,j,n) = .7*dsrc
               bems(i,j,n) = .7*dsrc/(dxy(j)*dt1) ! diagnostic (kg/m2/s)
            END DO
         END DO
      END DO
   END DO
-  
+
 END SUBROUTINE source_du
 
 end module dust_gocart_mod
