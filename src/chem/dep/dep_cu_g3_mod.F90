@@ -2653,14 +2653,15 @@ CONTAINS
 100   continue
      END SUBROUTINE cup_axx
 
-      SUBROUTINE conv_grell_spread3d(rthcuten,rqvcuten,rqccuten,raincv,   &
-     &         cugd_avedx,cugd_tten,cugd_qvten,rqicuten,cugd_ttens,       &
+      SUBROUTINE conv_grell_spread3d(rthcuten,rqvcuten,raincv,            &
+     &         cugd_avedx,cugd_tten,cugd_qvten,cugd_ttens,                &
      &         cugd_qvtens,cugd_qcten,pi_phy,moist_qv,pratec,dt,num_tiles,&
-     &         imomentum,F_QV    ,F_QC    ,F_QR    ,F_QI    ,F_QS,        &
+     &         imomentum,                                                 &
      &         ids, ide, jds, jde, kds, kde,                              &
      &         ips, ipe, jps, jpe, kps, kpe,                              &
      &         ims, ime, jms, jme, kms, kme,                              &
-     &         its,ite,jts,jte,kts,kte   )
+     &         its, ite, jts, jte, kts, kte,                              &
+     &         fqc, fqi, rqccuten, rqicuten                               )
 
 !
 
@@ -2671,19 +2672,24 @@ CONTAINS
                                        ims,ime, jms,jme, kms,kme, &
                                        ips,ipe, jps,jpe, kps,kpe, &
                                        kts,kte,cugd_avedx
-   REAL, DIMENSION (ims:ime,kms:kme,jms:jme), optional,INTENT (INOUT) ::     &
-     &  rthcuten,rqvcuten,rqccuten,rqicuten,cugd_tten,                       &
+   REAL, DIMENSION (ims:ime,kms:kme,jms:jme), optional,INTENT (INOUT) ::  &
+     &  rthcuten,rqvcuten,cugd_tten,                              &
      &  cugd_qvten,cugd_ttens,cugd_qvtens,cugd_qcten
-   REAL, DIMENSION (ims:ime,kms:kme,jms:jme),INTENT (IN) ::        &
+   REAL, DIMENSION (ims:ime,kms:kme,jms:jme),INTENT (IN) ::       &
           moist_qv
-   REAL, DIMENSION (ims:ime,kms:kme,jms:jme), INTENT (IN) ::        &
+   REAL, DIMENSION (ims:ime,kms:kme,jms:jme), INTENT (IN) ::      &
           PI_PHY
-   REAL, DIMENSION (ims:ime,jms:jme), INTENT (INOUT) ::             &
+   REAL, DIMENSION (ims:ime,jms:jme), INTENT (INOUT) ::           &
           RAINCV,PRATEC
    REAL,                              INTENT(IN) ::   dt
+   REAL, DIMENSION (ims:ime,kms:kme,jms:jme), optional,INTENT (INOUT) ::  &
+     &  rqccuten, rqicuten
+
+   LOGICAL, OPTIONAL,                 INTENT(IN) :: fqc, fqi
+
    INTEGER                        :: ikk1,ikk2,ikk11,i,j,k,kk,nn,smoothh,smoothv
    INTEGER                        :: ifs,ife,jfs,jfe,ido,jdo,cugd_spread
-   LOGICAL                        :: new
+   LOGICAL                        :: new, f_qc, f_qi
 !
 ! Flags relating to the optional tendency arrays declared above
 ! Models that carry the optional tendencies will provdide the
@@ -2691,18 +2697,18 @@ CONTAINS
 ! to determine at run-time whether a particular tracer is in
 ! use or not.
 !
-   LOGICAL, OPTIONAL ::                                      &
-                                                   F_QV      &
-                                                  ,F_QC      &
-                                                  ,F_QR      &
-                                                  ,F_QI      &
-                                                  ,F_QS
    REAL, DIMENSION (ips-2:ipe+2,kps:kpe,jps-2:jpe+2) ::     &
           rthcutent,rqvcutent
    real, dimension (ips-2:ipe+2,jps-2:jpe+2) :: qmem
    real, dimension (ips-1:ipe+1,jps-1:jpe+1) :: smtt,smtq
    real, dimension (kps:kpe) :: conv_trasht,conv_trashq
    REAL                           :: qmem1,qmem2,qmemf,thresh
+
+      f_qc = .false.
+      if (present(fqc)) f_qc = fqc
+      f_qi = .false.
+      if (present(fqi)) f_qi = fqi
+
       smoothh=1
       smoothv=1
       cugd_spread=cugd_avedx/2
