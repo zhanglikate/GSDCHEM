@@ -4,6 +4,7 @@ module seas_mod
   use chem_rc_mod,      only : chem_rc_test
   use chem_types_mod,   only : CHEM_KIND_R8
   use chem_tracers_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, p_seas_5, &
+                               p_eseas1, p_eseas2, p_eseas3, p_eseas4, p_eseas5, &
                                config => chem_config
   use seas_data_mod
   use seas_ngac_mod
@@ -118,16 +119,11 @@ CONTAINS
               airmas1(1,1,1) = airmas(1,1)
               tc1(1,1,1,:) = tc
               bems1(1,1,:) = bems
-!             call source_ss( imx,jmx,lmx,nmx, dt, tc,ilwi, dxy, w10m, airmas, bems,ipr)
               call source_ss( imx, jmx, lmx, number_ss_bins, dt, tc1,ilwi, dxy, w10m, airmas1, bems1,ipr)
               tc = tc1(1,1,1,:)
               chem(i,kts,j,p_seas_1)=(tc(1)+.75*tc(2))*converi
               chem(i,kts,j,p_seas_2)=(tc(3)+.25*tc(2))*converi
               seashelp(i,j)=tc(2)*converi
-! for output diagnostics
-!    emis_seas(i,1,j,p_seas_1)=bems(1)
-!    emis_seas(i,1,j,p_seas_2)=bems(2)
-!    emis_seas(i,1,j,p_seas_3)=bems(3)
             endif
           enddo
         enddo
@@ -173,11 +169,11 @@ CONTAINS
                   chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
 
                   ! for output diagnostics
-                  emis_seas(i,1,j,p_seas_1) = bems(1)
-                  emis_seas(i,1,j,p_seas_2) = bems(2)
-                  emis_seas(i,1,j,p_seas_3) = bems(3)
-                  emis_seas(i,1,j,p_seas_4) = bems(4)
-                  emis_seas(i,1,j,p_seas_5) = bems(5)
+                  emis_seas(i,1,j,p_eseas1) = bems(1)
+                  emis_seas(i,1,j,p_eseas2) = bems(2)
+                  emis_seas(i,1,j,p_eseas3) = bems(3)
+                  emis_seas(i,1,j,p_eseas4) = bems(4)
+                  emis_seas(i,1,j,p_eseas5) = bems(5)
 
                 end if
 
@@ -229,11 +225,11 @@ CONTAINS
                   chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
 
                   ! for output diagnostics
-                  emis_seas(i,1,j,p_seas_1) = bems(1)
-                  emis_seas(i,1,j,p_seas_2) = bems(2)
-                  emis_seas(i,1,j,p_seas_3) = bems(3)
-                  emis_seas(i,1,j,p_seas_4) = bems(4)
-                  emis_seas(i,1,j,p_seas_5) = bems(5)
+                  emis_seas(i,1,j,p_eseas1) = bems(1)
+                  emis_seas(i,1,j,p_eseas2) = bems(2)
+                  emis_seas(i,1,j,p_eseas3) = bems(3)
+                  emis_seas(i,1,j,p_eseas4) = bems(4)
+                  emis_seas(i,1,j,p_eseas5) = bems(5)
                 end if
 
               end do
