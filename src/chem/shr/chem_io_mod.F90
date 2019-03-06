@@ -140,7 +140,6 @@ contains
 
     lstr = len_trim(filename)
     if (lstr > 4) then
-      print *, 'filename = ', filename(lstr-3:lstr)
       if (filename(lstr-3:lstr) == ".dat") then
         write(fname, '("tile",i0,"/",a)') tile, trim(filename)
       else
@@ -326,7 +325,7 @@ contains
       call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_data_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+      write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
         trim(datafile), minval(buffer), maxval(buffer)
     end if
 
@@ -401,7 +400,7 @@ contains
       call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_data_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+      write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
         trim(datafile), minval(buffer), maxval(buffer)
     end if
 
@@ -483,7 +482,7 @@ contains
         pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_data_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
         trim(datafile), minval(recvbuf), maxval(recvbuf)
     end if
 
