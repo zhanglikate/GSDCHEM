@@ -3,7 +3,6 @@ module chem_species_mod
   implicit none
 
   type chem_species_type
-    sequence
     ! -- atmospheric tracers
     integer :: p_atm_shum    = 0
     integer :: p_atm_cldq    = 0

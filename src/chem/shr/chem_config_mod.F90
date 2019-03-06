@@ -21,7 +21,6 @@ module chem_config_mod
 
   ! -- data structure for configuration options
   type chem_config_type
-    sequence
     character(len=CHEM_MAXSTR) :: emi_inname         = ''
     character(len=CHEM_MAXSTR) :: fireemi_inname     = ''
     character(len=CHEM_MAXSTR) :: emi_outname        = ''
