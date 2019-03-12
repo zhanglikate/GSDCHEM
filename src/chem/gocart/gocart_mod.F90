@@ -433,7 +433,8 @@ contains
 
     ! -- set numerical parameters
     !dust_alpha = 1.0_CHEM_KIND_R4  !FIM-Chem
-    dust_alpha = 0.5_CHEM_KIND_R4  !HRRR-Chem
+    !dust_alpha = 0.5_CHEM_KIND_R4  !HRRR-Chem
+    dust_alpha = 0.3_CHEM_KIND_R4  !FV3-Chem
     !dust_gamma = 1.6_CHEM_KIND_R4 !FIM-Chem
     !dust_gamma = 1.0_CHEM_KIND_R4  !HRRR-Chem
     dust_gamma = 1.3_CHEM_KIND_R4  !FV3-Chem
