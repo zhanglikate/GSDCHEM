@@ -411,18 +411,11 @@
           its,ite, jts,jte, kts,kte                                    )
 
      use aero_soa_vbs_data_mod
-     use dust_data_mod, only:  ndust, reff_dust, den_dust
+     use dust_data_mod, only:  ndust, lo_dust, up_dust, reff_dust, den_dust
 
    USE seas_data_mod,  only: number_ss_bins, ra, rb
    USE chem_const_mod, only: oc_mfac,nh4_mfac
 
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: ra_dust(5)=(/1.d-1,1.0d0,1.8d0,3.0d0,6.0d0/)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: rb_dust(5)=(/1.0d0,1.8d0,3.0d0,6.0d0,10.0d0/)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_ash(4)=(/2500.,2500.,2500.,2500. /)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_ash(4)=(/ 11.719D-6,&!
-                                                      05.859D-6,&!
-                                                      02.930D-6,&!
-                                                      00.975D-6 /)! 3.9 um
 !
    INTEGER, INTENT(IN   ) :: its,ite, jts,jte, kts,kte, nbin_o
    INTEGER, INTENT(IN   ) :: ims,ime, jms,jme, kms,kme,num_chem
@@ -559,11 +552,9 @@
        end do
 ! Dust bin mass fractions
         dustfrc_goc8bin=0.
-       ! dlogoc=0.46*2.E-6 ! Begin lower dust bin, makes upper limit diam 20 micron diameter 
        do m =1, ndust  ! loop over dust size bins
-       !dhigoc = 2.*2.*reff_dust(m)-dlogoc ! hi diameter limit (m)
-        dlogoc = ra_dust(m)*2.E-6  ! low diameter limit (m)
-        dhigoc = rb_dust(m)*2.E-6  ! hi diameter limit (m)
+        dlogoc = 2 * lo_dust(m)  ! low diameter limit (m)
+        dhigoc = 2 * up_dust(m)  ! hi diameter limit (m)
         do n = 1, nbin_o
         dustfrc_goc8bin(m,n)=max(DBLE(0.),min(DBLE(dhi_sectm(n)),dhigoc)- &
                              max(dlogoc,DBLE(dlo_sectm(n))) )/(dhigoc-dlogoc)
@@ -577,7 +568,6 @@
        if(m.le.2.and.n.eq.5)dustfrc_goc8bin(m,n)=dustfrc_goc8bin(m,n)+.135*.458
 
        end do
-       !dlogoc=dhigoc
        end do
         kcall=kcall+1
 !       ISTOP=1
