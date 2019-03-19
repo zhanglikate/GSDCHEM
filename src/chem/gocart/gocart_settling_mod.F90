@@ -483,7 +483,7 @@ END SUBROUTINE gocart_settling_driver
             vd_wk1 = dt_settl(k)*vd_cor(l)/delz(i,j,l2)   !fraction to leave level
 
             tc(i,j,l,k)   =  tc(i,j,l,k)*(1.- vd_wk1)+transfer_to_below_level ! [ug/kg]
-            transfer_to_below_level =(temp_tc*vd_wk1)*((delz(i,j,l2) &
+            if (l.gt.1) transfer_to_below_level =(temp_tc*vd_wk1)*((delz(i,j,l2) &
                    *airden(i,j,l))/(delz(i,j,l2+1)*airden(i,j,l-1)))          ! [ug/kg]
 
               END DO   !i
