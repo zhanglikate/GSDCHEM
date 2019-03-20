@@ -3,6 +3,7 @@ noinst_LIBRARIES = libgocart.a
 libgocart_a_SOURCES  = gocart_mod.F90
 libgocart_a_SOURCES += gocart_aerosols_mod.F90
 libgocart_a_SOURCES += gocart_chem_mod.F90
+libgocart_a_SOURCES += gocart_diag_mod.F90
 libgocart_a_SOURCES += gocart_dmsemis_mod.F90
 libgocart_a_SOURCES += gocart_model_mod.F90
 libgocart_a_SOURCES += gocart_prep_mod.F90
@@ -15,6 +16,7 @@ libgocart_a_DEPENDENCIES = ../shr/libshr.a ../plume/libplume.a ../vash/libvash.a
 clean-local:
 	-rm -f *.mod
 
-libgocart_a-gocart_mod.$(OBJEXT) : libgocart_a-gocart_aerosols_mod.$(OBJEXT) libgocart_a-gocart_dmsemis_mod.$(OBJEXT) \
-	libgocart_a-gocart_chem_mod.$(OBJEXT) libgocart_a-gocart_prep_mod.$(OBJEXT) libgocart_a-gocart_settling_mod.$(OBJEXT)
+libgocart_a-gocart_mod.$(OBJEXT) : libgocart_a-gocart_aerosols_mod.$(OBJEXT) libgocart_a-gocart_diag_mod.$(OBJEXT) \
+	libgocart_a-gocart_dmsemis_mod.$(OBJEXT) libgocart_a-gocart_chem_mod.$(OBJEXT) libgocart_a-gocart_prep_mod.$(OBJEXT) \
+	libgocart_a-gocart_settling_mod.$(OBJEXT)
 libgocart_a-gocart_model_mod.$(OBJEXT) : libgocart_a-gocart_mod.$(OBJEXT)

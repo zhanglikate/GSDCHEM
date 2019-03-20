@@ -41,7 +41,7 @@ CONTAINS
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
            INTENT(INOUT ) ::                                   chem
      REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_seas),                    &
-           INTENT(INOUT ) ::                                                 &
+           INTENT(OUT   ) ::                                                 &
            emis_seas
      REAL,  DIMENSION( ims:ime , jms:jme )                   ,               &
             INTENT(IN   ) ::                                                 &
@@ -87,6 +87,8 @@ CONTAINS
     imx=1
     jmx=1
     lmx=1
+
+    emis_seas = 0.
 
     select case (config % chem_opt)
 

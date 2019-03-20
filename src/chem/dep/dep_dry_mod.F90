@@ -1,5 +1,6 @@
 module dep_dry_mod
 
+  use chem_types_mod, only : CHEM_KIND_R8
   use chem_const_mod, only : epsilc
   use chem_config_mod, only : GOCART_SIMPLE => CHEM_OPT_GOCART
   use chem_tracers_mod, only : p_o3,p_dust_1,p_vash_1,p_vash_4,p_vash_10,p_dms, &
@@ -32,7 +33,7 @@ contains
                chem,rho_phy,dz8w,exch_h,hfx,                              &
                ivgtyp,tsk,gsw,vegfra,pbl,ust,znt,z,z_at_w,                &
                xland,xlat,xlong,h2oaj,h2oai,nu3,ac3,cor3,asulf,ahno3,     &
-               anh3,dep_vel_o3,g,                                         &
+               anh3,ddep,dep_vel_o3,g,                                    &
                e_co,kemit,snowh,numgas,                                   &
                num_chem,num_moist,                                        &
                ids,ide, jds,jde, kds,kde,                                 &
@@ -108,6 +109,8 @@ contains
                                                    xlat,        &
                                                    xlong,       &
                                                     znt,rmol
+   REAL, DIMENSION( ims:ime, jms:jme, num_chem ),         &
+         INTENT(OUT ) ::                                   ddep
    REAL,  DIMENSION( ims:ime , jms:jme )                   ,    &
           INTENT(OUT) ::                                      &
                                                      dep_vel_o3
@@ -125,6 +128,8 @@ contains
 ! .. Local Scalars ..
       REAL ::  clwchem,  dvfog, dvpart,  &
         rad, rhchem, ta, ustar, z1,zntt
+
+      REAL(CHEM_KIND_R8) :: cdt, factor
 
       INTEGER :: iland, iprt, iseason, jce, jcs,  &
                  n, nr, ipr, jpr, nvr,   &
@@ -210,10 +215,6 @@ contains
                ids,ide, jds,jde, kds,kde,                      &
                ims,ime, jms,jme, kms,kme,                      &
                its,ite, jts,jte, kts,kte                       )
-!         ddvel(:,:,p_vash_1:num_chem) = 0.
-          !ddvel(:,:,p_dms) = 0. !lzhang
-          !ddvel(:,:,p_msa) = 0. !lzhang
-          !ddvel(:,:,p_so2) = 0. !lzhang
        ELSE if (chem_opt == 501 ) then
 ! for caesium .1cm/s
 !
@@ -228,7 +229,6 @@ contains
                ids,ide, jds,jde, kds,kde,                      &
                ims,ime, jms,jme, kms,kme,                      &
                its,ite, jts,jte, kts,kte                       )
-               !ddvel(:,:,numgas+1:num_chem) = 0.0
 ! limit aerosol ddvels to <= 0.5 m/s
 ! drydep routines occasionally produce unrealistically-large particle
 ! diameter leading to unrealistically-large sedimentation velocity 
@@ -237,12 +237,22 @@ contains
           !Set dry deposition velocity to zero when using the
           !chemistry tracer mode.
           ddvel(:,:,:) = 0.
-!         write(6,*)'no dry deposition '
        END IF
        idrydep_onoff = 1
 
-
-
+!
+!   Compute dry deposition according to NGAC
+!
+    cdt = real(dtstep, kind=CHEM_KIND_R8)
+    do nv = 1, num_chem
+      do j = jts, jte
+        do i = its, ite
+          factor = 1._CHEM_KIND_R8 - exp(-ddvel(i,j,nv)*cdt/dz8w(i,kts,j))
+          ddep(i,j,nv) = max(0.0, factor * chem(i,kts,j,nv)) &
+                         * (p8w(i,kts,j)-p8w(i,kts+1,j))/g/dtstep
+        end do
+      end do
+    end do
 
 
 !   This will be called later from subgrd_transport_driver.F !!!!!!!!
@@ -288,16 +298,11 @@ contains
 !   do not need lho,lho2
 !   (03-may-2006 rce - calc dryrho_1d and pass it to vertmx)
 !
-!     if(j.eq.681)write(6,*)ddvel(1,681,1:num_chem)
 !     if(p_o3.gt.1)dep_vel_o3(i,j)=ddvel(i,j,p_o3)
       do nv=1,num_chem-0
          do k=kts,kte
             pblst(k)=max(epsilc,chem(i,k,j,nv))
             dryrho_1d(k) = 1./alt(i,k,j)
-!           if(j.eq.681.and.nv.eq.10)then
-!             write(6,*)k,chem(i,k,j,nv),exch_h(i,k,j),ddvel(i,j,nv)
-!             write(6,*)dryrho_1d(k),zz(k),zzfull(k)
-!           endif
          enddo
 
          mix_select: SELECT CASE(chem_opt)

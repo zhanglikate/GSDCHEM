@@ -153,20 +153,13 @@ contains
         stateIn % vs3d, &
         stateIn % ws3d, &
         stateIn % tr3d, &
-        ! -- output tracers
+        ! -- output tracers and tracer diagnostics
         stateOut % tr3d, &
+        stateOut % trcm, &
+        stateOut % trab, &
+        stateOut % truf, &
+        stateOut % trdf, &
         data % trdp, &
-        data % emi_d1, &
-        data % emi_d2, &
-        data % emi_d3, &
-        data % emi_d4, &
-        data % emi_d5, &
-        data % intaer, &
-        data % intbc, &
-        data % intoc, &
-        data % intsulf, &
-        data % intdust, &
-        data % intsea, &
         data % ext_cof, &
         data % sscal, &
         data % asymp, &
@@ -192,7 +185,6 @@ contains
         config % num_asym_par, config % num_bscat_coef, &
         config % num_ext_coef, &
         ! -- domain
-!       real(lon, CHEM_KIND_R4), real(lat, CHEM_KIND_R4), &
         lon, lat, &
         is, ie, js, je, 1, nl, &
         is, ie, js, je, 1, ni, &

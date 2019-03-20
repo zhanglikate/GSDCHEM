@@ -218,6 +218,30 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
+          case ("inst_tracer_up_surface_flx")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % truf, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("inst_tracer_down_surface_flx")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % trdf, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("inst_tracer_clmn_mass_dens")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % trcm, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
+          case ("inst_tracer_anth_biom_flx")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateOut % trab, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
           case default
             ! -- unused field
         end select

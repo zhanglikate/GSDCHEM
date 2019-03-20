@@ -18,6 +18,7 @@ module gocart_mod
   use gocart_aerosols_mod
   use gocart_dmsemis_mod
   use gocart_chem_mod
+  use gocart_diag_mod
   use plume_rise_mod
   use vash_settling_mod
   use dep_mod
@@ -44,8 +45,7 @@ contains
     h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
-    sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trdp, &
-    emi_d1, emi_d2, emi_d3, emi_d4, emi_d5,intaer, intbc, intoc, intsulf, intdust, intsea, &
+    sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
     ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     rainl, rainc, ebu, &
@@ -138,18 +138,13 @@ contains
     real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in
     real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
 
+    ! -- output diagnostics
+    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: trcm
+    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: trab
+    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: truf
+    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: trdf
+
     ! -- output tracers
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d1
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d2
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d3
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d4
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: emi_d5
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intaer
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intbc
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intoc
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intsulf
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intdust
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: intsea
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: aod2d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem), intent(out) :: wet_dep
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: p10
@@ -272,6 +267,7 @@ contains
 
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: var_rmv
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: tr_fall
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: dry_fall
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_moist)      :: moist
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:16)             :: tauaerlw
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: tauaersw
@@ -302,6 +298,12 @@ contains
     print *,'gocart_run: entering ...', chem_opt, ims, ime, jms, jme, num_chem
 
     if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    ! -- initialize output diagnostics
+    trcm = 0._CHEM_KIND_R8
+    trab = 0._CHEM_KIND_R8
+    truf = 0._CHEM_KIND_R8
+    trdf = 0._CHEM_KIND_R8
 
     if (chem_opt == CHEM_OPT_NONE) return
 
@@ -404,6 +406,7 @@ contains
     ssca          = 0._CHEM_KIND_R4
     var_rmv       = 0._CHEM_KIND_R4
     tr_fall       = 0._CHEM_KIND_R4
+    dry_fall      = 0._CHEM_KIND_R4
     moist         = 0._CHEM_KIND_R4
     tauaerlw      = 0._CHEM_KIND_R4
     tauaersw      = 0._CHEM_KIND_R4
@@ -522,6 +525,8 @@ contains
         ids,ide, jds,jde, kds,kde,                        &
         ims,ime, jms,jme, kms,kme,                        &
         its,ite, jts,jte, kts,kte)
+      truf(:,:,num_emis_dust+1:num_emis_dust+num_emis_seas) = &
+        emis_seas(its:ite,1,jts:jte,1:num_emis_seas)
     endif
     print *,'gocart_run: exit sea salt ...'
     print *,'gocart_run: check dust ...', dust_opt
@@ -556,11 +561,7 @@ contains
     ! -- set output arrays
     if (store_arrays) then
       print *,'gocart_run: storing arrays ...'
-      emi_d1(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,1)
-      emi_d2(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,2)
-      emi_d3(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,3)
-      emi_d4(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,4)
-      emi_d5(its:ite,jts:jte) = emis_dust(its:ite,1,jts:jte,5)
+      truf(:,:,1:num_emis_dust) = emis_dust(its:ite,1,jts:jte,1:num_emis_dust)
       print *,'gocart_run: storing arrays done'
     end if
     if (call_plume) then
@@ -576,7 +577,6 @@ contains
         ids,ide, jds,jde, kds,kde,                               &
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
-      ! -- store current emissions to buffer
       print *,'gocart_run: calling plume done'
     end if
 
@@ -673,8 +673,8 @@ contains
        chem,rho_phy,dz8w,exch_h,hfx,                              &
        ivgtyp,tsk,gsw,vegfra,pbl,ust,znt,zmid,z_at_w,             &
        xland,xlat,xlong,h2oaj,h2oai,nu3,ac3,cor3,asulf,ahno3,     &
-       anh3,dep_vel_o3,grvity,                                    &
-       e_co,kemit,snowh,numgas,                          &
+       anh3,dry_fall,dep_vel_o3,grvity,                           &
+       e_co,kemit,snowh,numgas,                                   &
        num_chem,num_moist,                                        &
        ids,ide, jds,jde, kds,kde,                                 &
        ims,ime, jms,jme, kms,kme,                                 &
@@ -833,102 +833,26 @@ contains
       end do
     end do
 
-!calulate the aerosol column burden 
-        jp=0
-        do j=jts, jte
-        jp = jp + 1
-          ip = 0
-         do i= its, ite
-            ip = ip + 1
-          dpsum=0.
-          intsea(i,j)=0.
-          intaer(i,j)=0.
-          intbc(i,j)=0.
-          intoc(i,j)=0.
-          intsulf(i,j)=0.
-          intdust(i,j)=0.
-          !o3du(i,j)=0.
-          !o3dg(i,j)=0.
-           kp=0
-          do k = kts, kte
-           kp=kp+1
-            dpsum=dpsum+(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
-            if ((chem_opt >= CHEM_OPT_GOCART) .and. ( chem_opt < CHEM_OPT_MAX)) then
-              intaer(i,j)=intaer(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_p25)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intbc(i,j)=intbc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_bc1)&
-                +tr3d_out(ip,jp,kp,nbegin+p_bc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_oc1)&
-                +tr3d_out(ip,jp,kp,nbegin+p_oc2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_dust_1)&
-                +.38*tr3d_out(ip,jp,kp,nbegin+p_dust_2))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intsulf(i,j)=intsulf(i,j)+1e-6*tr3d_out(ip,jp,kp,nbegin+p_sulf)*(pr3d(ip,jp,kp)&
-                -pr3d(ip,jp,kp+1))/grvity
-!             intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_2))*(pr3d(ip,jp,kp)&
-              intsea(i,j)=intsea(i,j)+1e-6*(tr3d_out(ip,jp,kp,nbegin+p_seas_1)+tr3d_out(ip,jp,kp,nbegin+p_seas_2)+0.83*tr3d_out(ip,jp,kp,nbegin+p_seas_3))*(pr3d(ip,jp,kp)&
-                -pr3d(ip,jp,kp+1))/grvity
-            end if !chem_opt >= 300 .and. chem_opt < 500
+    ! -- calculate column mass density
+    call gocart_diag_cmass(config % chem_opt, nbegin, grvity, pr3d, tr3d_out, trcm)
 
-            if (chem_opt == CHEM_OPT_RACM_SOA_VBS) then
-              intaer(i,j)=intaer(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_p25j)+&
-                tr3d_out(ip,jp,kp,nbegin+p_p25i))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intbc(i,j)=intbc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_ecj)&
-                +tr3d_out(ip,jp,kp,nbegin+p_eci))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intoc(i,j)=intoc(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_orgpaj)&
-                +tr3d_out(ip,jp,kp,nbegin+p_orgpai))*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intdust(i,j)=intdust(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_soila)&
-                )*1e-6*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))/grvity
-              intsulf(i,j)=intsulf(i,j)+(tr3d_out(ip,jp,kp,nbegin+p_so4aj)+&
-                tr3d_out(ip,jp,kp,nbegin+p_so4ai))*1e-6*(pr3d(ip,jp,kp)&
-                -pr3d(ip,jp,kp+1))/grvity
-            end if !chem_opt == 108
-! comment out the column ozone for gas-phase chemistry
-#if 0
-            rho_phys(i,j,k)=(pr3l(i,j,k)&
-              /(RD*tk3d(i,j,k)) !*(1.+.608*qv3d(k,j))
-            if ((chem_opt == 301) .or. ( chem_opt == 108))then
-              o3du(i,j)=o3du(i,j)+(0.001*tr3d_out(ip,jp,kp,nbegin+p_o3)*(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))&
-                *rho_phys(i,j,k)*6.022*1e23/(48.*9.8*2.69*1e20))
-            end if
-            o3dg(i,j)=o3dg(i,j)+(1e6*0.001*tr3d_out(ip,jp,kp,4)*airmw/48.*(ph3d(ip,jp,kp+1)-ph3d(ip,jp,kp))&
-              *rho_phys(i,j,k)*6.022*1e23/(48.*9.8*2.69*1e20))
-#endif
-! comment out the chem_option for 304,316,317
-#if 0
-          if ( chem_opt==304.or. chem_opt==316.or.chem_opt==317) then
-              intdust(i,j)=intdust(i,j)+d1st(i,j,k)*1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))&
-                /grvity
-           endif
-            if (chem_opt == 316) then
-              intash(i,j)=intash(i,j)+(tr3d_out(i,j,k,ichem_start+p_vash_1)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_2)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_3)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_4)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_5)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_6)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_7)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_8)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_9)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_10))     &
-                *1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))/grvity
-            endif
-            if ( chem_opt == 317 ) then
-              intash(i,j)=intash(i,j)+(tr3d_out(i,j,k,ichem_start+p_vash_1)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_2)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_3)       &
-                + tr3d_out(i,j,k,ichem_start+p_vash_4))      &
-                *1e-6*(pr3d(i,j,k)-pr3d(i,j,k+1))/grvity
-            endif
-#endif
-          end do
-!          if (config % chem_opt == 316 .or. config % chem_opt == 317)intash(j)=intash(j)
-! column burden average
-          !intaer(i,j)=intaer(i,j)/dpsum
-          !intbc(i,j)=intbc(i,j)/dpsum
-          !intoc(i,j)=intoc(i,j)/dpsum
-          !intsulf(i,j)=intsulf(i,j)/dpsum
-          !intdust(i,j)=intdust(i,j)/dpsum
-        end do
-       end do
+    ! -- output anthropogenic emissions
+    trab(:,:,1) = emis_ant(its:ite, kts, jts:jte, p_e_bc )
+    trab(:,:,2) = emis_ant(its:ite, kts, jts:jte, p_e_oc )
+    trab(:,:,3) = emis_ant(its:ite, kts, jts:jte, p_e_so2)
+
+    ! -- output biomass burning emissions
+    trab(:,:,4) = ebu_in(its:ite, jts:jte, p_ebu_bc )
+    trab(:,:,5) = ebu_in(its:ite, jts:jte, p_ebu_oc )
+    trab(:,:,6) = ebu_in(its:ite, jts:jte, p_ebu_so2)
+
+    ! -- output sedimentation and dry/wet deposition
+    ! -- output dry deposition
+    call gocart_diag_store(2, dry_fall, trdf)
+    ! -- output large-scale wet deposition
+    call gocart_diag_store(3, var_rmv, trdf)
+    ! -- output convective-scale wet deposition
+    if (chem_conv_tr == 2) call gocart_diag_store(4, tr_fall, trdf)
 
   end subroutine gocart_advance
 

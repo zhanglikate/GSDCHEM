@@ -32,6 +32,11 @@ module chem_state_mod
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: vs3d     => null()
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: ws3d     => null()
 
+    real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: trab     => null()
+    real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: trcm     => null()
+    real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: truf     => null()
+    real(CHEM_KIND_R8), dimension(:,:,:,:), pointer :: trdf     => null()
+
     real(CHEM_KIND_R8), dimension(:,:,:,:), pointer :: tr3d     => null()
 
   end type chem_state_type

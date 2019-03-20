@@ -98,6 +98,7 @@ libgocart_a_LIBADD =
 am_libgocart_a_OBJECTS = libgocart_a-gocart_mod.$(OBJEXT) \
 	libgocart_a-gocart_aerosols_mod.$(OBJEXT) \
 	libgocart_a-gocart_chem_mod.$(OBJEXT) \
+	libgocart_a-gocart_diag_mod.$(OBJEXT) \
 	libgocart_a-gocart_dmsemis_mod.$(OBJEXT) \
 	libgocart_a-gocart_model_mod.$(OBJEXT) \
 	libgocart_a-gocart_prep_mod.$(OBJEXT) \
@@ -257,7 +258,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libgocart.a
 libgocart_a_SOURCES = gocart_mod.F90 gocart_aerosols_mod.F90 \
-	gocart_chem_mod.F90 gocart_dmsemis_mod.F90 \
+	gocart_chem_mod.F90 gocart_diag_mod.F90 gocart_dmsemis_mod.F90 \
 	gocart_model_mod.F90 gocart_prep_mod.F90 \
 	gocart_settling_mod.F90
 libgocart_a_FCFLAGS = -I . -I ../shr/ -I ../plume/ -I ../vash/ -I ../dust/ -I ../dep/ -I ../seas/ -I ../opt/
@@ -334,6 +335,12 @@ libgocart_a-gocart_chem_mod.o: gocart_chem_mod.F90
 
 libgocart_a-gocart_chem_mod.obj: gocart_chem_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgocart_a_FCFLAGS) $(FCFLAGS) -c -o libgocart_a-gocart_chem_mod.obj `if test -f 'gocart_chem_mod.F90'; then $(CYGPATH_W) 'gocart_chem_mod.F90'; else $(CYGPATH_W) '$(srcdir)/gocart_chem_mod.F90'; fi`
+
+libgocart_a-gocart_diag_mod.o: gocart_diag_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgocart_a_FCFLAGS) $(FCFLAGS) -c -o libgocart_a-gocart_diag_mod.o `test -f 'gocart_diag_mod.F90' || echo '$(srcdir)/'`gocart_diag_mod.F90
+
+libgocart_a-gocart_diag_mod.obj: gocart_diag_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgocart_a_FCFLAGS) $(FCFLAGS) -c -o libgocart_a-gocart_diag_mod.obj `if test -f 'gocart_diag_mod.F90'; then $(CYGPATH_W) 'gocart_diag_mod.F90'; else $(CYGPATH_W) '$(srcdir)/gocart_diag_mod.F90'; fi`
 
 libgocart_a-gocart_dmsemis_mod.o: gocart_dmsemis_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libgocart_a_FCFLAGS) $(FCFLAGS) -c -o libgocart_a-gocart_dmsemis_mod.o `test -f 'gocart_dmsemis_mod.F90' || echo '$(srcdir)/'`gocart_dmsemis_mod.F90
@@ -562,8 +569,9 @@ uninstall-am:
 clean-local:
 	-rm -f *.mod
 
-libgocart_a-gocart_mod.$(OBJEXT) : libgocart_a-gocart_aerosols_mod.$(OBJEXT) libgocart_a-gocart_dmsemis_mod.$(OBJEXT) \
-	libgocart_a-gocart_chem_mod.$(OBJEXT) libgocart_a-gocart_prep_mod.$(OBJEXT) libgocart_a-gocart_settling_mod.$(OBJEXT)
+libgocart_a-gocart_mod.$(OBJEXT) : libgocart_a-gocart_aerosols_mod.$(OBJEXT) libgocart_a-gocart_diag_mod.$(OBJEXT) \
+	libgocart_a-gocart_dmsemis_mod.$(OBJEXT) libgocart_a-gocart_chem_mod.$(OBJEXT) libgocart_a-gocart_prep_mod.$(OBJEXT) \
+	libgocart_a-gocart_settling_mod.$(OBJEXT)
 libgocart_a-gocart_model_mod.$(OBJEXT) : libgocart_a-gocart_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

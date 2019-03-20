@@ -42,10 +42,14 @@ module CHM
       "inst_surface_roughness               "  &
     /)
   ! -- export fields
-  integer, parameter :: exportFieldCount = 1
+  integer, parameter :: exportFieldCount = 5
   character(len=*), dimension(exportFieldCount), parameter :: &
     exportFieldNames = (/ &
-      "inst_tracer_mass_frac                "  &
+      "inst_tracer_mass_frac                ", &
+      "inst_tracer_up_surface_flx           ", &
+      "inst_tracer_down_surface_flx         ", &
+      "inst_tracer_clmn_mass_dens           ", &
+      "inst_tracer_anth_biom_flx            "  &
     /)
 
   ! -- verbosity
