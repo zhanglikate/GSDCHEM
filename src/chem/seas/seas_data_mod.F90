@@ -7,8 +7,8 @@ module seas_data_mod
   ! -- lower/upper particle radii (um) for each bin
   real,     dimension(number_ss_bins), parameter :: ra =             (/  0.03,   0.1,   0.5,   1.5,   5.0 /)
   real,     dimension(number_ss_bins), parameter :: rb =             (/   0.1,   0.5,   1.5,   5.0,  10.0 /)
-  ! -- global scaling factors for sea salt emissions (originally 0.875)
-  real,     dimension(number_ss_bins), parameter :: emission_scale = (/ 0.400, 0.400, 0.400, 0.400, 0.400 /)
+  ! -- global scaling factors for sea salt emissions (originally 0.875 in NGAC namelist)
+  real,     dimension(number_ss_bins), parameter :: emission_scale = (/ 0.150, 0.150, 0.150, 0.150, 0.150 /)
   ! -- sea salt density
   real(fp), dimension(number_ss_bins), parameter :: den_seas  = (/    2200._fp,    2200._fp,    2200._fp,    2200._fp,    2200._fp /)
   ! -- particle effective radius (m)

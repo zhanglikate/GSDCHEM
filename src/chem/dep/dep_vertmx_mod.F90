@@ -85,7 +85,8 @@ CONTAINS
       REAL, INTENT(INOUT), DIMENSION (kts:ktem1) :: lhs1, lhs2, lhs3, phi, rhs
 ! ..
 ! .. Local Scalars ..
-      REAL :: a1, a2, alfa_explicit = .25, beta_implicit = .75
+      !REAL :: a1, a2, alfa_explicit = .25, beta_implicit = .75
+      REAL :: a1, a2, alfa_explicit = .0, beta_implicit = 1.
       INTEGER :: i
 
 ! ..

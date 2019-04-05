@@ -411,16 +411,11 @@
           its,ite, jts,jte, kts,kte                                    )
 
      use aero_soa_vbs_data_mod
-     use dust_data_mod, only:  ndust, reff_dust, den_dust
+     use dust_data_mod, only:  ndust, lo_dust, up_dust, reff_dust, den_dust
 
    USE seas_data_mod,  only: number_ss_bins, ra, rb
    USE chem_const_mod, only: oc_mfac,nh4_mfac
 
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: den_ash(4)=(/2500.,2500.,2500.,2500. /)
-  real(CHEM_KIND_R8), DIMENSION (4), PARAMETER :: reff_ash(4)=(/ 11.719D-6,&!
-                                                      05.859D-6,&!
-                                                      02.930D-6,&!
-                                                      00.975D-6 /)! 3.9 um
 !
    INTEGER, INTENT(IN   ) :: its,ite, jts,jte, kts,kte, nbin_o
    INTEGER, INTENT(IN   ) :: ims,ime, jms,jme, kms,kme,num_chem
@@ -557,9 +552,9 @@
        end do
 ! Dust bin mass fractions
         dustfrc_goc8bin=0.
-        dlogoc=0.46*2.E-6 ! Begin lower dust bin, makes upper limit diam 20 micron diameter 
        do m =1, ndust  ! loop over dust size bins
-       dhigoc = 2.*2.*reff_dust(m)-dlogoc ! hi diameter limit (m)
+        dlogoc = 2 * lo_dust(m)  ! low diameter limit (m)
+        dhigoc = 2 * up_dust(m)  ! hi diameter limit (m)
         do n = 1, nbin_o
         dustfrc_goc8bin(m,n)=max(DBLE(0.),min(DBLE(dhi_sectm(n)),dhigoc)- &
                              max(dlogoc,DBLE(dlo_sectm(n))) )/(dhigoc-dlogoc)
@@ -573,7 +568,6 @@
        if(m.le.2.and.n.eq.5)dustfrc_goc8bin(m,n)=dustfrc_goc8bin(m,n)+.135*.458
 
        end do
-       dlogoc=dhigoc
        end do
         kcall=kcall+1
 !       ISTOP=1
@@ -860,8 +854,10 @@
        end do
        endif
 
-       mass_cl=mass_seas*conv1a*22.9897/58.4428
-       mass_na=mass_seas*conv1a*35.4270/58.4428
+       !mass_cl=mass_seas*conv1a*22.9897/58.4428
+       !mass_na=mass_seas*conv1a*35.4270/58.4428
+       mass_cl=mass_seas*conv1a*35.4270/58.4167
+       mass_na=mass_seas*conv1a*22.9897/58.4167
        mass_soil=mass_soil*conv1a
           vol_so4 = mass_so4 / dens_so4
           vol_no3 = mass_no3 / dens_no3

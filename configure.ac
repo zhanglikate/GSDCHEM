@@ -4,7 +4,7 @@
 AC_PREREQ([2.63])
 AC_INIT([gsdchem], [0.1], [raffaele.montuoro@noaa.gov])
 AM_INIT_AUTOMAKE
-#AM_EXTRA_RECURSIVE_TARGETS([fortran nuopc])
+AM_MAINTAINER_MODE
 
 # Checks for programs.
 AC_PROG_GREP
