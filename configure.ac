@@ -2,7 +2,11 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([gsdchem], [0.1], [raffaele.montuoro@noaa.gov])
+AC_INIT([gsdchem], [0.8.6], [raffaele.montuoro@noaa.gov])
+
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CONFIG_MACRO_DIR([m4])
+
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 
@@ -11,81 +15,156 @@ AC_PROG_GREP
 AC_PROG_SED
 AC_PATH_PROG(CUT,cut)
 
+# Checks for required ESMF library
 AC_ARG_WITH([esmfmk],
   [AS_HELP_STRING([--with-esmfmk=<path-to-esmf.mk>],
-    [set full path to makefile fragment from ESMF library.])],
-  [],
-  [with_esmfmk=no])
+    [set full path to ESMF makefile fragment.])],
+  [],[with_esmfmk=no])
 
-AS_IF([test "x$with_esmfmk" != xno],
-  AC_CHECK_FILE(["$with_esmfmk"],
-    [AC_SUBST(ESMFMKFILE,["$with_esmfmk"])
-     with_esmfmk=yes],
-    [AC_MSG_WARN([File $with_esmfmk not found. Carry on.])
-     with_esmfmk=no]))
+AS_CASE(["x$with_esmfmk"],
+  [x|xauto|xcheck|xyes|xno], [esmfmk=${ESMFMKFILE}],
+  [esmfmk=$withval]
+)
 
-AS_IF([test "x$with_esmfmk" = xno],
-  [AC_CHECKING([environment for ESMFMKFILE])
-   AC_CHECK_FILE(["${ESMFMKFILE}"],
-      [AC_SUBST(ESMFMKFILE,["${ESMFMKFILE}"])
-       AC_MSG_RESULT([getting ESMF Makefile fragment from environment variable ESMFMKFILE])
-       with_esmfmk=yes],
-      [AC_MSG_WARN([Makefile fragment from ESMF library not found.])])])
+AC_MSG_CHECKING([for ESMF library])
+AS_IF([test "x$esmfmk" != x], [dnl
+  AC_CHECK_FILE([$esmfmk], [AC_SUBST(ESMFMKFILE,["$esmfmk"])], [esmfmk=])],
+  [])
 
+AS_IF([test "x$esmfmk" = x], [AC_MSG_ERROR([Unable to find required ESMF library])],
+  [dnl Retrieve ESMF compiler settings
+   ESMF_FC=`$GREP ESMF_F90COMPILER ${ESMFMKFILE} | $SED -e 's/ESMF_F90COMPILER *= *//g'`
+   ESMF_FC_INC=`$GREP ESMF_F90COMPILEPATHS ${ESMFMKFILE} 2>/dev/null | $CUT -d= -f2-`
+  ]
+)
 
-AC_PROG_CC
-
-AS_IF([test "x$with_esmfmk" = xyes],
-  [FCOMPILER=`$GREP ESMF_F90COMPILER ${ESMFMKFILE} | $SED -e 's/ESMF_F90COMPILER *= *//g'`
-   for v in ESMF_F90COMPILEOPTS ESMF_F90COMPILEPATHS ESMF_F90COMPILECPPFLAGS
-   do 
-     FCFLAGS="${FCFLAGS} `$GREP $v ${ESMFMKFILE} 2>/dev/null | $CUT -d= -f2-`"
-   done
-   FCLIBS="${LDFLAGS}"
-   for v in ESMF_F90LINKOPTS ESMF_F90LINKPATHS ESMF_F90LINKRPATHS ESMF_F90ESMFLINKLIBS
-   do 
-     FCLIBS="${FCLIBS} `$GREP $v ${ESMFMKFILE} 2>/dev/null | $CUT -d= -f2-`"
-   done
-   AC_PROG_FC([$FCOMPILER])
-   AC_SUBST([FCLIBS])],
-   [AC_PROG_FC([mpiifort])
-    FCFLAGS="${FCFLAGS} -O2"])
+# Checks for MPI Fortran compiler
+AC_PROG_FC([$FC $ESMF_FC mpiifort mpifort mpif90 mpixlf90_r mpxlf90_r])
+AC_MSG_CHECKING([whether MPI is supported])
+AC_LANG_PUSH([Fortran])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[dnl
+       use mpi
+       integer, parameter :: comm = MPI_COMM_WORLD
+       integer  rc
+       call MPI_Init(rc)
+  ])],
+  [AC_MSG_RESULT(yes)],
+  [dnl No MPI found. Disable compiler.
+   FC=
+   AC_MSG_RESULT(no)])
 
 AS_IF([test "x$FC" = x],
-  [AC_MSG_ERROR([Cannot find a suitable Fortran compiler.])])
+  [AC_MSG_ERROR([Cannot find a suitable MPI Fortran compiler.])])
 
-# default
+AC_FC_PP_SRCEXT([F90])
+AX_COMPILER_VENDOR
+
+# Add configure options
+# - safe floating point arithmetic
 AC_ARG_ENABLE([safe-fp],
-  [AS_HELP_STRING([--enable-safe-fp],[Enable value-safe floating-point optimization for Intel compilers (default: yes).])],
+  [AS_HELP_STRING([--enable-safe-fp],[Enable value-safe floating-point arithmetic (default: yes).])],
   [],[])
 
-AS_IF([test "x$enable_safe_fp" != xno],
- [AC_CHECKING([compiler for -fp-model option])
-  save_FCFLAGS=${FCFLAGS}
-  FCFLAGS="-fp-model precise ${FCFLAGS}"
-  AC_LANG_PUSH(Fortran)
-  AC_COMPILE_IFELSE(AC_LANG_PROGRAM([]),
-    [AC_MSG_RESULT([adding -fp-model precise option for results consistency])],
-    [FCFLAGS=${save_FCFLAGS}
-     AC_MSG_WARN([-fp-model option not recognized. Please add corresponding option for value-safe floating-point optimization.])])
-  AC_LANG_POP()],[])
+# - debug
+AC_ARG_ENABLE([debug],
+  [AS_HELP_STRING([--enable-debug],[Enable debug mode (default: no).])],
+  [enable_debug=${enableval}], [enable_debug=no])
 
+# Checks for debug/optimization options
+AS_IF([test "x$enable_debug" = xyes],[
+  AC_MSG_CHECKING([compiler for debug options])
+  save_FCFLAGS=${FCFLAGS}
+  FCFLAGS=`echo $FCFLAGS | $SED -e 's/-O@<:@0-9s@:>@*//g'`
+  FCFLAGS=`echo $FCFLAGS | $SED -e 's/-g@<:@0-9@:>@*//g'`
+  debug_opts=
+  AS_CASE(["$ax_cv_fc_compiler_vendor"],
+    [gnu|clang], [debug_opts="-Wall -Wno-unused -Wno-unused-dummy-argument -fbacktrace"],
+    [ibm],       [debug_opts="-qcheck -qfullpath"],
+    [intel],     [debug_opts="-traceback -check pointer,stack,uninit"],
+    [portland],  [debug_opts="-traceback"],
+    []            dnl no debug options available for other platforms
+  )
+  AS_IF([test "x$ac_cv_prog_fc_g" = xyes], [debug_opts="-g ${debug_opts}"], [])
+  FCFLAGS="-O0 ${debug_opts} ${FCFLAGS}"
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+    [],
+    [FCFLAGS=${save_FCFLAGS}
+     debug_opts="unknown. Please add debug flags to FCFLAGS"]
+  )
+  AC_MSG_RESULT([${debug_opts}])
+  ], [dnl default optimization settings, if none present
+  AC_MSG_CHECKING([compiler for optimization options])
+  fcflags_noopt=
+  perf_opts=
+  for fc_flag in $FCFLAGS
+  do
+    AS_CASE([$fc_flag],
+      [-O@<:@0-9s@:>@*|-Ofast], [perf_opts=$fc_flag], dnl find optimization settings
+      [fcflags_noopt="$fcflags_noopt $fc_flag"]
+    )
+  done
+  AS_IF([test "x$perf_opts" = x], [dnl add default optimization settings
+    AS_CASE(["$ax_cv_fc_compiler_vendor"],
+      [gnu|clang], [dnl
+                    perf_opts="-O2"
+                    AS_IF([test "x$enable_safe_fp" != xno],
+                           [perf_opts="${perf_opts} -fno-unsafe-math-optimizations"],[])],
+      [ibm],       [perf_opts="-O2"],
+      [intel],     [dnl
+                    perf_opts="-O3"
+                    AS_IF([test "x$enable_safe_fp" != xno],
+                          [perf_opts="${perf_opts} -fp-model precise"],[])],
+      [portland],  [dnl
+                    perf_opts="-O2"
+                    AS_IF([test "x$enable_safe_fp" != xno],
+                          [perf_opts="${perf_opts} -Kieee"],[])],
+      []            dnl no debug options available for other platforms
+    )], []
+  )
+  AS_IF([test "x$perf_opts" = x], [dnl optization flags unknown
+    perf_opts=unknown],
+    [dnl test optimization flags
+    save_FCFLAGS=${fcflags_noopt}
+    FCFLAGS="${fcflags_noopt} ${perf_opts}"
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+      [],
+      [FCFLAGS=${save_FCFLAGS}
+       perf_opts=unknown]
+    )
+    ]
+  )
+  AC_MSG_RESULT([$perf_opts])
+  ]
+)
+
+# Checks for compiler characteristics
+AC_FC_LINE_LENGTH([unlimited])
+AC_FC_MODULE_EXTENSION
+AC_FC_MODULE_FLAG
+
+# Adds ESMF include paths
+fc_inc=
+for incpath in ${ESMF_FC_INC}
+do
+  incpath=`echo "${incpath}" | $SED -e's/^-@<:@A-Z,a-z@:>@*\//\//g'`
+  fc_inc="${fc_inc}${FC_MODINC}${incpath} "
+done
+
+AC_MSG_CHECKING([whether ESMF include paths work])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+  [FCFLAGS="${fc_inc}${FCFLAGS}"
+   AC_MSG_RESULT([yes])],
+  [AC_MSG_FAILURE([no])]
+)
+
+AC_LANG_POP
+
+# Checks for auxiliary build tools
 AC_PROG_INSTALL
 AC_PROG_RANLIB
+AM_PROG_AR
 
-# Checks for libraries.
-
-# Checks for header files.
-AC_CHECK_HEADERS([stdlib.h string.h unistd.h])
-
-# Checks for typedefs, structures, and compiler characteristics.
-# AC_CHECK_HEADER_STDBOOL (not supported by autoconf 2.63 on WCOSS)
-AC_TYPE_PID_T
-
-# Checks for library functions.
-AC_CHECK_FUNCS([bzero clock_gettime strerror])
-
-AC_CONFIG_HEADERS([config.h])
+# Output Makefiles
 AC_CONFIG_FILES([Makefile
                  src/Makefile
                  src/chem/Makefile
@@ -104,22 +183,11 @@ AC_OUTPUT
 AS_ECHO("")
 AS_ECHO("${PACKAGE_NAME} version ${PACKAGE_VERSION} successfully configured.")
 AS_ECHO("")
-AS_ECHO("Configuration settings:")
+AS_ECHO("Compiler settings:")
 AS_ECHO("=======================")
-AS_ECHO("  CC        = ${CC}")
-AS_ECHO("  CFLAGS    = ${CFLAGS}")
-AS_ECHO("")
-AS_ECHO("  CPP       = ${CPP}")
-AS_ECHO("  CPPFLAGS  = ${CPPFLAGS}")
-AS_ECHO("")
-AS_ECHO("  FC        = ${FC}")
-AS_ECHO("  FCFLAGS   = ${FCFLAGS}")
-AS_ECHO("")
-AS_ECHO("  LDFLAGS   = ${LDFLAGS}")
-AS_ECHO("  LIBS      = ${LIBS}")
-AS_ECHO("  FCLIBS    = ${FCLIBS}")
+AS_ECHO("  FC      = ${FC}")
+AS_ECHO("  FCFLAGS = ${FCFLAGS}")
 AS_ECHO("=======================")
-AS_IF([test "x$with_esmfmk" != xno],
-  [AS_ECHO("NOTE: Settings imported from ESMF Makefile fragment: ${ESMFMKFILE}")],[])
+AS_ECHO("NOTE: Settings imported from ESMF Makefile fragment: ${ESMFMKFILE}")
 AS_ECHO("")
 AS_ECHO("Type 'make' to build.")

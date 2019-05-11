@@ -6,7 +6,12 @@ libseas_a_FCFLAGS = -I ../shr/
 
 libseas_a_DEPENDENCIES = ../shr/libshr.a
 
-clean-local:
-	-rm -f *.mod
+.PHONY: clean-modules
+
+clean-modules:
+	-test -z "$(FC_MODEXT)" || rm -f *.$(FC_MODEXT)
+
+clean-local: clean-modules
+
 
 libseas_a-seas_mod.$(OBJEXT) : libseas_a-seas_data_mod.$(OBJEXT) libseas_a-seas_ngac_mod.$(OBJEXT)

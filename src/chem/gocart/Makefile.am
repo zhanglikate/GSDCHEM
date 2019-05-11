@@ -9,12 +9,17 @@ libgocart_a_SOURCES += gocart_model_mod.F90
 libgocart_a_SOURCES += gocart_prep_mod.F90
 libgocart_a_SOURCES += gocart_settling_mod.F90
 
-libgocart_a_FCFLAGS = -I . -I ../shr/ -I ../plume/ -I ../vash/ -I ../dust/ -I ../dep/ -I ../seas/ -I ../opt/
+libgocart_a_FCFLAGS = -I . -I ../shr -I ../aero -I ../dep -I ../dust -I ../opt -I ../plume -I ../seas -I ../vash
 
-libgocart_a_DEPENDENCIES = ../shr/libshr.a ../plume/libplume.a ../vash/libvash.a ../dep/libdep.a ../dust/libdust.a ../seas/libseas.a ../opt/libopt.a
+libgocart_a_DEPENDENCIES = ../shr/libshr.a ../dep/libdep.a ../dust/libdust.a ../opt/libopt.a ../plume/libplume.a ../seas/libseas.a ../vash/libvash.a
 
-clean-local:
-	-rm -f *.mod
+.PHONY: clean-modules
+
+clean-modules:
+	-test -z "$(FC_MODEXT)" || rm -f *.$(FC_MODEXT)
+
+clean-local: clean-modules
+
 
 libgocart_a-gocart_mod.$(OBJEXT) : libgocart_a-gocart_aerosols_mod.$(OBJEXT) libgocart_a-gocart_diag_mod.$(OBJEXT) \
 	libgocart_a-gocart_dmsemis_mod.$(OBJEXT) libgocart_a-gocart_chem_mod.$(OBJEXT) libgocart_a-gocart_prep_mod.$(OBJEXT) \

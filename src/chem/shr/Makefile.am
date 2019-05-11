@@ -7,8 +7,13 @@ libshr_a_SOURCES = chem_clock_mod.F90 chem_comm_mod.F90 chem_config_mod.F90 chem
 
 libshr_a_FCFLAGS = -I .
 
-clean-local:
-	-rm -f *.mod
+.PHONY: clean-modules
+
+clean-modules:
+	-test -z "$(FC_MODEXT)" || rm -f *.$(FC_MODEXT)
+
+clean-local: clean-modules
+
 
 libshr_a-chem_clock_mod.$(OBJEXT): libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)
 libshr_a-chem_comm_mod.$(OBJEXT): libshr_a-chem_rc_mod.$(OBJEXT) libshr_a-chem_types_mod.$(OBJEXT)

@@ -6,5 +6,9 @@ libvash_a_FCFLAGS = -I ../shr/
 
 libvash_a_DEPENDENCIES = ../shr/libshr.a 
 
-clean-local:
-	-rm -f *.mod
+.PHONY: clean-modules
+
+clean-modules:
+	-test -z "$(FC_MODEXT)" || rm -f *.$(FC_MODEXT)
+
+clean-local: clean-modules

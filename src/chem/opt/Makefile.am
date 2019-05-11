@@ -7,8 +7,13 @@ libopt_a_FCFLAGS = -I . -I ../shr/ -I ../aero/ -I ../dust/ -I ../seas/
 
 libopt_a_DEPENDENCIES = ../shr/libshr.a ../aero/libaero.a ../dust/libdust.a ../seas/libseas.a
 
-clean-local:
-	-rm -f *.mod
+.PHONY: clean-modules
+
+clean-modules:
+	-test -z "$(FC_MODEXT)" || rm -f *.$(FC_MODEXT)
+
+clean-local: clean-modules
+
 
 libopt_a-opt_aer_mod.$(OBJEXT)       : libopt_a-opt_aer_out_mod.$(OBJEXT) libopt_a-opt_aer_ra_mod.$(OBJEXT)
 libopt_a-opt_averaging_mod.$(OBJEXT) : libopt_a-opt_data_mod.$(OBJEXT) libopt_a-opt_peg_util_mod.$(OBJEXT)
