@@ -157,6 +157,17 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
    AC_MSG_FAILURE([unrecognized include flags])]
 )
 
+# Checks whether ESMF is compatible with Fortran compiler
+AC_MSG_CHECKING([whether ESMF works])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[dnl
+       use esmf
+  ])],
+  [AC_MSG_RESULT(yes)],
+  [dnl ESMF is incompatible with selected Fortran compiler or not found. Abort.
+   AC_MSG_RESULT(no)
+   AC_MSG_FAILURE([ESMF library incompatible or not found])]
+)
+
 AC_LANG_POP
 
 # Checks for auxiliary build tools
