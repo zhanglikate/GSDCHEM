@@ -29,7 +29,8 @@ AS_CASE(["x$with_esmfmk"],
 AC_MSG_CHECKING([for ESMF library])
 AS_IF([test "x$esmfmk" != x], [dnl
   AC_CHECK_FILE([$esmfmk], [AC_SUBST(ESMFMKFILE,["$esmfmk"])], [esmfmk=])],
-  [])
+  []
+)
 
 AS_IF([test "x$esmfmk" = x], [AC_MSG_ERROR([Unable to find required ESMF library])],
   [dnl Retrieve ESMF compiler settings
@@ -45,16 +46,13 @@ AC_LANG_PUSH([Fortran])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[dnl
        use mpi
        integer, parameter :: comm = MPI_COMM_WORLD
-       integer  rc
-       call MPI_Init(rc)
   ])],
   [AC_MSG_RESULT(yes)],
   [dnl No MPI found. Disable compiler.
    FC=
-   AC_MSG_RESULT(no)])
-
-AS_IF([test "x$FC" = x],
-  [AC_MSG_ERROR([Cannot find a suitable MPI Fortran compiler.])])
+   AC_MSG_RESULT(no)
+   AC_MSG_ERROR([Cannot find a suitable MPI Fortran compiler.])]
+)
 
 AC_FC_PP_SRCEXT([F90])
 AX_COMPILER_VENDOR
