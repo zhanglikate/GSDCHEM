@@ -148,11 +148,13 @@ do
   fc_inc="${fc_inc}${FC_MODINC}${incpath} "
 done
 
-AC_MSG_CHECKING([whether ESMF include paths work])
+AC_MSG_CHECKING([whether ESMF include flags work])
+FCFLAGS="${fc_inc}${FCFLAGS}"
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
-  [FCFLAGS="${fc_inc}${FCFLAGS}"
-   AC_MSG_RESULT([yes])],
-  [AC_MSG_FAILURE([no])]
+  [AC_MSG_RESULT([yes])],
+  [dnl ESMF-derived include flags may be corrupted. Abort.
+   AC_MSG_RESULT([no])
+   AC_MSG_FAILURE([unrecognized include flags])]
 )
 
 AC_LANG_POP
