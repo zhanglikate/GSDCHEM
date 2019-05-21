@@ -29,8 +29,7 @@ AS_CASE(["x$with_esmfmk"],
 AC_MSG_CHECKING([for ESMF library])
 AS_IF([test "x$esmfmk" != x], [dnl
   AC_CHECK_FILE([$esmfmk], [AC_SUBST(ESMFMKFILE,["$esmfmk"])], [esmfmk=])],
-  []
-)
+  [])
 
 AS_IF([test "x$esmfmk" = x], [AC_MSG_ERROR([Unable to find required ESMF library])],
   [dnl Retrieve ESMF compiler settings
@@ -117,8 +116,7 @@ AS_IF([test "x$enable_debug" = xyes],[
                     AS_IF([test "x$enable_safe_fp" != xno],
                           [perf_opts="${perf_opts} -Kieee"],[])],
       []            dnl no debug options available for other platforms
-    )], []
-  )
+    )], [])
   AS_IF([test "x$perf_opts" = x], [dnl optization flags unknown
     perf_opts=unknown],
     [dnl test optimization flags
