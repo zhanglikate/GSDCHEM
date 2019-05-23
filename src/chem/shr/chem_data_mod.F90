@@ -24,7 +24,8 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: h2o2_backgd       ! H2O2 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: no3_backgd        ! NO3 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: oh_backgd         ! OH background for GOCART
-    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: plumestuff        ! fire info
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: plumefrp          ! fire info - GBBEPx
+    real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: plumestuff        ! fire info - MODIS
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: sandfrac          ! sand fraction (AFWA dust scheme)
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: th_pvsrf
     ! -- output
@@ -130,6 +131,10 @@ contains
     end if
     if (allocated(data % oh_backgd)) then
       deallocate(data % oh_backgd, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % plumefrp)) then
+      deallocate(data % plumefrp, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (allocated(data % plumestuff)) then

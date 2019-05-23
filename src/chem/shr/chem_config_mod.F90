@@ -17,6 +17,9 @@ module chem_config_mod
   integer, parameter :: DUST_OPT_GOCART = 1
   integer, parameter :: DUST_OPT_AFWA   = 3
 
+  integer, parameter :: FIRE_OPT_MODIS  = 1
+  integer, parameter :: FIRE_OPT_GBBEPx = 2
+
   character(len=*), parameter :: chem_file_nml = 'input.nml'
 
   ! -- data structure for configuration options
@@ -51,6 +54,7 @@ module chem_config_mod
     integer :: seas_opt
     integer :: bio_emiss_opt
     integer :: biomass_burn_opt
+    integer :: plumerise_flag
     integer :: plumerisefire_frq
     integer :: emiss_inpt_opt
     integer :: gas_bc_opt
@@ -86,7 +90,7 @@ module chem_config_mod
     integer :: nbandlw  = 16
     integer :: num_soil_layers = 4
     integer :: num_scalar      = 1
-    integer :: nvl_gocart      = 55  ! number of input levels from gocart file
+    integer :: nvl_gocart      = 64  ! number of input levels from gocart file
     integer :: num_ext_coef    = 5
     integer :: num_bscat_coef  = 3
     integer :: num_asym_par    = 3
@@ -123,6 +127,9 @@ module chem_config_mod
   public :: DUST_OPT_GOCART, &
             DUST_OPT_AFWA
 
+  public :: FIRE_OPT_MODIS, &
+            FIRE_OPT_GBBEPx
+
 contains
 
   subroutine chem_config_read(config, rc)
@@ -134,7 +141,7 @@ contains
     integer, parameter :: unit = 200
 
     integer                :: localrc, iostat
-    integer                :: buffer(24)
+    integer                :: buffer(25)
     real(CHEM_KIND_R4)     :: rbuffer(6)
     character(CHEM_MAXSTR) :: sbuffer(4)
 
@@ -169,6 +176,7 @@ contains
     integer :: seas_opt
     integer :: bio_emiss_opt
     integer :: biomass_burn_opt
+    integer :: plumerise_flag
     integer :: plumerisefire_frq
     integer :: emiss_inpt_opt
     integer :: gas_bc_opt
@@ -215,6 +223,7 @@ contains
       seas_opt,                  &
       bio_emiss_opt,             &
       biomass_burn_opt,          &
+      plumerise_flag,            &
       plumerisefire_frq,         &
       emiss_inpt_opt,            &
       gas_bc_opt,                &
@@ -250,6 +259,7 @@ contains
     EMISS_OPT         = 5
     BIO_EMISS_OPT     = 0
     BIOMASS_BURN_OPT  = 1
+    PLUMERISE_FLAG    = FIRE_OPT_MODIS
     PLUMERISEFIRE_FRQ = 30
     EMISS_INPT_OPT    = 1
     GAS_BC_OPT        = 1
@@ -308,6 +318,7 @@ contains
       EMISS_OPT,         &
       BIO_EMISS_OPT,     &
       BIOMASS_BURN_OPT,  &
+      PLUMERISE_FLAG,    &
       PLUMERISEFIRE_FRQ, &
       EMISS_INPT_OPT,    &
       GAS_BC_OPT,        &
@@ -337,21 +348,22 @@ contains
     config % emiss_opt         = buffer( 7 )
     config % bio_emiss_opt     = buffer( 8 )
     config % biomass_burn_opt  = buffer( 9 )
-    config % plumerisefire_frq = buffer( 10 )
-    config % emiss_inpt_opt    = buffer( 11 )
-    config % gas_bc_opt        = buffer( 12 )
-    config % gas_ic_opt        = buffer( 13 )
-    config % aer_bc_opt        = buffer( 14 )
-    config % aer_ic_opt        = buffer( 15 )
-    config % gaschem_onoff     = buffer( 16 )
-    config % aerchem_onoff     = buffer( 17 )
-    config % gfdlmp_onoff      = buffer( 18 )
-    config % cldchem_onoff     = buffer( 19 )
-    config % vertmix_onoff     = buffer( 20 )
-    config % chem_conv_tr      = buffer( 21 )
-    config % aer_ra_feedback   = buffer( 22 )
-    config % chem_in_opt       = buffer( 23 )
-    config % archive_step      = buffer( 24 )
+    config % plumerise_flag    = buffer( 10 )
+    config % plumerisefire_frq = buffer( 11 )
+    config % emiss_inpt_opt    = buffer( 12 )
+    config % gas_bc_opt        = buffer( 13 )
+    config % gas_ic_opt        = buffer( 14 )
+    config % aer_bc_opt        = buffer( 15 )
+    config % aer_ic_opt        = buffer( 16 )
+    config % gaschem_onoff     = buffer( 17 )
+    config % aerchem_onoff     = buffer( 18 )
+    config % gfdlmp_onoff      = buffer( 19 )
+    config % cldchem_onoff     = buffer( 20 )
+    config % vertmix_onoff     = buffer( 21 )
+    config % chem_conv_tr      = buffer( 22 )
+    config % aer_ra_feedback   = buffer( 23 )
+    config % chem_in_opt       = buffer( 24 )
+    config % archive_step      = buffer( 25 )
 
     ! -- pack real variables in buffer
     rbuffer = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, depo_fact /)

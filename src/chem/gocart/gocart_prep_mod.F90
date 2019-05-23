@@ -6,8 +6,11 @@ module gocart_prep_mod
   use chem_config_mod, only : CHEM_OPT_GOCART,       &
                               CHEM_OPT_GOCART_RACM,  &
                               CHEM_OPT_RACM_SOA_VBS, &
-                              CHEM_OPT_MAX
+                              CHEM_OPT_MAX,          &
+                              FIRE_OPT_GBBEPx,       &
+                              FIRE_OPT_MODIS
   use chem_const_mod,  only : airmw, epsilc, rgasuniv, mwdry
+  use plume_data_mod
 
   implicit none
 
@@ -31,7 +34,8 @@ contains
                        t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                        rho_phy,smois,num_soil_layers,num_chem,num_moist,             &
                        emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_emis_ant,            &
-                       num_emis_vol,kemit,call_gocart,plumestuff,                    &
+                       num_emis_vol,kemit,call_gocart,plumerise_flag,                &
+                       plumefrp,plumestuff,plumedist,                                &
                        mean_fct_agtf,mean_fct_agef,mean_fct_agsv,                    &
                        mean_fct_aggr,firesize_agtf,firesize_agef,                    &
                        firesize_agsv,firesize_aggr,                                  &
@@ -47,10 +51,12 @@ contains
     LOGICAL,      INTENT(IN) :: readrestart
     INTEGER,      INTENT(IN) :: chem_opt,chem_in_opt
     INTEGER,      INTENT(IN) :: ktau,nvl,nvlp1,ntra,ntrb,nvl_gocart
-    INTEGER,      INTENT(IN) :: num_ebu_in,num_soil_layers,num_chem,num_moist,julday,     &
-                                   num_emis_vol,num_emis_ant,ids,ide, jds,jde, kds,kde,      &
-                                   kemit,ims,ime, jms,jme, kms,kme,                          &
-                                   its,ite, jts,jte, kts,kte
+    INTEGER,      INTENT(IN) :: num_ebu_in,num_soil_layers,num_chem,num_moist, &
+                                num_emis_vol,num_emis_ant,kemit,plumerise_flag
+    INTEGER,      INTENT(IN) :: julday
+    INTEGER,      INTENT(IN) :: ids,ide, jds,jde, kds,kde, &
+                                ims,ime, jms,jme, kms,kme, &
+                                its,ite, jts,jte, kts,kte
     LOGICAL,      INTENT(IN) :: call_gocart
     REAL(CHEM_KIND_R4), INTENT(IN) :: g,rd,p1000,cp,dtstep,gmt
 
@@ -100,7 +106,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: backg_oh
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: backg_h2o2
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: backg_no3
-    real(CHEM_KIND_R4), dimension(nvl_gocart+1),     intent(in) :: p_gocart
+    real(CHEM_KIND_R4), dimension(nvl_gocart),       intent(in) :: p_gocart
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: ttday
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: tcosz
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
@@ -153,7 +159,9 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_emis_ant),   intent(in) :: emiss_ab
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(in) :: emiss_abu
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(out) :: ebu_in
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(in) :: plumefrp
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 5), intent(out) :: plumedist
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: mean_fct_agtf
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: mean_fct_agef
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: mean_fct_agsv
@@ -192,12 +200,26 @@ contains
     real(CHEM_KIND_R4), parameter :: percen_mass_umbrel = 0.75
     real(CHEM_KIND_R4), parameter :: base_umbrel        = 0.25    ! fraction
     real(CHEM_KIND_R4), parameter :: base_umbrel2       = 1.0     ! evenly distribution
+    real(CHEM_KIND_R4), parameter :: frac_so2_ant       = 0.5_CHEM_KIND_R4     ! antropogenic so2 fraction
+    real(CHEM_KIND_R4), parameter :: frpc               = 1.e+09_CHEM_KIND_R4  ! FRP conversion factor
+
     ! .. Intrinsic Functions ..
     INTRINSIC max, min, float
 
     ! -- begin
     print *,'chem_prep: begin...'
     if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    ! -- initialize fire emissions
+    plumedist     = 0._CHEM_KIND_R4
+    mean_fct_agtf = 0._CHEM_KIND_R4
+    mean_fct_agef = 0._CHEM_KIND_R4
+    mean_fct_agsv = 0._CHEM_KIND_R4
+    mean_fct_aggr = 0._CHEM_KIND_R4
+    firesize_agtf = 0._CHEM_KIND_R4
+    firesize_agef = 0._CHEM_KIND_R4
+    firesize_agsv = 0._CHEM_KIND_R4
+    firesize_aggr = 0._CHEM_KIND_R4
 
     ! -- initialize local arrays
     so2_mass       = 0._CHEM_KIND_R4
@@ -319,7 +341,7 @@ contains
           emis_ant(i,k,j,p_e_bc)=emiss_ab(i,j,p_e_bc)
           emis_ant(i,k,j,p_e_oc)=emiss_ab(i,j,p_e_oc)
           emis_ant(i,k,j,p_e_sulf)=emiss_ab(i,j,p_e_sulf)
-          emis_ant(i,k,j,p_e_so2)=emiss_ab(i,j,p_e_so2)
+          emis_ant(i,k,j,p_e_so2)=frac_so2_ant * emiss_ab(i,j,p_e_so2)
           emis_ant(i,k,j,p_e_dms)= 0. !emiss_ab(j,p_e_dms)
           emis_ant(i,k,j,p_e_pm_25)=emiss_ab(i,j,p_e_pm_25)
           emis_ant(i,k,j,p_e_pm_10)=emiss_ab(i,j,p_e_pm_10)
@@ -367,21 +389,37 @@ contains
             ebu_in(i,j,p_ebu_in_ora2)=emiss_abu(i,j,p_e_ora2)
             ebu_in(i,j,p_ebu_in_nh3)=emiss_abu(i,j,p_e_nh3)
           endif
-          ebu_in(i,j,p_ebu_in_oc)=emiss_abu(i,j,p_e_oc)
-          ebu_in(i,j,p_ebu_in_bc)=emiss_abu(i,j,p_e_bc)
-          ebu_in(i,j,p_ebu_in_pm25)=emiss_abu(i,j,p_e_pm_25)
-          ebu_in(i,j,p_ebu_in_pm10)=emiss_abu(i,j,p_e_pm_10)
-          ebu_in(i,j,p_ebu_in_so2)=emiss_abu(i,j,p_e_so2)
-          ebu_in(i,j,p_ebu_in_dms)= 0.
 
-          mean_fct_agtf(i,j)=plumestuff(i,j,1)
-          mean_fct_agef(i,j)=plumestuff(i,j,2)
-          mean_fct_agsv(i,j)=plumestuff(i,j,3)
-          mean_fct_aggr(i,j)=plumestuff(i,j,4)
-          firesize_agtf(i,j)=plumestuff(i,j,5)
-          firesize_agef(i,j)=plumestuff(i,j,6)
-          firesize_agsv(i,j)=plumestuff(i,j,7)
-          firesize_aggr(i,j)=plumestuff(i,j,8)
+          ebu_in(i,j,p_ebu_in_pm10)=emiss_abu(i,j,p_e_pm_10)
+          ebu_in(i,j,p_ebu_in_dms)= 0._CHEM_KIND_R4
+
+          select case (plumerise_flag)
+            case (FIRE_OPT_MODIS)
+              ebu_in(i,j,p_ebu_in_oc)   = emiss_abu(i,j,p_e_oc)
+              ebu_in(i,j,p_ebu_in_bc)   = emiss_abu(i,j,p_e_bc)
+              ebu_in(i,j,p_ebu_in_pm25) = emiss_abu(i,j,p_e_pm_25)
+              ebu_in(i,j,p_ebu_in_so2)  = emiss_abu(i,j,p_e_so2)
+              mean_fct_agtf(i,j)=plumestuff(i,j,1)
+              mean_fct_agef(i,j)=plumestuff(i,j,2)
+              mean_fct_agsv(i,j)=plumestuff(i,j,3)
+              mean_fct_aggr(i,j)=plumestuff(i,j,4)
+              firesize_agtf(i,j)=plumestuff(i,j,5)
+              firesize_agef(i,j)=plumestuff(i,j,6)
+              firesize_agsv(i,j)=plumestuff(i,j,7)
+              firesize_aggr(i,j)=plumestuff(i,j,8)
+            case (FIRE_OPT_GBBEPx)
+              ebu_in(i,j,p_ebu_in_oc)   = frpc * emiss_abu(i,j,p_e_oc)
+              ebu_in(i,j,p_ebu_in_bc)   = frpc * emiss_abu(i,j,p_e_bc)
+              ebu_in(i,j,p_ebu_in_pm25) = frpc * emiss_abu(i,j,p_e_pm_25)
+              ebu_in(i,j,p_ebu_in_so2)  = frpc * emiss_abu(i,j,p_e_so2)
+              plumedist(i,j,1) = flaming(catb(ivgtyp(i,j)))
+              plumedist(i,j,2) = plumefrp(i,j)
+              plumedist(i,j,3) = 0.3_CHEM_KIND_R4 * plumefrp(i,j)
+              plumedist(i,j,4) = msize(ivgtyp(i,j)) * plumefrp(i,j)
+              plumedist(i,j,5) = 0.5_CHEM_KIND_R4 * plumedist(i,j,4)
+            case default
+              ! -- no further option available
+          end select
         enddo
       enddo
 

@@ -5,13 +5,15 @@ module gocart_mod
   use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, mw_so2_aer, mw_so4_aer, &
                               p1000, rd, epsilc
   use chem_tracers_mod
-  use chem_config_mod, only : CHEM_OPT_NONE,   &
-                              CHEM_OPT_GOCART, &
-                              DUST_OPT_GOCART, &
-                              DUST_OPT_AFWA,   &
-                              CHEM_OPT_GOCART_RACM,&
+  use chem_config_mod, only : CHEM_OPT_NONE,         &
+                              CHEM_OPT_GOCART,       &
+                              CHEM_OPT_GOCART_RACM,  &
                               CHEM_OPT_RACM_SOA_VBS, &
-                              CHEM_OPT_MAX
+                              CHEM_OPT_MAX,          &
+                              DUST_OPT_AFWA,         &
+                              DUST_OPT_GOCART,       &
+                              FIRE_OPT_GBBEPx,       &
+                              FIRE_OPT_MODIS
 
   use gocart_prep_mod
   use gocart_settling_mod
@@ -37,12 +39,12 @@ contains
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
     biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, aer_ra_feedback, &
-    call_chemistry, call_rad, plumerisefire_frq, &
+    call_chemistry, call_rad, plumerise_flag, plumerisefire_frq, &
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
     emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3,     &
-    h2o2_backgd, no3_backgd, oh_backgd,  plumestuff, sandfrac, th_pvsrf,  &
+    h2o2_backgd, no3_backgd, oh_backgd, plumefrp, plumestuff, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
@@ -66,6 +68,7 @@ contains
     integer,            intent(in) :: aer_ra_feedback
     integer,            intent(in) :: call_chemistry
     integer,            intent(in) :: call_rad
+    integer,            intent(in) :: plumerise_flag
     integer,            intent(in) :: plumerisefire_frq
     integer,            intent(in) :: kemit
     integer,            intent(in) :: ktau
@@ -85,7 +88,8 @@ contains
 
     real(CHEM_KIND_R8), intent(in) :: dts
 
-    real(CHEM_KIND_R4), dimension(nvl_gocart+1),     intent(in) :: p_gocart
+    real(CHEM_KIND_R4), dimension(nvl_gocart),       intent(in) :: p_gocart
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: clayfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: dm0
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
@@ -96,7 +100,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_ash_dt
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_mass
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: clayfrac
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: plumefrp
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: sandfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: th_pvsrf
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: h2o2_backgd
@@ -208,6 +212,7 @@ contains
 
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in) :: ebu_in
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:3)        :: erod
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:5)        :: plume_frp
 
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: ac3
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: ahno3
@@ -282,17 +287,18 @@ contains
 
     integer :: localrc
     integer :: nbegin, nv, nvv
-    integer :: i, ip, j, jp, jps, k, kp
+    integer :: i, ip, j, jp, k, kp
     integer :: ids, ide, jds, jde, kds, kde
     real(CHEM_KIND_R4) :: dt
     real(CHEM_KIND_R8) :: curr_secs
     real(CHEM_KIND_R4) :: dpsum
 
-    real(CHEM_KIND_R4) :: factor, factor2
+    real(CHEM_KIND_R4) :: factor, factor2, factor3
     real(CHEM_KIND_R4) :: dtstep, gmt
     real(CHEM_KIND_R4) :: dust_alpha,dust_gamma
 
     real(CHEM_KIND_R4), parameter :: m2mm = 1.e+03_CHEM_KIND_R4
+    real(CHEM_KIND_R4), parameter :: frpc = 1.e+06_CHEM_KIND_R4
 
     ! -- begin
     print *,'gocart_run: entering ...', chem_opt, ims, ime, jms, jme, num_chem
@@ -448,7 +454,7 @@ contains
     gmt = real(tz)
 
     ! -- set control flags
-    call_plume       = (biomass_burn_opt > 0)
+    call_plume       = (biomass_burn_opt > 0) .and. (plumerisefire_frq > 0)
     if (call_plume) &
        call_plume    = (mod(ktau, max(1, int(60*plumerisefire_frq/dts))) == 0) &
                         .or. (ktau == 1) .or. firstfire
@@ -458,8 +464,9 @@ contains
     print *,'gocart_run: control flags set'
 
     print *,'gocart_run: biomass_burn_opt  ...', biomass_burn_opt
+    print *,'gocart_run: plumerise_flag    ...', plumerisefire_frq
     print *,'gocart_run: plumerisefire_frq ...', plumerisefire_frq
-    print *,'gocart_run: call_plume ...',   call_plume
+    print *,'gocart_run: call_plume        ...', call_plume
     print *,'gocart_run: call_chemistry    ...', call_chemistry
     print *,'gocart_run: call_radiation    ...', call_radiation
     print *,'gocart_run: ktau, firstfire   ...', ktau, firstfire
@@ -505,7 +512,8 @@ contains
                    t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                    rho_phy,smois,num_soil_layers,num_chem,num_moist,        &
                    emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_emis_ant,       &
-                   num_emis_vol,kemit,call_gocart,plumestuff, &
+                   num_emis_vol,kemit,call_gocart,plumerise_flag, &
+                   plumefrp,plumestuff,plume_frp, &
                    mean_fct_agtf,mean_fct_agef,mean_fct_agsv, &
                    mean_fct_aggr,firesize_agtf,firesize_agef, &
                    firesize_agsv,firesize_aggr, &
@@ -569,12 +577,12 @@ contains
       !print *,'gocart_run: calling plume'
       print *,'gocart_run: calling plume',call_plume,ktau,tile
       firstfire = .false.
-      call plumerise_driver (ktau,dtstep,num_chem,num_moist,num_ebu, &
-        num_ebu_in,ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
+      call plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in, &
+        ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr, &
-        'GOCART','BIOMASSB', t_phy,moist, &
+        'GOCART','BIOMASSB', t_phy,moist(:,:,:,p_qv),            &
         rho_phy,vvel,u_phy,v_phy,p_phy,                          &
-        z_at_w,scale_fire_emiss,                                 &
+        z_at_w,scale_fire_emiss,plume_frp,plumerise_flag,        &
         ids,ide, jds,jde, kds,kde,                               &
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
@@ -585,7 +593,7 @@ contains
       print *,'gocart_run: calling dmsemis ...'
       call gocart_dmsemis(dt,rri,t_phy,u_phy,v_phy,     &
          chem,rho_phy,dz8w,u10,v10,p8w,dms_0,tsk,       &
-         ivgtyp,isltyp,xland,dxy,grvity,mwdry,         &
+         ivgtyp,isltyp,xland,dxy,grvity,mwdry,          &
          num_chem,p_dms,                                &
          ids,ide, jds,jde, kds,kde,                     &
          ims,ime, jms,jme, kms,kme,                     &
@@ -599,7 +607,7 @@ contains
       print *,'gocart_run: calling settling ...'
       call gocart_settling_driver(dt,t_phy,moist,  &
         chem,rho_phy,dz8w,p8w,p_phy,   &
-        dusthelp,seashelp,dxy,grvity, &
+        dusthelp,seashelp,dxy,grvity,  &
         num_moist,num_chem,            &
         ids,ide, jds,jde, kds,kde,     &
         ims,ime, jms,jme, kms,kme,     &
@@ -637,12 +645,30 @@ contains
     ! -- add biomass burning emissions at every timestep
     if (biomass_burn_opt == 1) then
       print *,'gocart_run: set chem: biomass_burn_opt ...'
-      do j = jts, jte
-        do k = kts, kte
+      jp = jte
+      factor3 = 0._CHEM_KIND_R4
+      select case (plumerise_flag)
+        case (FIRE_OPT_MODIS)
+          factor3 = 4.828e-04_CHEM_KIND_R4/60
+          kp = kte    ! full column
+        case (FIRE_OPT_GBBEPx)
+          factor3 = 1.e-03_CHEM_KIND_R4 * mwdry / mw_so2_aer
+          if (plumerisefire_frq > 0) then
+            kp = kte  ! full column
+          else
+            kp = kts  ! surface only
+          end if
+        case default
+          ! -- no further options available, skip this step
+          jp = jts - 1
+      end select
+
+      do j = jts, jp
+        do k = kts, kp
           do i = its, ite
             ! -- factor for pm emissions, factor2 for burn emissions
             factor  = dt*rri(i,k,j)/dz8w(i,k,j)
-            factor2 = 4.828e-4*dt*rri(i,k,j)/(60.*dz8w(i,k,j))
+            factor2 = factor * factor3
             chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu(i,k,j,p_ebu_oc  )
             chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu(i,k,j,p_ebu_bc  )
             chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu(i,k,j,p_ebu_pm25)

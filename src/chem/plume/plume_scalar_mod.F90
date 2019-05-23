@@ -1,54 +1,47 @@
 module plume_scalar_mod
 
-  use chem_const_mod, only : g => grvity, cp, &
-                             r_d => rd, r_v => rv, p1000mb => p1000
+  use chem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
+  use chem_const_mod,  only : g => grvity, cp, &
+                              r_d => rd, r_v => rv, p1000mb => p1000
+  use plume_data_mod,  only : iflam_frac, imean_frp, istd_frp, imean_size, istd_size, &
+                              tropical_forest, boreal_forest, savannah, grassland,    &
+                              nveg_agreg, wind_eff
   use plume_zero_mod
 
   real,parameter :: rgas=r_d
   real,parameter :: cpor=cp/r_d
   real,parameter :: p00=p1000mb
-!  real, external:: esat_pr
 
   public
 
 contains
 
 subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
-                    ,nspecies,eburn_in,eburn_out      &
-                    ,up,vp,wp,theta,pp,dn0,rv,zt_rams,zm_rams)
-! use module_zero_plumegen_coms, only : ucon,vcon,wcon,thtcon,rvcon,picon,tmpcon&
-!                          ,dncon,prcon,zcon,zzcon,scon
+                    ,nspecies,eburn_in,eburn_out              &
+                    ,up,vp,wp,theta,pp,dn0,rv,zt_rams,zm_rams &
+                    ,plume_frp,plumerise_flag)
   
   implicit none
 
+  ! arguments
+  integer :: m1,m2,m3,ia,iz,ja,jz,nspecies,plumerise_flag
 
-  integer :: ng,m1,m2,m3,ia,iz,ja,jz,ibcon,mynum,i,j,k,iveg_ag,&
-            imm,k1,k2,ixx,ispc,nspecies
+  real, dimension(nveg_agreg),  intent(in)    :: firesize,mean_fct
+  real, dimension(nspecies),    intent(in)    :: eburn_in
+  real, dimension(m1,nspecies), intent(out)   :: eburn_out
+  real, dimension(m1,m2,m3),    intent(in)    :: up,vp,wp,theta,pp,dn0,rv
+  real, dimension(m1),          intent(in)    :: zt_rams,zm_rams
+  real, dimension(5),           intent(inout) :: plume_frp
 
+  ! local variables
+  integer :: i,j,k,iveg_ag,imm,ispc,ixx,k1,k2,kmt
+  integer :: iloop
   integer :: ncall = 0 
-  integer :: kmt
- real,dimension(m1,nspecies), intent(out) :: eburn_out
- real,dimension(nspecies), intent(in) :: eburn_in
 
-  real,    dimension(m1,m2,m3) :: up, vp, wp,theta,pp,dn0,rv
-  real,    dimension(m1)       :: zt_rams,zm_rams
-
-  real                         :: burnt_area,STD_burnt_area,dz_flam,rhodzi,dzi
-  real,    dimension(2)        :: ztopmax
-
-  real                         :: q_smold_kgm2
-
-! From plumerise1.F routine
-  integer, parameter :: nveg_agreg      = 4
-  integer, parameter :: tropical_forest = 1
-  integer, parameter :: boreal_forest   = 2
-  integer, parameter :: savannah        = 3
-
-  integer, parameter :: grassland       = 4
-  real, dimension(nveg_agreg) :: firesize,mean_fct
-
-  INTEGER, PARAMETER :: wind_eff = 1
-
+  real               :: burnt_area,dz_flam,rhodzi,dzi,frp
+  real               :: q_smold_kgm2
+  real               :: convert_smold_to_flam
+  real, dimension(2) :: ztopmax
 
   !Fator de conversao de unidades
   !!fcu=1.      !=> kg [gas/part] /kg [ar]
@@ -75,15 +68,16 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
   !
   !24-n1 =>  sem uso
   !----------------------------------------------------------------------
-! print *,' Plumerise_scalar 1',ncall
+
+  ! initialize output
+  eburn_out = 0.
+
   if (ncall == 0) then
     ncall = 1
     call zero_plumegen_coms
   endif
-! print *,' Plumerise_scalar 1',ncall
   
     
-! print *,' Plumerise_scalar 2',m1
   j=1
   i=1
 ! do j = ja,jz           ! loop em j
@@ -104,108 +98,124 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
         rvcon (k)=rv(k,i,j)            ! water vapor mixing ratio
         zcon  (k)=zt_rams(k)               ! termod-point height
         zzcon (k)=zm_rams(k)               ! W-point height
-!       print*,'PL:',k,zcon(k),picon (k),thtcon(k),1000.*rvcon (k)
       enddo
-         do ispc=1,nspecies
-          eburn_out(1,ispc) = eburn_in(ispc)
-         enddo
+      do ispc=1,nspecies
+        eburn_out(1,ispc) = eburn_in(ispc)
+      enddo
 
          !- get envinronmental state (temp, water vapor mix ratio, ...)
       call get_env_condition(1,m1,kmt,wind_eff)
+      !- loop over the four types of aggregate biomes with fires for
+      !plumerise version 1
+      !- for plumerise version 2, there is exist only one loop
+      iloop=1
+      if (plumerise_flag == FIRE_OPT_MODIS) iloop = nveg_agreg
 
-         !- loop nos 4 biomas agregados com possivel queimada 
-      do iveg_ag=1,nveg_agreg
-!         print *,'iveg_ag = ',iveg_ag,mean_fct(iveg_ag)
-  
+      !- loop nos 4 biomas agregados com possivel queimada
+      do iveg_ag=1,iloop
 
-         !- verifica a existencia de emissao flaming para um bioma especifico
-         !orig: if( plume( k_CO_smold + iveg_ag ,i,j) < 1.e-6 ) cycle
-           if(mean_fct(iveg_ag) < 1.e-6 ) cycle
+        select case (plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            !- verifica a existencia de emissao flaming para um bioma especifico
+            !orig: if( plume( k_CO_smold + iveg_ag ,i,j) < 1.e-6 ) cycle
+            if(mean_fct(iveg_ag) < 1.e-6 ) cycle
  
-       ! burnt area and standard deviation
-       burnt_area    = firesize(iveg_ag)
+            ! burnt area and standard deviation
+            burnt_area    = firesize(iveg_ag)
 
-       !not em use
-       !STD_burnt_area= plume(3+iveg_ag,i,j)
-        STD_burnt_area= 0.
+            !-number to calculate the flaming emission from the
+            !amount emitted
+            !-during the smoldering phase
+            convert_smold_to_flam = mean_fct(iveg_ag) !FRP
 
-       !- loop nos valores  minimo e maximo da taxa de calor
-       do imm=1,2
+          case (FIRE_OPT_GBBEPx)
+            !-number to calculate the emission during the flaming pahse
+            !-from the amount emitted during the smoldering phase
+            convert_smold_to_flam=plume_frp(iflam_frac)
 
-!--------------------
-                !ixx=iveg_ag*10 + imm
-!               print*,'i j veg=',i, j, iveg_ag,imm
-!--------------------             
+            !- check if there is only one fire in a given grid box (=> std =0.)
+            if(plume_frp(istd_frp ) < 1.0e-6) then
+              !- if yes, we will set it as a 20% of the mean frp as a gross
+              !estimation
+              !- of the retrieval uncertainty by the sensors.
+              !- (we are not taking care about the fire size retrieval)
+              plume_frp(istd_frp )=0.2*plume_frp(imean_frp )
+            endif
+          case default
+            !- no further option implemented
+        end select
 
-         !- get fire properties (burned area, plume radius, heating rates ...)
-          call get_fire_properties(imm,iveg_ag,burnt_area,STD_burnt_area)
+        !- loop nos valores  minimo e maximo da taxa de calor
+        do imm=1,2
+          if (plumerise_flag == FIRE_OPT_GBBEPx) then
+            if(imm==1 ) then
+              !for imm = 1 => lower injection height
+              burnt_area = max(1.0e4,plume_frp(imean_size) -0.5*plume_frp(istd_size))
+              frp = max(1000.,plume_frp(imean_frp) - 0.5*plume_frp(istd_frp))
+            elseif(imm==2 ) then
+              !for imm = 2 => higher injection height
+              burnt_area = max(1.0e4,plume_frp(imean_size) +0.5*plume_frp(istd_size))
+              frp = max(1000.,plume_frp(imean_frp) + 0.5*plume_frp(istd_frp))
+            endif
+          endif
+
+          !- get fire properties (burned area, plume radius, heating rates ...)
+          call get_fire_properties(imm,iveg_ag,burnt_area,frp,plumerise_flag)
      
-             !------  generates the plume rise    ------
+          !------  generates the plume rise    ------
 
-         !-- only one value for eflux of GRASSLAND
-       !     if(iveg_ag == GRASSLAND .and. imm == 2) then 
-         if(iveg_ag == 4         .and. imm == 2) then
-             ztopmax(2)=ztopmax(1)
-        ztopmax(1)=zzcon(1)
-!               print *,'cycle',ztopmax(1),ztopmax(2)
-                cycle
-         endif
+          !-- only one value for eflux of GRASSLAND
+          if (plumerise_flag == FIRE_OPT_MODIS) then
+            if(iveg_ag == 4         .and. imm == 2) then
+              ztopmax(2)=ztopmax(1)
+              ztopmax(1)=zzcon(1)
+              cycle
+            endif
+          endif
 
-         call makeplume (kmt,ztopmax(imm),ixx,imm)
+          call makeplume (kmt,ztopmax(imm),ixx,imm)
 
-       enddo ! enddo do loop em imm
+        enddo ! enddo do loop em imm
 
-       !- define o dominio vertical onde a emissao flaming ira ser colocada
-       call set_flam_vert(ztopmax,k1,k2,nkp,zzcon,W_VMD,VMD)
+        !- define o dominio vertical onde a emissao flaming ira ser colocada
+        call set_flam_vert(ztopmax,k1,k2,nkp,zzcon,W_VMD,VMD)
 
-       !- espessura da camada vertical
-       dz_flam=zzcon(k2)-zzcon(k1-1)
-       !- distribui a emissao flaming entre os niveis k1 e k2
-!          print *,'distribui, k1,k2,dz_flam',k1,k2,dz_flam
-       do k=k1,k2
+        !- espessura da camada vertical
+        !- distribui a emissao flaming entre os niveis k1 e k2
+        dzi= 1./(zzcon(k2)-zzcon(k1-1))
+        do k=k1,k2
           !use this in case the emission src is already in mixing ratio
           !rhodzi= 1./(dn0(k,i,j) * dz_flam)
           !use this in case the emission src is tracer density
-           dzi= 1./( dz_flam)
 
-        do ispc = 1, nspecies
+          do ispc = 1, nspecies
 
-          !- get back the smoldering emission in kg/m2  (actually in 1e-9 kg/m2)
+            !- get back the smoldering emission in kg/m2  (actually in 1e-9 kg/m2)
 
-          !use this in case the emission src is already in mixing ratio
-          !q_smold_kgm2 = (1/dzt(2) *  dn0(2,i,j)    )*   &
-          !          chem1_src_g(bburn,ispc,ng)%sc_src(2,i,j)
+            !use this in case the emission src is already in mixing ratio
+            !q_smold_kgm2 = (1/dzt(2) *  dn0(2,i,j)    )*   &
+            !          chem1_src_g(bburn,ispc,ng)%sc_src(2,i,j)
 
-          !use this in case the emission src is tracer density
-!       q_smold_kgm2 = ((zt_rams(2)-zt_rams(1))                 )*   &
-!                 eburn_in(ispc)
-        q_smold_kgm2 = eburn_in(ispc)
+            !use this in case the emission src is tracer density
+            !q_smold_kgm2 = ((zt_rams(2)-zt_rams(1))                 )*   &
+            !          eburn_in(ispc)
+            q_smold_kgm2 = eburn_in(ispc)
 
-          ! units = already in ppbm,  don't need "fcu" factor
-          eburn_out(k,ispc) = eburn_out(k,ispc) +&
-                                 mean_fct(iveg_ag)  *&
-                                 q_smold_kgm2 * &
-                             dzi    !use this in case the emission src is tracer density
-                            !rhodzi !use this in case the emission src is already in mixing ratio
-!             if(ispc.eq. 1) print *,' Plume: ',k,eburn_out(k,ispc),mean_fct(iveg_ag),q_smold_kgm2,dzi
+            ! units = already in ppbm,  don't need "fcu" factor
+            !eburn_out(k,ispc) = eburn_out(k,ispc) +&
+            !                       mean_fct(iveg_ag)  *&
+            !                       q_smold_kgm2 * &
+            !                   dzi    !use this in case the emission src is tracer density
+            eburn_out(k,ispc)= eburn_out(k,ispc) + convert_smold_to_flam * q_smold_kgm2 * dzi
+          enddo
 
-
-
-          !srcCO(k,i,j)=   srcCO(k,i,j) + plume(k_CO_smold+iveg_ag,i,j)*&
-          !                 plume(k_CO_smold        ,i,j)*&
-          !                 rhodzi*fcu
         enddo
 
-       enddo
+      enddo ! enddo do loop em iveg_ag
 
-         enddo ! enddo do loop em iveg_ag
-     !-----  
-      !stop 333
-      !endif
-     !-----
 !      enddo  ! loop em i
 ! enddo   ! loop em j
-!stop 4544
+
 end subroutine plumerise
 !-------------------------------------------------------------------------
 
@@ -258,10 +268,8 @@ do k=1,kmt
   te(k)  = the(k)*pke(k)/cp         ! temperature (K) 
   pe(k)  = (pke(k)/cp)**cpor*p00    ! pressure (Pa)
   dne(k)= pe(k)/(rgas*te(k)*(1.+.61*qvenv(k))) !  dry air density (kg/m3)
-!  print*,'ENV=',qvenv(k)*1000., te(k)-273.15,zt(k)
 !-srf-mb
   vel_e(k) = sqrt(upe(k)**2+vpe(k)**2)         !-env wind (m/s)
-  !print*,'k,vel_e(k),te(k)=',vel_e(k),te(k)
 enddo
 
 !-ewe - env wind effect
@@ -309,8 +317,6 @@ do k=3,mzp
  zt(k) = zt(k-1) + dz ! thermo and water levels
  zm(k) = zm(k-1) + dz ! dynamical levels
 enddo
-!print*,zsurf
-!Print*,zt(:)
 do k = 1,mzp-1
    dzm(k) = 1. / (zt(k+1) - zt(k))
 enddo 
@@ -359,8 +365,6 @@ end subroutine set_grid
     k2=MAX(3,k_lim(2))
 
     IF(k2 < k1) THEN
-       !print*,'1: ztopmax k=',ztopmax(1), k1
-       !print*,'2: ztopmax k=',ztopmax(2), k2
        k2=k1
        !stop 1234
     ENDIF
@@ -406,7 +410,6 @@ end subroutine set_grid
             do ko=k_initial,k_final
               VMD(ko,imm) = VMD(ko,imm)+ xxx !- values between 0 and 1.
             enddo
-               ! print*,'new mass=',sum(mass)*100.,xxx
                !pause
            endif
         endif !k_final > 0 .and. k_initial > 
@@ -416,14 +419,22 @@ end subroutine set_grid
   END SUBROUTINE set_flam_vert
 !-------------------------------------------------------------------------
 
-subroutine get_fire_properties(imm,iveg_ag,burnt_area,STD_burnt_area)
-!use module_zero_plumegen_coms  
-implicit none
-integer ::  moist,  i,  icount,imm,iveg_ag
-real::   bfract,  effload,  heat,  hinc ,burnt_area,STD_burnt_area,heat_fluxW
-real,    dimension(2,4) :: heat_flux
-INTEGER, parameter :: use_last = 0
+subroutine get_fire_properties(imm,iveg_ag,burnt_area,frp,plumerise_flag)
 
+implicit none
+
+! arguments
+integer, intent(in) :: imm, iveg_ag, plumerise_flag
+real,    intent(in) :: burnt_area, frp
+
+! local variables
+integer              :: i, icount, moist
+real                 :: bfract, effload, heat, hinc, heat_fluxW
+real, dimension(2,4) :: heat_flux
+
+! local parameters
+integer, parameter :: use_last = 0
+real,    parameter :: beta = 0.88  !ref.: Paugam et al., 2015 FRP
 
 data heat_flux/  &
 !---------------------------------------------------------------------
@@ -443,8 +454,16 @@ data heat_flux/  &
 !area = 20.e+4   ! area of burn, m^2
 area = burnt_area! area of burn, m^2
 
-!fluxo de calor para o bioma
-heat_fluxW = heat_flux(imm,iveg_ag) * 1000. ! converte para W/m^2
+select case (plumerise_flag)
+  case (FIRE_OPT_MODIS)
+    !fluxo de calor para o bioma
+    heat_fluxW = heat_flux(imm,iveg_ag) * 1000. ! converte para W/m^2
+  case (FIRE_OPT_GBBEPx)
+    ! "beta" factor converts FRP to convective energy
+    heat_fluxW = beta*(frp/area)/0.55 ! in W/m^2
+  case default
+    ! no further option implemented
+end select
 
 mdur = 53        ! duration of burn, minutes
 bload = 10.      ! total loading, kg/m**2 
@@ -663,8 +682,6 @@ endif
 ! ******************* model evolution ******************************
 rmaxtime = float(maxtime)
 !
-!print * ,' TIME=',time,' RMAXTIME=',rmaxtime
-!print*,'======================================================='
  DO WHILE (TIME.LE.RMAXTIME)  !beginning of time loop
 
 !   do itime=1,120
@@ -790,13 +807,11 @@ rmaxtime = float(maxtime)
        DO WHILE (w (kk) .GT. 1.)  
           kk = kk + 1  
           ztop =  zm(kk) 
-          !print*,'W=',w (kk)
        ENDDO
        !
        ztop_(mintime) = ztop
        ztopmax = MAX (ztop, ztopmax) 
        kkmax   = MAX (kk  , kkmax  ) 
-       !print * ,'ztopmax=', mintime,'mn ',ztop_(mintime), ztopmax
 
        !
        ! if the solution is going to a stationary phase, exit
@@ -830,9 +845,6 @@ rmaxtime = float(maxtime)
 
 ENDDO   !do next timestep
 
-!print * ,' ztopmax=',ztopmax,'m',mintime,'mn '
-!print*,'======================================================='
-!
 !the last printout
 if (izprint.ne.0) then
  call printout (izprint,nrectotal)  
@@ -871,7 +883,6 @@ ELSE
    WATER = EFLUX * (DT / HEAT) * (0.5 + FMOIST) /0.55 ! kg/m**2 
    WATER = WATER * 1000.                              ! g/m**2
 !
-!        print*,'BURN:',time,EFLUX/1.e+9
 ENDIF  
 !
 RETURN  
@@ -1152,10 +1163,6 @@ if(mintime == 1) eps=0.5
 !     For both IAC=1 and IAC=2, call PREDICT for U, V, W, and P.
 !
 call predict_plumerise(m1,wc,wp,wt,dummy,iac,2.*dt,eps)
-!print*,'mintime',mintime,eps
-!do k=1,m1
-!   print*,'W-HAD',k,wc(k),wp(k),wt(k)
-!enddo
 return
 end subroutine hadvance_plumerise
 !-------------------------------------------------------------------------------
@@ -1230,13 +1237,10 @@ do k = 2,m1-1
 !- orig
    !scr1(k)= G*( umgamai*(  TV - TVE) / TVE   - QWTOTL) 
     scr1(k)= G*  umgamai*( (TV - TVE) / TVE   - QWTOTL) 
-
-    !if(k .lt. 10)print*,'BT',k,TV,TVE,TVE,QWTOTL
 enddo
 
 do k = 2,m1-2
     wt(k) = wt(k)+0.5*(scr1(k)+scr1(k+1))
-!   print*,'W-BUO',k,wt(k),scr1(k),scr1(k+1)
 enddo
 
 end subroutine  buoyancy_plumerise
@@ -1271,7 +1275,6 @@ umgamai = 1./(1.+gama) ! compensa a falta do termo de aceleracao associado `as
 
 !--  DMDTM*W(L) entrainment,
       wt(k) = wt(k)  - DMDTM*ABS (WBAR)
-      !print*,'W-ENTR=',k,w(k),- DMDTM*ABS (WBAR)
       
       !if(VEL_P (k) - VEL_E (k) > 0.) cycle
 
@@ -1305,7 +1308,6 @@ integer :: k
 !     vt3dc(k) =  (w(k) + wc(k)) * dtlto2 *.5 * (dne(k) + dne(k+1))
       vt3dc(k) =  (w(k) + wc(k)) * dtlto2 *.5 * (rho(k) + rho(k+1))*1.e-3
       vt3df(k) =  (w(k) + wc(k)) * dtlto2 *.5 *  dzm(k)
-     !print*,'vt3df-vt3dc',k,vt3dc(k),vt3df(k)
    enddo
 
  
@@ -1316,7 +1318,6 @@ integer :: k
      vctr2(k) = (zm(k)   - zt(k)) * dzm(k)
 !    vt3dk(k) = dzt(k) / dne(k)
      vt3dk(k) = dzt(k) /(rho(k)*1.e-3)
-     !print*,'VT3dk',k,dzt(k) , dne(k)
   enddo
 
 !      scalarp => scalar_tab(n,ngrid)%var_p
@@ -1635,7 +1636,6 @@ do k=2,m2-1
  vel_t(k) =   vel_t(k) + d2vel_pdz
  rad_t(k) =   rad_t(k) + d2rad_dz
  !SCT(k) =  SCT(k) + D2SCDZ
- !print*,'W-VISC=',k,D2WDZ
 enddo  
 
 end subroutine visc_W
@@ -1802,10 +1802,6 @@ WRITE (2, 380)
    write (19,rec=nrec) (QSAT(KO)*1000., KO=1,nrectotal)
    nrec=nrec+1
    write (19,rec=nrec) (QVENV(KO)*1000., KO=1,nrectotal)
-
-
-
-!print*,'ntimes=',nrec/(9)
 !
 RETURN  
 !
@@ -2183,7 +2179,6 @@ IF (Y(4).GT.0.0 ) THEN
    A = 1/y(4)  *  y(2)*y(2)*1000./( 60. *( 5. + 0.0366*NB/(y(2)*1000.*DB) )  )
  ELSE
    IF (y(2).GT.(KA*ROH)) THEN
-   !print*,'1',y(2),KA*ROH
    A = KEINS/y(4) *(y(2) - KA*ROH )
    ENDIF
  ENDIF
@@ -2224,8 +2219,6 @@ CON      = A
 ACCRETE  = B
  
 TOTAL = (CON + ACCRETE) *(1/DZM(L)) /ROH     ! DT / RHO (L)  
-
-!print*,'L=',L,total,QC(L),dzm(l)
 
 !
 IF (TOTAL.LT.QC (L) ) THEN  
@@ -2288,8 +2281,6 @@ IF (SUBL.LT.QV (L) ) THEN
    QI (L) = QI (L) + SUBL            !gain ice
    T (L) = T (L) + SUBL * SRC         !energy change, warms air
 
-     !print*,'5',l,qi(l),SUBL
-
    RETURN  
 !
 ELSE  
@@ -2297,7 +2288,6 @@ ELSE
    QI (L) = QV (L)                    !use what there is
    T  (L) = T (L) + QV (L) * SRC      !warm the air
    QV (L) = 0.0  
-     !print*,'6',l,qi(l)
 !
 ENDIF  
 !
@@ -2339,9 +2329,6 @@ IF (DFRZH.LT.QH (L) ) THEN
    QH (L) = QH (L) - DFRZH  
    T (L) = T (L) + FRC * DFRZH  !warms air
    
-        !print*,'7',l,qi(l),DFRZH
-
-   
    RETURN  
 !
 ELSE  
@@ -2349,8 +2336,6 @@ ELSE
    QI (L) = QI (L) + QH (L)  
    T  (L) = T  (L) + FRC * QH (L)  
    QH (L) = 0.0  
-
- !print*,'8',l,qi(l), QH (L)  
 !
 ENDIF  
 !
@@ -2386,8 +2371,6 @@ IF (DTMELT.LT.QI (L) ) THEN
    QH (L) = QH (L) + DTMELT  
    QI (L) = QI (L) - DTMELT  
    T  (L) = T (L) - FRC * DTMELT     !cools air
-        !print*,'9',l,qi(l),DTMELT
-
    
    RETURN  
 !
@@ -2396,7 +2379,6 @@ ELSE
    QH (L) = QH (L) + QI (L)   !get all there is to get
    T  (L) = T (L) - FRC * QI (L)  
    QI (L) = 0.0  
-        !print*,'10',l,qi(l)
 !
 ENDIF  
 !

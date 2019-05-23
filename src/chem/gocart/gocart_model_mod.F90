@@ -103,7 +103,8 @@ contains
         config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
         config % seas_opt, config % dust_opt, config % dmsemis_opt, &
         config % aer_ra_feedback, &
-        config % call_chemistry, config % call_radiation, config % plumerisefire_frq, &
+        config % call_chemistry, config % call_radiation, &
+        config % plumerise_flag, config % plumerisefire_frq, &
         config % kemit, &
         advanceCount, dts, mm, tz, julday, &
         ! -- background data 
@@ -124,6 +125,7 @@ contains
         data % h2o2_backgd, &
         data % no3_backgd, &
         data % oh_backgd, &
+        data % plumefrp, &
         data % plumestuff, &
         data % sandfrac, &
         data % th_pvsrf, &

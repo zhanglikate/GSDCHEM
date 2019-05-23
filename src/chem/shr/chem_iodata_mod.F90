@@ -91,16 +91,14 @@ contains
 
       ! -- pressure levels for GOCART
       if (.not.allocated(data % p_gocart)) then
-        allocate(data % p_gocart(config % nvl_gocart+1), stat=localrc)
+        allocate(data % p_gocart(config % nvl_gocart), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % p_gocart = (/ 1013.250, 998.1627, 968.4935, 914.7947, &
-          841.1536, 752.8976, 655.9680, 556.8575, 472.6497, 401.1463, 340.4388, 288.9272, 245.2461,&
-          208.2443, 176.9300, 150.3930, 127.8370, 108.6634, 92.36566, 78.51230, 66.60338, 56.38794,&
-          47.64393, 40.17542, 33.80996, 28.36782, 23.73036, 19.79155, 16.45707, 13.64339, 11.27689,&
-          9.292943, 7.619839, 6.216800, 5.046805, 4.076567, 3.276433, 2.620212, 2.084972, 1.650792,&
-          1.300508, 1.019442, 0.7951340, 0.6167790, 0.4758060, 0.3650410, 0.2785260, 0.2113490,&
-          0.1594950, 0.1197030, 8.9345001E-02, 6.6000000E-02, 4.7584999E-02, 3.2699998E-02,&
-          2.0000000E-02,  9.9999998E-03 /)
+        data % p_gocart = (/ 1000., 992.5, 985., 977.5, 970., 955., 940., 925., 910.,    &
+          895., 880., 865., 850., 825., 800., 775., 750., 712.5,  675., 637.5, 600.,     &
+          562.5, 525., 487.5, 450., 412.5, 375., 337.5, 288.08, 244.88, 208.15, 176.93,  &
+          150.39, 127.84, 108.66, 92.37, 78.51, 66.6, 56.39, 47.64, 40.18, 33.81, 28.37, &
+          23.73, 19.79,  16.46, 13.64, 11.28, 9.29, 7.62, 6.22, 5.05, 4.08, 3.28, 2.62,  &
+          2.08, 1.65, 1.3, 1.02, 0.8, 0.62, 0.48, 0.37, 0.28 /)
       end if
 
       ! -- dust 
@@ -212,11 +210,22 @@ contains
           if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
           data % emiss_abu = 0._CHEM_KIND_R4
         end if
-        if (.not.allocated(data % plumestuff)) then
-          allocate(data % plumestuff(ids:ide,jds:jde,config % num_plumestuff), stat=localrc)
-          if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-          data % plumestuff = 0._CHEM_KIND_R4
-        end if
+        select case (config % plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            if (.not.allocated(data % plumestuff)) then
+              allocate(data % plumestuff(ids:ide,jds:jde,config % num_plumestuff), stat=localrc)
+              if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+              data % plumestuff = 0._CHEM_KIND_R4
+            end if
+          case (FIRE_OPT_GBBEPx)
+            if (.not.allocated(data % plumefrp)) then
+              allocate(data % plumefrp(ids:ide,jds:jde), stat=localrc)
+              if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+              data % plumefrp = 0._CHEM_KIND_R4
+            end if
+          case default
+            ! -- no additional options
+        end select
       end if
 
     end do
@@ -325,11 +334,11 @@ contains
           call chem_io_read('clay.dat', data % clayfrac, path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') localpe, de, &
-            tile, minval(data % dm0), maxval(data % clayfrac)
+            tile, minval(data % clayfrac), maxval(data % clayfrac)
           call chem_io_read('sand.dat', data % sandfrac, path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') localpe, de, &
-            tile, minval(data % dm0), maxval(data % sandfrac)
+            tile, minval(data % sandfrac), maxval(data % sandfrac)
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
@@ -497,11 +506,22 @@ contains
           tile, minval(data % emiss_abu(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_sulf))
 
-        call chem_io_read('plumestuff.dat', data % plumestuff, recrange=(/ 1, config % num_plumestuff /), &
-          path=trim(config % fireemi_inname), de=de, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
-          tile, minval(data % plumestuff), maxval(data % plumestuff)
+        select case (config % plumerise_flag)
+          case (FIRE_OPT_MODIS)
+            call chem_io_read('plumestuff.dat', data % plumestuff, recrange=(/ 1, config % num_plumestuff /), &
+              path=trim(config % fireemi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') localpe, de, &
+              tile, minval(data % plumestuff), maxval(data % plumestuff)
+          case (FIRE_OPT_GBBEPx)
+            call chem_io_read('plumefrp.dat', data % plumefrp, &
+              path=trim(config % fireemi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumefrp - min/max = "2g16.6)') localpe, de, &
+              tile, minval(data % plumefrp), maxval(data % plumefrp)
+          case default
+            ! -- no further options available
+        end select
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
             (config % chem_opt == CHEM_OPT_RACM_SOA_VBS)) then

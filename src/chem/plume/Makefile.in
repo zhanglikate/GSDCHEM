@@ -95,7 +95,8 @@ am__v_AR_0 = @echo "  AR      " $@;
 am__v_AR_1 = 
 libplume_a_AR = $(AR) $(ARFLAGS)
 libplume_a_LIBADD =
-am_libplume_a_OBJECTS = libplume_a-plume_rise_mod.$(OBJEXT) \
+am_libplume_a_OBJECTS = libplume_a-plume_data_mod.$(OBJEXT) \
+	libplume_a-plume_rise_mod.$(OBJEXT) \
 	libplume_a-plume_zero_mod.$(OBJEXT) \
 	libplume_a-plume_scalar_mod.$(OBJEXT)
 libplume_a_OBJECTS = $(am_libplume_a_OBJECTS)
@@ -256,7 +257,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libplume.a
-libplume_a_SOURCES = plume_rise_mod.F90 plume_zero_mod.F90 plume_scalar_mod.F90
+libplume_a_SOURCES = plume_data_mod.F90 plume_rise_mod.F90 plume_zero_mod.F90 plume_scalar_mod.F90
 libplume_a_FCFLAGS = -I ../shr/
 libplume_a_DEPENDENCIES = ../shr/libshr.a
 all: all-am
@@ -313,6 +314,12 @@ distclean-compile:
 
 .F90.obj:
 	$(AM_V_PPFC)$(PPFCCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+libplume_a-plume_data_mod.o: plume_data_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplume_a_FCFLAGS) $(FCFLAGS) -c -o libplume_a-plume_data_mod.o `test -f 'plume_data_mod.F90' || echo '$(srcdir)/'`plume_data_mod.F90
+
+libplume_a-plume_data_mod.obj: plume_data_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplume_a_FCFLAGS) $(FCFLAGS) -c -o libplume_a-plume_data_mod.obj `if test -f 'plume_data_mod.F90'; then $(CYGPATH_W) 'plume_data_mod.F90'; else $(CYGPATH_W) '$(srcdir)/plume_data_mod.F90'; fi`
 
 libplume_a-plume_rise_mod.o: plume_rise_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libplume_a_FCFLAGS) $(FCFLAGS) -c -o libplume_a-plume_rise_mod.o `test -f 'plume_rise_mod.F90' || echo '$(srcdir)/'`plume_rise_mod.F90
@@ -539,8 +546,9 @@ clean-modules:
 
 clean-local: clean-modules
 
-libplume_a-plume_rise_mod.$(OBJEXT)   : libplume_a-plume_zero_mod.$(OBJEXT) libplume_a-plume_scalar_mod.$(OBJEXT)
-libplume_a-plume_scalar_mod.$(OBJEXT) : libplume_a-plume_zero_mod.$(OBJEXT)
+libplume_a-plume_rise_mod.$(OBJEXT)   : libplume_a-plume_data_mod.$(OBJEXT) \
+	libplume_a-plume_zero_mod.$(OBJEXT) libplume_a-plume_scalar_mod.$(OBJEXT)
+libplume_a-plume_scalar_mod.$(OBJEXT) : libplume_a-plume_data_mod.$(OBJEXT) libplume_a-plume_zero_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
