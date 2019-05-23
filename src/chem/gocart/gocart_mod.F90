@@ -439,14 +439,6 @@ contains
       nbegin = ntra + num_moist - 3
     end if
 
-    ! -- set numerical parameters
-    !dust_alpha = 1.0_CHEM_KIND_R4  !FIM-Chem
-    !dust_alpha = 0.5_CHEM_KIND_R4  !HRRR-Chem
-    dust_alpha = 0.3_CHEM_KIND_R4  !FV3-Chem
-    !dust_gamma = 1.6_CHEM_KIND_R4 !FIM-Chem
-    !dust_gamma = 1.0_CHEM_KIND_R4  !HRRR-Chem
-    dust_gamma = 1.3_CHEM_KIND_R4  !FV3-Chem
-
     ! -- get time & time step
     dt = real(dts, kind=CHEM_KIND_R4)
     curr_secs = ktau * dts
@@ -544,7 +536,7 @@ contains
     print *,'gocart_run: dust is GOCART ...'
         call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy,&
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
-          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust, &
+          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
           dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,   &
           current_month,                                               &
           ids,ide, jds,jde, kds,kde,                                   &
@@ -555,8 +547,8 @@ contains
     print *,'gocart_run: dust is AFWA ...'
         call gocart_dust_afwa_driver(ktau,dt,rri,t_phy,moist,u_phy,    &
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
-          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust, &
-          dusthelp,ust,znt,clayf,sandf,dust_alpha,dust_gamma,    &
+          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
+          dusthelp,ust,znt,clayf,sandf,                                &
           num_emis_dust,num_moist,num_chem,num_soil_layers,            &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &

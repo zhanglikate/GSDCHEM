@@ -18,7 +18,7 @@ contains
   subroutine gocart_dust_afwa_driver(ktau,dt,alt,t_phy,moist,u_phy,        &
          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,                   &
          ivgtyp,isltyp,vegfra,xland,xlat,xlong,gsw,area,g,emis_dust,       &
-         srce_dust,dustin,ust,znt,clay,sand,alpha,gamma,                   &
+         srce_dust,dustin,ust,znt,clay,sand,                               &
          num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
@@ -81,7 +81,6 @@ contains
   real(CHEM_KIND_R8), dimension (1) :: dxy
   real(CHEM_KIND_R8), dimension (3) :: massfrac
   real(CHEM_KIND_R8) :: conver,converi
-  real, INTENT(IN   ) :: alpha, gamma
 
   conver=1.e-9
   converi=1.e9
@@ -159,7 +158,7 @@ contains
 ! Call dust emission routine.
       call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
                        erodtot, ilwi, dxy, gravsm, airden, airmas, &
-                       bems, g, drylimit, alpha, gamma)
+                       bems, g, drylimit, dust_alpha, dust_gamma)
 
      chem(i,kts,j,p_dust_1)=tc(1)*converi
      chem(i,kts,j,p_dust_2)=tc(2)*converi
