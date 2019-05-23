@@ -394,7 +394,6 @@ contains
     bscat_coeff   = 0._CHEM_KIND_R4
     bscoefsw      = 0._CHEM_KIND_R4
     chem          = 0._CHEM_KIND_R4
-    ebu           = 0._CHEM_KIND_R4
     emis_ant      = 0._CHEM_KIND_R4
     emis_vol      = 0._CHEM_KIND_R4
     emis_dust     = 0._CHEM_KIND_R4
