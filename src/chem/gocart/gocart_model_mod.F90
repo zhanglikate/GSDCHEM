@@ -98,7 +98,6 @@ contains
       if (chem_rc_check(localrc, msg="Failed to retrieve model domain on local DE", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
-      print *,'gocart_model_advance(rc) -- before gocart_advance(), de=',de, deCount
       call gocart_advance(config % readrestart, config % chem_opt,&
         config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
         config % seas_opt, config % dust_opt, config % dmsemis_opt, &
@@ -190,7 +189,8 @@ contains
         lon, lat, &
         is, ie, js, je, 1, nl, &
         is, ie, js, je, 1, ni, &
-        tile,rc=localrc)
+        tile, &
+        verbose=chem_comm_isroot(), rc=localrc)
 
         if (chem_rc_check(localrc, msg="Failure advancing GOCART", &
           file=__FILE__, line=__LINE__, rc=rc)) return

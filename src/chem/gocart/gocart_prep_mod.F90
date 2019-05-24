@@ -207,7 +207,6 @@ contains
     INTRINSIC max, min, float
 
     ! -- begin
-    print *,'chem_prep: begin...'
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     ! -- initialize fire emissions
@@ -510,9 +509,6 @@ contains
       enddo
     enddo
 
-    print *,'chem_prep: chem array done'
-    print *,'chem_prep: readrestart  =',readrestart
-
     if (.NOT. readrestart) then
       if (chem_in_opt == 0 ) then
         if(ktau.le.1)then
@@ -588,8 +584,6 @@ contains
         
       endif !(chem_in_opt == 1 )
 
-      print *,'chem_prep: chem in done'
-      
 #if 0
       if (ktau<=1.and.chem_opt == CHEM_OPT_RACM_SOA_VBS) then
            call aerosols_soa_vbs_init(chem,convfac,z_at_w,           &
@@ -660,7 +654,6 @@ endif
     !
     !if (.NOT. readrestart) then
     if (call_gocart .and. (chem_opt == CHEM_OPT_GOCART))then
-      print *,'chem_prep: call_gocart enter...'
       do j=jts,jte
         do i=its,ite
           do k=kts,kte
@@ -689,11 +682,9 @@ endif
           enddo
         enddo
       enddo
-      print *,'chem_prep: call_gocart exit'
     endif   ! end gocart stuff
     !endif !restart
 
-    print *,'chem_prep: chem + emiss: starting ...'
 !   emis_ant=0.
     nv=1
     k=1
@@ -728,9 +719,7 @@ endif
         file=__FILE__, line=__LINE__, rc=rc)
       return
     endif
-    print *,'chem_prep: chem + emiss: done ...'
 
-    print *,'chem_prep: smois: start'
     do j=jts,jte
       jp = j - jts + 1
       do nv=1,num_soil_layers
@@ -740,7 +729,6 @@ endif
         enddo
       enddo
     enddo
-    print *,'chem_prep: smois: end'
 
     curr_secs=ktau*ifix(dtstep)
     curr_hours=curr_secs/3600
@@ -785,7 +773,6 @@ endif
       end if
     end do
 
-    print *,'chem_prep: stage 2'
 !     endif ! chem_opt = 502
 !
     ! -- real-time application, keeping eruption constant
@@ -905,14 +892,12 @@ endif
       end if
 !      endif ! chem_opt == 316 .or. chem_opt == 317 .or. chem_opt == 502
     endif ! curr_mins 
-    print *,'chem_prep: stage 3'
 
     ! next is done to scale background oh and no3 in dependence on average zenith angle and day/night for no3
     ! this is done since background values are only available as average/month. It will not be necessary if other
     ! chemistry packages are used that provide oh,no3,h2o2
 
     !if(ktau.le.1 .or.readrestart)then
-    print *,'-- chem_opt = ',chem_opt
     if ((chem_opt == CHEM_OPT_RACM_SOA_VBS) .or. (chem_opt >= CHEM_OPT_GOCART .and. chem_opt < CHEM_OPT_MAX)) then
       !ndystep=86400/ifix(dtstepc)
       ndystep=86400/ifix(dtstep)
@@ -937,8 +922,6 @@ endif
       enddo
     endif !chem_opt >= 300 .and. chem_opt <  500
          !endif ! ktau
-
-    print *,'chem_prep: stage 4'
 
     ! -- add volcanic emissions
     if (num_emis_vol > 0) then
@@ -1019,8 +1002,6 @@ endif
     end if
 
 #if 0
-    print *,'chem_prep: stage 5'
-
     ! -- option 501 was only used for cesium ensemble - Japan 2010
     if (chem_opt == 501) then
       ! -- explosive tr emissions
@@ -1080,7 +1061,6 @@ endif
         enddo       
       endif       
 #endif
-      print *,'chem_prep: stage end'
 
   end subroutine gocart_prep
 

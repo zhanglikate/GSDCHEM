@@ -30,11 +30,12 @@ module gocart_mod
 
   implicit none
 
-  public
+  public :: gocart_advance
 
 contains
 
   subroutine gocart_init
+   ! -- add initialization step here
   end subroutine gocart_init
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
@@ -55,7 +56,7 @@ contains
     num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
     num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
     its, ite, jts, jte, kts, kte, &
-    ims, ime, jms, jme, kms, kme, tile,rc)
+    ims, ime, jms, jme, kms, kme, tile, verbose, rc)
 
     logical,            intent(in) :: readrestart
     integer,            intent(in) :: chem_opt
@@ -84,6 +85,7 @@ contains
     integer,            intent(in) :: num_asym_par, num_bscat_coef, num_ext_coef
     integer,            intent(in) :: numgas
     integer,            intent(in) :: tile
+    logical, optional,  intent(in) :: verbose
     integer, optional, intent(out) :: rc
 
     real(CHEM_KIND_R8), intent(in) :: dts
@@ -301,8 +303,6 @@ contains
     real(CHEM_KIND_R4), parameter :: frpc = 1.e+06_CHEM_KIND_R4
 
     ! -- begin
-    print *,'gocart_run: entering ...', chem_opt, ims, ime, jms, jme, num_chem
-
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     ! -- initialize output diagnostics
@@ -452,15 +452,12 @@ contains
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
     call_radiation   = (mod(ktau, call_rad)       == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
-    print *,'gocart_run: control flags set'
 
-    print *,'gocart_run: biomass_burn_opt  ...', biomass_burn_opt
-    print *,'gocart_run: plumerise_flag    ...', plumerisefire_frq
-    print *,'gocart_run: plumerisefire_frq ...', plumerisefire_frq
-    print *,'gocart_run: call_plume        ...', call_plume
-    print *,'gocart_run: call_chemistry    ...', call_chemistry
-    print *,'gocart_run: call_radiation    ...', call_radiation
-    print *,'gocart_run: ktau, firstfire   ...', ktau, firstfire
+    if (present(verbose)) then
+      if (verbose) &
+       call gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
+         firstfire, call_gocart, call_plume, call_radiation)
+    end if
 
     ! -- compute accumulated large-scale and convective rainfall since last call
     if (ktau > 1) then
@@ -488,7 +485,6 @@ contains
     end do
 
     ! -- get ready for chemistry run
-    print *,'gocart_run: entering gocart_prep ...,katu=',ktau
     call gocart_prep(readrestart,chem_opt,chem_in_opt,ktau,dt,tr3d_in,tk3d,sm3d,   &
                    ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height, &
                    emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,      &
@@ -516,7 +512,6 @@ contains
       file=__FILE__, line=__LINE__, rc=rc)) return
 
     ! -- compute sea salt
-    print *,'gocart_run: entering sea salt ...'
     if (seas_opt >= SEAS_OPT_DEFAULT) then
       call gocart_seasalt_driver(ktau,dt,rri,t_phy,moist, &
         u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,&
@@ -528,12 +523,9 @@ contains
       truf(:,:,num_emis_dust+1:num_emis_dust+num_emis_seas) = &
         emis_seas(its:ite,1,jts:jte,1:num_emis_seas)
     endif
-    print *,'gocart_run: exit sea salt ...'
-    print *,'gocart_run: check dust ...', dust_opt
     store_arrays = .false.
     select case (dust_opt)
       case (DUST_OPT_GOCART)
-    print *,'gocart_run: dust is GOCART ...'
         call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy,&
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
           vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
@@ -544,7 +536,6 @@ contains
           its,ite, jts,jte, kts,kte)
         store_arrays = .true.
       case (DUST_OPT_AFWA)
-    print *,'gocart_run: dust is AFWA ...'
         call gocart_dust_afwa_driver(ktau,dt,rri,t_phy,moist,u_phy,    &
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
           vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
@@ -556,17 +547,12 @@ contains
         store_arrays = .true.
     end select
     store_arrays = store_arrays .and. (chem_opt >= CHEM_OPT_GOCART)
-    print *,'gocart_run: done dust ...'
 
     ! -- set output arrays
     if (store_arrays) then
-      print *,'gocart_run: storing arrays ...'
       truf(:,:,1:num_emis_dust) = emis_dust(its:ite,1,jts:jte,1:num_emis_dust)
-      print *,'gocart_run: storing arrays done'
     end if
     if (call_plume) then
-      !print *,'gocart_run: calling plume'
-      print *,'gocart_run: calling plume',call_plume,ktau,tile
       firstfire = .false.
       call plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in, &
         ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
@@ -577,11 +563,9 @@ contains
         ids,ide, jds,jde, kds,kde,                               &
         ims,ime, jms,jme, kms,kme,                               &
         its,ite, jts,jte, kts,kte                                )
-      print *,'gocart_run: calling plume done'
     end if
 
     if (dmsemis_opt == 1) then
-      print *,'gocart_run: calling dmsemis ...'
       call gocart_dmsemis(dt,rri,t_phy,u_phy,v_phy,     &
          chem,rho_phy,dz8w,u10,v10,p8w,dms_0,tsk,       &
          ivgtyp,isltyp,xland,dxy,grvity,mwdry,          &
@@ -589,13 +573,11 @@ contains
          ids,ide, jds,jde, kds,kde,                     &
          ims,ime, jms,jme, kms,kme,                     &
          its,ite, jts,jte, kts,kte)
-      print *,'gocart_run: calling dmsemis done'
     endif
 
     if ((dust_opt == DUST_OPT_GOCART) .or. &
         (dust_opt == DUST_OPT_AFWA  ) .or. &
         (seas_opt >= SEAS_OPT_DEFAULT)) then
-      print *,'gocart_run: calling settling ...'
       call gocart_settling_driver(dt,t_phy,moist,  &
         chem,rho_phy,dz8w,p8w,p_phy,   &
         dusthelp,seashelp,dxy,grvity,  &
@@ -603,14 +585,13 @@ contains
         ids,ide, jds,jde, kds,kde,     &
         ims,ime, jms,jme, kms,kme,     &
         its,ite, jts,jte, kts,kte)
-      print *,'gocart_run: calling settling done'
     end if
 
 #if 0
     if (chem_opt == 316) then
       ! -- 10 volcanic size bins
       call vash_settling_driver(dt,t_phy,moist, &
-         chem,rho_phy,dz8w,p8w,p_phy,dxy,      &
+         chem,rho_phy,dz8w,p8w,p_phy,dxy,       &
          ash_fall,grvity,num_moist,num_chem,    &
          ids,ide, jds,jde, kds,kde,             &
          ims,ime, jms,jme, kms,kme,             &
@@ -619,23 +600,19 @@ contains
     else
 #endif
       ! -- 4 volcanic size bins
-      print *,'gocart_run: calling vashshort_settling_driver ...'
       call vashshort_settling_driver(dt,t_phy,moist, &
-           chem,rho_phy,dz8w,p8w,p_phy,dxy,         &
+           chem,rho_phy,dz8w,p8w,p_phy,dxy,          &
            ash_fall,grvity,num_moist,num_chem,       &
            ids,ide, jds,jde, kds,kde,                &
            ims,ime, jms,jme, kms,kme,                &
            its,ite, jts,jte, kts,kte) 
-      print *,'gocart_run: calling vashshort_settling_driver done'
 !     ashfall = ash_fall !!!!!!!!!!!!!!!!!! WARNING: rewrites ashfall if chem_opt = 316
-      print *,'gocart_run: ashfall done'
 
 #if 0
     end if
 #endif
     ! -- add biomass burning emissions at every timestep
     if (biomass_burn_opt == 1) then
-      print *,'gocart_run: set chem: biomass_burn_opt ...'
       jp = jte
       factor3 = 0._CHEM_KIND_R4
       select case (plumerise_flag)
@@ -668,24 +645,20 @@ contains
           end do
         end do
       end do
-      print *,'gocart_run: set chem: done'
     end if
     ! -- subgrid convective transport
-     print *,'gocart_run: calling grelldrvct ...'
     if (chem_conv_tr == 2 )then
-      call grelldrvct(dt,ktau,             &
-        rho_phy,rcav,chem,tr_fall,     &
-        u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w,&
-        pbl,xlv,cp,grvity,rv,z_at_w,cu_co_ten, &
-        numgas,chem_opt,                   &
-        num_chem,num_moist,tile,           &
-        ids,ide, jds,jde, kds,kde,         &
-        ims,ime, jms,jme, kms,kme,         &
+      call grelldrvct(dt,ktau,                  &
+        rho_phy,rcav,chem,tr_fall,              &
+        u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w, &
+        pbl,xlv,cp,grvity,rv,z_at_w,cu_co_ten,  &
+        numgas,chem_opt,                        &
+        num_chem,num_moist,tile,                &
+        ids,ide, jds,jde, kds,kde,              &
+        ims,ime, jms,jme, kms,kme,              &
         its,ite, jts,jte, kts,kte)
-     print *,'gocart_run: done grelldrvct ...'
      endif
 
-     print *,'gocart_run: calling dry_dep_driver ...'
      call dry_dep_driver(ktau,dt,julday,current_month,t_phy,p_phy,&
        moist,p8w,rmol,rri,gmt,t8w,rcav,                           &
        chem,rho_phy,dz8w,exch_h,hfx,                              &
@@ -697,63 +670,55 @@ contains
        ids,ide, jds,jde, kds,kde,                                 &
        ims,ime, jms,jme, kms,kme,                                 &
        its,ite, jts,jte, kts,kte)
-     print *,'gocart_run: done dry_dep_driver ...'
 
      ! -- ls wet deposition
-     print *,'gocart_run: calling wetdep_ls ...'
      call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,num_moist, &
-         num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt,        &
+         num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt,            &
          ids,ide, jds,jde, kds,kde,                               &
          ims,ime, jms,jme, kms,kme,                               &
          its,ite, jts,jte, kts,kte)
-     print *,'gocart_run: calling wetdep_ls ...'
 
     if (call_gocart) then
-     print *,'gocart_run: calling GOCART CHEM driver ...'
-      call gocart_chem_driver(ktau,dt,dtstep, gmt,julday,t_phy,moist, &
-        chem,rho_phy,dz8w,p8w,backg_oh,oh_t,backg_h2o2,h2o2_t,backg_no3,no3_t, &
-         dxy,grvity,xlat,xlong,ttday,tcosz, &
-         chem_opt,num_chem,num_moist,                                      &
-         ids,ide, jds,jde, kds,kde,                                        &
-         ims,ime, jms,jme, kms,kme,                                        &
-         its,ite, jts,jte, kts,kte                                         )
-     print *,'gocart_run: done GOCART CHEM driver'
-     print *,'gocart_run: calling GOCART aerosols driver ...'
-       call gocart_aerosols_driver(ktau,dtstep,t_phy,moist,  &
-         chem,rho_phy,dz8w,p8w,dxy,grvity,         &
-         chem_opt,num_chem,num_moist,                                      &
-         ids,ide, jds,jde, kds,kde,                                        &
-         ims,ime, jms,jme, kms,kme,                                        &
-         its,ite, jts,jte, kts,kte                                         )
-     print *,'gocart_run: done GOCART aerosols driver'
+      call gocart_chem_driver(ktau,dt,dtstep,gmt,julday,    &
+           t_phy,moist,chem,rho_phy,dz8w,p8w,backg_oh,oh_t, &
+           backg_h2o2,h2o2_t,backg_no3,no3_t,               &
+           dxy,grvity,xlat,xlong,ttday,tcosz,               &
+           chem_opt,num_chem,num_moist,                     &
+           ids,ide, jds,jde, kds,kde,                       &
+           ims,ime, jms,jme, kms,kme,                       &
+           its,ite, jts,jte, kts,kte                        )
+      call gocart_aerosols_driver(ktau,dtstep,t_phy,moist,  &
+           chem,rho_phy,dz8w,p8w,dxy,grvity,                &
+           chem_opt,num_chem,num_moist,                     &
+           ids,ide, jds,jde, kds,kde,                       &
+           ims,ime, jms,jme, kms,kme,                       &
+           its,ite, jts,jte, kts,kte                        )
     endif
 
     if (call_radiation) then
-     print *,'gocart_run: calling radiation ...'
       store_arrays = .false.
       select case (aer_ra_feedback)
         case (1) 
-     print *,'gocart_run: calling optical_driver ...'
-          call optical_driver(curr_secs,dtstep,          &
-               chem,dz8w,rri,relhum,                               &
-               h2oai,h2oaj,                                        &
-               tauaersw,gaersw,waersw,bscoefsw,tauaerlw,           &
-               l2aer,l3aer,l4aer,l5aer,l6aer,l7aer,                &
-               num_chem,chem_opt,ids,ide, jds,jde, kds,kde,        &
-               ims,ime, jms,jme, kms,kme,                          &
+          call optical_driver(curr_secs,dtstep,             &
+               chem,dz8w,rri,relhum,                        &
+               h2oai,h2oaj,                                 &
+               tauaersw,gaersw,waersw,bscoefsw,tauaerlw,    &
+               l2aer,l3aer,l4aer,l5aer,l6aer,l7aer,         &
+               num_chem,chem_opt,ids,ide, jds,jde, kds,kde, &
+               ims,ime, jms,jme, kms,kme,                   &
                its,ite, jts,jte, kts,kte)
-          call aer_opt_out(aod,dz8w,                           &
-               ext_coeff,bscat_coeff,asym_par,                &
-               tauaersw,gaersw,waersw,tauaerlw,               &
-               num_ext_coef,num_bscat_coef,num_asym_par,      &
-               ids,ide, jds,jde, kds,kde,                     &
-               ims,ime, jms,jme, kms,kme,                     &
+          call aer_opt_out(aod,dz8w,                        &
+               ext_coeff,bscat_coeff,asym_par,              &
+               tauaersw,gaersw,waersw,tauaerlw,             &
+               num_ext_coef,num_bscat_coef,num_asym_par,    &
+               ids,ide, jds,jde, kds,kde,                   &
+               ims,ime, jms,jme, kms,kme,                   &
                its,ite, jts,jte, kts,kte)
-          call aer_ra(dz8w                                     &
-               ,extt,ssca,asympar,nbands                       &
-               ,tauaersw,gaersw,waersw,tauaerlw                &
-               ,ids,ide, jds,jde, kds,kde                      &
-               ,ims,ime, jms,jme, kms,kme                      &
+          call aer_ra(dz8w                                  &
+               ,extt,ssca,asympar,nbands                    &
+               ,tauaersw,gaersw,waersw,tauaerlw             &
+               ,ids,ide, jds,jde, kds,kde                   &
+               ,ims,ime, jms,jme, kms,kme                   &
                ,its,ite, jts,jte, kts,kte)
           store_arrays = .true.
         case (2) 
@@ -785,17 +750,14 @@ contains
       end if
     endif
 
-    print *,'gocart_run: calling sum_pm_gocart ...'
     call sum_pm_gocart (                              &
          rri, chem,pm2_5_dry, pm2_5_dry_ec, pm10,     &
-         num_chem,chem_opt,                  &
+         num_chem,chem_opt,                           &
          ids,ide, jds,jde, kds,kde,                   &
          ims,ime, jms,jme, kms,kme,                   &
          its,ite, jts,jte, kts,kte)
-    print *,'gocart_run: done sum_pm_gocart'
 
     ! -- pm25 and pm10 for output , not for tracer options
-    print *,'gocart_run: setting output arrays ...'
     do j = jts, jte
       do k = kts, kte
         do i = its, ite
@@ -805,11 +767,8 @@ contains
         end do
       end do
     end do
-    print *,'gocart_run: done output arrays'
 
-    print *,'gocart_run: call GOCART?',call_gocart
     if (call_gocart) then
-      print *,'gocart_run: set bg fields ...'
       do j = jts, jte
         do k = kts, kte
           do i = its, ite
@@ -819,14 +778,9 @@ contains
           end do
         end do
       end do
-      print *,'gocart_run: set bg fields done'
     end if
 
     ! -- put chem stuff back into tracer array
-    print *,'gocart_run: put chem stuff back into tracer array ...'
-    print *,'gocart_run: ntra, ntrb, ntra+ntrb, nbegin, num_chem, nbegin+num_chem', &
-                         ntra, ntrb, ntra+ntrb, nbegin, num_chem, nbegin+num_chem
-
     do nv = 1, num_chem
       nvv = nbegin + nv
       jp = 0
@@ -873,5 +827,55 @@ contains
     if (chem_conv_tr == 2) call gocart_diag_store(4, tr_fall, trdf)
 
   end subroutine gocart_advance
+
+  subroutine gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
+    firstfire, call_gocart, call_plume, call_radiation)
+
+    ! -- arguments
+    integer, intent(in) :: ktau
+    integer, intent(in) :: plumerise_flag
+    integer, intent(in) :: plumerisefire_frq
+    logical, intent(in) :: firstfire
+    logical, intent(in) :: call_gocart
+    logical, intent(in) :: call_plume
+    logical, intent(in) :: call_radiation
+
+    ! -- local parameters
+    character(len=3), dimension(0:1), parameter :: switch = (/"OFF", "ON "/)
+
+    ! -- local variables
+    integer :: state
+
+    ! -- begin
+    write(6,'(38("-"))')
+    write(6,'(1x,"Running GSDCHEM @ step: ",i0)') ktau
+    write(6,'(14("-")," Modules: ",14("-"))')
+    state = 0
+    if (call_gocart) state = 1
+    write(6,'(1x,"Chemistry and Aerosols",11x,a)') switch(state)
+    state = 0
+    if (call_radiation) state = 1
+    write(6,'(1x,"Radiation",24x,a)') switch(state)
+    state = 0
+    if (call_plume) state = 1
+    write(6,'(1x,"Fires    ",24x,a)') switch(state)
+    if (call_plume) then
+      if (firstfire) write(6,'(1x,"* Initializing...")')
+      select case (plumerise_flag)
+        case (FIRE_OPT_MODIS)
+          if (plumerisefire_frq > 0) write(6,'(1x,"* Using MODIS with plume-rise")')
+        case (FIRE_OPT_GBBEPx)
+          if (plumerisefire_frq > 0) then
+            write(6,'(1x,"* Using GBBEPx + FRP with plume-rise")')
+          else
+            write(6,'(1x,"* Using surface GBBEPx only")')
+          end if
+        case default
+          ! -- no further option
+      end select
+    end if
+    write(6,'(38("-"))')
+
+  end subroutine gocart_diag_output
 
 end module gocart_mod
