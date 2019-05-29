@@ -78,14 +78,8 @@ contains
     if (deCount < 1) return
 
     ! -- get current time and set model's internal clock
-    call ESMF_ClockPrint(clock, &
-      preString="chem: run(): time step : ", rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
     call ESMF_ClockPrint(clock, options="currTime", &
-      preString="chem: run(): time stamp: ", rc=rc)
+      preString=" GSDCHEM: current time: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &

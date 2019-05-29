@@ -10,6 +10,8 @@ module chem_io_mod
 
   integer, parameter :: ioUnit = 100
 
+  logical :: chem_io_verbose = .false.
+
   interface chem_io_read
     module procedure chem_io_read_2DR4
     module procedure chem_io_read_3DR4
@@ -30,7 +32,8 @@ module chem_io_mod
 
 contains
 
-  subroutine chem_io_init(rc)
+  subroutine chem_io_init(verbose, rc)
+    logical, optional, intent(in)  :: verbose
     integer, optional, intent(out) :: rc
 
     ! -- local variables
@@ -43,6 +46,9 @@ contains
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    chem_io_verbose = .false.
+    if (present(verbose)) chem_io_verbose = verbose
 
     call chem_model_get(deCount=deCount, tileCount=tileCount, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -117,9 +123,9 @@ contains
       ! -- mark local root PET as I/O PET
       call chem_model_set(de=de, localIOflag=(pe == 0), rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-      write(6,'("chem_io_init: PET:",i2," DE:",i02," tile=",i0," - comm=",i0," PE:",i0,"/",i0)') &
-        localpe, de, tile, tileComm, pe, npe
-      flush(6)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_init: PET:",i2," DE:",i02," tile=",i0," - comm=",i0," PE:",i0,"/",i0)') &
+          localpe, de, tile, tileComm, pe, npe
     end do
 
   end subroutine chem_io_init
@@ -326,8 +332,9 @@ contains
       call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(buffer), maxval(buffer)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(buffer), maxval(buffer)
     end if
 
     call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
@@ -401,8 +408,9 @@ contains
       call chem_io_file_read(datafile, buffer, recrange=recrange, recsize=recsize, recstride=recstride, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(buffer), maxval(buffer)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_read: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(buffer), maxval(buffer)
     end if
 
     call chem_comm_bcast(buffer, comm=tileComm, rc=localrc)
@@ -483,8 +491,9 @@ contains
         pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(recvbuf), maxval(recvbuf)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(recvbuf), maxval(recvbuf)
     end if
 
     deallocate(buf2d, recvbuf, stat=localrc)
@@ -553,8 +562,9 @@ contains
         pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(recvbuf), maxval(recvbuf)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(recvbuf), maxval(recvbuf)
     end if
 
     deallocate(buf2d, recvbuf, stat=localrc)
@@ -653,8 +663,9 @@ contains
       call chem_io_file_write(datafile, recvbuf, pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(recvbuf), maxval(recvbuf)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(recvbuf), maxval(recvbuf)
     end if
 
     deallocate(buf3d, recvbuf, stat=localrc)
@@ -751,8 +762,9 @@ contains
       call chem_io_file_write(datafile, recvbuf, pos=pos, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
-        trim(datafile), minval(recvbuf), maxval(recvbuf)
+      if (chem_io_verbose) &
+        write(6,'("chem_io_write: tile=",i2,2x,a," - min/max = "2g16.6)') tile, &
+          trim(datafile), minval(recvbuf), maxval(recvbuf)
     end if
 
     deallocate(buf3d, recvbuf, stat=localrc)

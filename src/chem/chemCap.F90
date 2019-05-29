@@ -437,7 +437,7 @@ module CHM
     end if
 
     ! -- initialize model I/O
-    call chem_io_init(rc=rc)
+    call chem_io_init(verbose=btest(verbosity,0), rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
         msg="Failed to initialize I/O model subsystem", &
@@ -512,7 +512,7 @@ module CHM
     end if
 
     ! -- read-in emission and background fields
-    call chem_backgd_read(rc=rc)
+    call chem_backgd_read(verbose=btest(verbosity,0), rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
         msg="Failed to read background/emission values", &
@@ -626,7 +626,7 @@ module CHM
       return  ! bail out
     
     call ESMF_TimePrint(currTime + timeStep, &
-      preString="--------------------------------> to: ", rc=rc)
+      preString="---------------------> to: ", rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -662,7 +662,7 @@ module CHM
       return  ! bail out
 
     ! write output if it is time
-    call chem_output_write(rc)
+    call chem_output_write(rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
         msg="Failed to write chemistry output", &
