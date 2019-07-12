@@ -201,6 +201,7 @@ contains
     real(CHEM_KIND_R4), parameter :: base_umbrel        = 0.25    ! fraction
     real(CHEM_KIND_R4), parameter :: base_umbrel2       = 1.0     ! evenly distribution
     real(CHEM_KIND_R4), parameter :: frac_so2_ant       = 0.5_CHEM_KIND_R4     ! antropogenic so2 fraction
+    real(CHEM_KIND_R4), parameter :: frp2plume          = 1.e+06_CHEM_KIND_R4  ! FRP-to-plume conversion factor
     real(CHEM_KIND_R4), parameter :: frpc               = 1.e+09_CHEM_KIND_R4  ! FRP conversion factor
 
     ! .. Intrinsic Functions ..
@@ -412,9 +413,9 @@ contains
               ebu_in(i,j,p_ebu_in_pm25) = frpc * emiss_abu(i,j,p_e_pm_25)
               ebu_in(i,j,p_ebu_in_so2)  = frpc * emiss_abu(i,j,p_e_so2)
               plumedist(i,j,p_frp_flam_frac) = flaming(catb(ivgtyp(i,j)))
-              plumedist(i,j,p_frp_mean     ) = plumefrp(i,j)
-              plumedist(i,j,p_frp_std      ) = 0.3_CHEM_KIND_R4   * plumefrp(i,j)
-              plumedist(i,j,p_frp_mean_size) = msize(ivgtyp(i,j)) * plumefrp(i,j)
+              plumedist(i,j,p_frp_mean     ) = frp2plume * plumefrp(i,j)
+              plumedist(i,j,p_frp_std      ) = 0.3_CHEM_KIND_R4   * frp2plume * plumefrp(i,j)
+              plumedist(i,j,p_frp_mean_size) = msize(ivgtyp(i,j)) * frp2plume * plumefrp(i,j)
               plumedist(i,j,p_frp_std_size ) = 0.5_CHEM_KIND_R4 * plumedist(i,j,p_frp_mean_size)
             case default
               ! -- no further option available
