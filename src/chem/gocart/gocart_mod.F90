@@ -830,10 +830,6 @@ contains
             tr3d_out(ip,jp,kp,nvv) = real(ppm2ugkg(nv) * max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
-          if (k==1) then
-          !wet_dep(i,j,nv) = max(0.,var_rmv(i,j,nv))   !largescale
-          wet_dep(i,j,nv) = max(0.,tr_fall(i,j,nv))    !convetive 
-          endif
           end do
         end do
       end do
@@ -858,7 +854,10 @@ contains
     ! -- output large-scale wet deposition
     call gocart_diag_store(3, var_rmv, trdf)
     ! -- output convective-scale wet deposition
-    if (chem_conv_tr == 2) call gocart_diag_store(4, tr_fall, trdf)
+    if (chem_conv_tr == 2) then
+      where (tr_fall > 0._CHEM_KIND_R4) wet_dep = tr_fall
+      call gocart_diag_store(4, tr_fall, trdf)
+    end if
 
   end subroutine gocart_advance
 
