@@ -631,20 +631,40 @@ contains
           jp = jts - 1
       end select
 
-      do j = jts, jp
-        do k = kts, kp
+      if (kp == kts) then
+        ! -- only include surface emissions
+        k = kts
+        do j = jts, jp
           do i = its, ite
             ! -- factor for pm emissions, factor2 for burn emissions
             factor  = dt*rri(i,k,j)/dz8w(i,k,j)
             factor2 = factor * factor3
-            chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu(i,k,j,p_ebu_oc  )
-            chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu(i,k,j,p_ebu_bc  )
-            chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu(i,k,j,p_ebu_pm25)
-            chem(i,k,j,p_p10) = chem(i,k,j,p_p10) + factor  * ebu(i,k,j,p_ebu_pm10)
-            chem(i,k,j,p_so2) = chem(i,k,j,p_so2) + factor2 * ebu(i,k,j,p_ebu_so2 )
+            chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu_in(i,j,p_ebu_in_oc  )
+            chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu_in(i,j,p_ebu_in_bc  )
+            chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu_in(i,j,p_ebu_in_pm25)
+            chem(i,k,j,p_p10) = chem(i,k,j,p_p10) + factor  * ebu_in(i,j,p_ebu_in_pm10)
+            chem(i,k,j,p_so2) = chem(i,k,j,p_so2) + factor2 * ebu_in(i,j,p_ebu_in_so2 )
           end do
         end do
-      end do
+
+      else
+        ! -- use full-column emissions
+        do j = jts, jp
+          do k = kts, kp
+            do i = its, ite
+              ! -- factor for pm emissions, factor2 for burn emissions
+              factor  = dt*rri(i,k,j)/dz8w(i,k,j)
+              factor2 = factor * factor3
+              chem(i,k,j,p_oc1) = chem(i,k,j,p_oc1) + factor  * ebu(i,k,j,p_ebu_oc  )
+              chem(i,k,j,p_bc1) = chem(i,k,j,p_bc1) + factor  * ebu(i,k,j,p_ebu_bc  )
+              chem(i,k,j,p_p25) = chem(i,k,j,p_p25) + factor  * ebu(i,k,j,p_ebu_pm25)
+              chem(i,k,j,p_p10) = chem(i,k,j,p_p10) + factor  * ebu(i,k,j,p_ebu_pm10)
+              chem(i,k,j,p_so2) = chem(i,k,j,p_so2) + factor2 * ebu(i,k,j,p_ebu_so2 )
+            end do
+          end do
+        end do
+      end if
+
     end if
     ! -- subgrid convective transport
     if (chem_conv_tr == 2 )then
