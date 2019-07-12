@@ -834,9 +834,9 @@ contains
     trab(:,:,3) = emis_ant(its:ite, kts, jts:jte, p_e_so2)
 
     ! -- output biomass burning emissions
-    trab(:,:,4) = ebu_in(its:ite, jts:jte, p_ebu_bc )
-    trab(:,:,5) = ebu_in(its:ite, jts:jte, p_ebu_oc )
-    trab(:,:,6) = ebu_in(its:ite, jts:jte, p_ebu_so2)
+    trab(:,:,4) = ebu_in(its:ite, jts:jte, p_ebu_in_bc )
+    trab(:,:,5) = ebu_in(its:ite, jts:jte, p_ebu_in_oc )
+    trab(:,:,6) = ebu_in(its:ite, jts:jte, p_ebu_in_so2)
 
     ! -- output sedimentation and dry/wet deposition
     ! -- output dry deposition
