@@ -57,7 +57,7 @@ contains
    REAL, INTENT(IN   ) ::                             dtstep
 
    LOGICAL,      INTENT(IN   ) :: scale_fire_emiss
-   Character *(*), intent(in) :: chem_opt,burn_opt
+   character (len=*), intent(in) :: chem_opt,burn_opt
 
 !
 ! Local variables...
