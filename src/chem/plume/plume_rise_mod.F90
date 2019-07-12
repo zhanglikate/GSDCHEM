@@ -14,6 +14,7 @@ module plume_rise_mod
 
   private
 
+  public :: num_frp_plume
   public :: plumerise_driver
 
 contains
@@ -39,7 +40,7 @@ contains
          INTENT(INOUT ) ::                                   ebu
    REAL, DIMENSION( ims:ime, 1, jms:jme, num_ebu_in ),                 &
          INTENT(INOUT ) ::                                   ebu_in
-   REAL, DIMENSION( ims:ime, jms:jme, 5 ),                             &
+   REAL, DIMENSION( ims:ime, jms:jme, num_frp_plume ),                 &
          INTENT(INOUT ) ::                                   plume_frp
    REAL, DIMENSION( ims:ime, jms:jme ),                                &
          INTENT(IN ) ::                                                &
@@ -208,7 +209,7 @@ contains
                 firesize(3)=firesize_agsv(i,j)
                 firesize(4)=firesize_aggr(i,j)
               case (FIRE_OPT_GBBEPx)
-                if (plume_frp(i,j,2) < 1.e-06) cycle
+                if (plume_frp(i,j,p_frp_mean) < 1.e-06) cycle
               case default
                 ! -- no further option available
             end select

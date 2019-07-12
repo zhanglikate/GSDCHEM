@@ -212,9 +212,9 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: xlong
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: znt
 
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in) :: ebu_in
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:3)        :: erod
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:5)        :: plume_frp
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in)    :: ebu_in
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:3)           :: erod
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_frp_plume) :: plume_frp
 
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: ac3
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: ahno3

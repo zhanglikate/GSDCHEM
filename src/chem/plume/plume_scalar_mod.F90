@@ -3,8 +3,9 @@ module plume_scalar_mod
   use chem_config_mod, only : FIRE_OPT_GBBEPx, FIRE_OPT_MODIS
   use chem_const_mod,  only : g => grvity, cp, &
                               r_d => rd, r_v => rv, p1000mb => p1000
-  use plume_data_mod,  only : iflam_frac, imean_frp, istd_frp, imean_size, istd_size, &
-                              tropical_forest, boreal_forest, savannah, grassland,    &
+  use plume_data_mod,  only : num_frp_plume, p_frp_flam_frac, p_frp_mean, p_frp_std, &
+                              p_frp_mean_size, p_frp_std_size, &
+                              tropical_forest, boreal_forest, savannah, grassland,   &
                               nveg_agreg, wind_eff
   use plume_zero_mod
 
@@ -26,12 +27,12 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
   ! arguments
   integer :: m1,m2,m3,ia,iz,ja,jz,nspecies,plumerise_flag
 
-  real, dimension(nveg_agreg),  intent(in)    :: firesize,mean_fct
-  real, dimension(nspecies),    intent(in)    :: eburn_in
-  real, dimension(m1,nspecies), intent(out)   :: eburn_out
-  real, dimension(m1,m2,m3),    intent(in)    :: up,vp,wp,theta,pp,dn0,rv
-  real, dimension(m1),          intent(in)    :: zt_rams,zm_rams
-  real, dimension(5),           intent(inout) :: plume_frp
+  real, dimension(nveg_agreg),    intent(in)    :: firesize,mean_fct
+  real, dimension(nspecies),      intent(in)    :: eburn_in
+  real, dimension(m1,nspecies),   intent(out)   :: eburn_out
+  real, dimension(m1,m2,m3),      intent(in)    :: up,vp,wp,theta,pp,dn0,rv
+  real, dimension(m1),            intent(in)    :: zt_rams,zm_rams
+  real, dimension(num_frp_plume), intent(inout) :: plume_frp
 
   ! local variables
   integer :: i,j,k,iveg_ag,imm,ispc,ixx,k1,k2,kmt
@@ -131,15 +132,15 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
           case (FIRE_OPT_GBBEPx)
             !-number to calculate the emission during the flaming pahse
             !-from the amount emitted during the smoldering phase
-            convert_smold_to_flam=plume_frp(iflam_frac)
+            convert_smold_to_flam=plume_frp(p_frp_flam_frac)
 
             !- check if there is only one fire in a given grid box (=> std =0.)
-            if(plume_frp(istd_frp ) < 1.0e-6) then
+            if(plume_frp(p_frp_std) < 1.0e-6) then
               !- if yes, we will set it as a 20% of the mean frp as a gross
               !estimation
               !- of the retrieval uncertainty by the sensors.
               !- (we are not taking care about the fire size retrieval)
-              plume_frp(istd_frp )=0.2*plume_frp(imean_frp )
+              plume_frp(p_frp_std)=0.2*plume_frp(p_frp_mean)
             endif
           case default
             !- no further option implemented
@@ -150,12 +151,12 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
           if (plumerise_flag == FIRE_OPT_GBBEPx) then
             if(imm==1 ) then
               !for imm = 1 => lower injection height
-              burnt_area = max(1.0e4,plume_frp(imean_size) -0.5*plume_frp(istd_size))
-              frp = max(1000.,plume_frp(imean_frp) - 0.5*plume_frp(istd_frp))
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) -0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) - 0.5*plume_frp(p_frp_std))
             elseif(imm==2 ) then
               !for imm = 2 => higher injection height
-              burnt_area = max(1.0e4,plume_frp(imean_size) +0.5*plume_frp(istd_size))
-              frp = max(1000.,plume_frp(imean_frp) + 0.5*plume_frp(istd_frp))
+              burnt_area = max(1.0e4,plume_frp(p_frp_mean_size) +0.5*plume_frp(p_frp_std_size))
+              frp = max(1000.,plume_frp(p_frp_mean) + 0.5*plume_frp(p_frp_std))
             endif
           endif
 

@@ -32,11 +32,12 @@ module plume_data_mod
    /)
 
   ! -- FRP buffer indices
-  integer :: iflam_frac = 1
-  integer :: imean_frp  = 2
-  integer :: istd_frp   = 3
-  integer :: imean_size = 4
-  integer :: istd_size  = 5
+  integer, parameter :: p_frp_flam_frac = 1
+  integer, parameter :: p_frp_mean      = 2
+  integer, parameter :: p_frp_std       = 3
+  integer, parameter :: p_frp_mean_size = 4
+  integer, parameter :: p_frp_std_size  = 5
+  integer, parameter :: num_frp_plume   = 5
 
   ! -- plumerise parameters
   integer, parameter :: tropical_forest = 1
