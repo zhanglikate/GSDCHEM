@@ -305,6 +305,20 @@ contains
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
+    ! -- initialize output arrays
+    aod2d   = 0._CHEM_KIND_R4
+    wet_dep = 0._CHEM_KIND_R4
+    p10     = 0._CHEM_KIND_R4
+    pm25    = 0._CHEM_KIND_R4
+    ebu_oc  = 0._CHEM_KIND_R4
+    oh_bg   = 0._CHEM_KIND_R4
+    h2o2_bg = 0._CHEM_KIND_R4
+    no3_bg  = 0._CHEM_KIND_R4
+    ext_cof = 0._CHEM_KIND_R4
+    sscal   = 0._CHEM_KIND_R4
+    asymp   = 0._CHEM_KIND_R4
+    trdp    = 0._CHEM_KIND_R4
+
     ! -- initialize output diagnostics
     trcm = 0._CHEM_KIND_R8
     trab = 0._CHEM_KIND_R8
