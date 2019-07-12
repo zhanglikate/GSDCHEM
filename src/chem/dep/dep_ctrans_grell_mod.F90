@@ -215,7 +215,8 @@ CONTAINS
            if(pret(i).gt.0.)then
              trfall(i,j,nv)=trdep(i,nv) !lzhang
              do k=kts,ktop(i)
-               chem(i,k,j,nv)=max(epsilc,chem(i,k,j,nv)+tracert(i,k,nv)*dt)
+               chem(i,k,j,nv)=min(maxval(chem(i,1:kte,j,nv)),chem(i,k,j,nv)+tracert(i,k,nv)*dt)!lzhang
+               chem(i,k,j,nv)=max(epsilc,chem(i,k,j,nv)) !lzhang
                if(nv.eq.npr)then
                  cu_co_ten(i,k,j)=tracert(i,k,npr)*dt
                endif
