@@ -5,15 +5,19 @@ module gocart_mod
   use chem_const_mod,  only : cp, grvity,rv,xlv, mwdry, mw_so2_aer, mw_so4_aer, &
                               p1000, rd, epsilc
   use chem_tracers_mod
-  use chem_config_mod, only : CHEM_OPT_NONE,         &
+  use chem_config_mod, only : BURN_OPT_ENABLE,       &
+                              CHEM_OPT_NONE,         &
                               CHEM_OPT_GOCART,       &
                               CHEM_OPT_GOCART_RACM,  &
                               CHEM_OPT_RACM_SOA_VBS, &
                               CHEM_OPT_MAX,          &
+                              CTRA_OPT_GRELL,        &
+                              DMSE_OPT_ENABLE,       &
                               DUST_OPT_AFWA,         &
                               DUST_OPT_GOCART,       &
                               FIRE_OPT_GBBEPx,       &
-                              FIRE_OPT_MODIS
+                              FIRE_OPT_MODIS,        &
+                              SEAS_OPT_NONE
 
   use gocart_prep_mod
   use gocart_settling_mod
@@ -34,9 +38,45 @@ module gocart_mod
 
 contains
 
-  subroutine gocart_init
-   ! -- add initialization step here
+  subroutine gocart_init(config, rc)
+
+   type(chem_config_type), intent(in) :: config
+   integer,     optional, intent(out) :: rc
+
+   ! -- local variables
+   integer :: nbins
+
+   ! -- begin
+   if (present(rc)) rc = CHEM_RC_SUCCESS
+
+   ! -- initialize dust module
+   ! -- set default values
+   select case (config % dust_opt)
+     case (DUST_OPT_AFWA   )
+       dust_alpha = afwa_alpha
+       dust_gamma = afwa_gamma
+     case (DUST_OPT_GOCART )
+       dust_alpha = gocart_alpha
+       dust_gamma = gocart_gamma
+     case default
+       call chem_rc_set(CHEM_RC_FAILURE, msg="Dust option not implemented", &
+         file=__FILE__, line=__LINE__, rc=rc)
+       return
+   end select
+   ! -- replace with input values if available
+   if (config % dust_alpha > 0._CHEM_KIND_R4) dust_alpha = config % dust_alpha
+   if (config % dust_gamma > 0._CHEM_KIND_R4) dust_gamma = config % dust_gamma
+
+   ! -- initialize sea salt module
+   ! -- replace first default nbins parameters with input values if available
+   if (any(config % seas_emis_scale > 0._CHEM_KIND_R4)) then
+     nbins = min(number_ss_bins, size(config % seas_emis_scale))
+     emission_scale(1:nbins) = config % seas_emis_scale(1:nbins)
+   end if
+   if (config % seas_emis_scheme > 0) emission_scheme = config % seas_emis_scheme
+
   end subroutine gocart_init
+
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
     biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, aer_ra_feedback, &
@@ -459,7 +499,7 @@ contains
     gmt = real(tz)
 
     ! -- set control flags
-    call_plume       = (biomass_burn_opt > 0) .and. (plumerisefire_frq > 0)
+    call_plume       = (biomass_burn_opt == BURN_OPT_ENABLE) .and. (plumerisefire_frq > 0)
     if (call_plume) &
        call_plume    = (mod(ktau, max(1, int(60*plumerisefire_frq/dts))) == 0) &
                         .or. (ktau == 1) .or. firstfire
@@ -526,7 +566,7 @@ contains
       file=__FILE__, line=__LINE__, rc=rc)) return
 
     ! -- compute sea salt
-    if (seas_opt >= SEAS_OPT_DEFAULT) then
+    if (seas_opt /= SEAS_OPT_NONE) then
       call gocart_seasalt_driver(ktau,dt,rri,t_phy,moist, &
         u_phy,v_phy,chem,rho_phy,dz8w,u10,v10,ust,p8w,tsk,&
         xland,xlat,xlong,dxy,grvity,emis_seas,           &
@@ -579,7 +619,7 @@ contains
         its,ite, jts,jte, kts,kte                                )
     end if
 
-    if (dmsemis_opt == 1) then
+    if (dmsemis_opt == DMSE_OPT_ENABLE) then
       call gocart_dmsemis(dt,rri,t_phy,u_phy,v_phy,     &
          chem,rho_phy,dz8w,u10,v10,p8w,dms_0,tsk,       &
          ivgtyp,isltyp,xland,dxy,grvity,mwdry,          &
@@ -591,7 +631,7 @@ contains
 
     if ((dust_opt == DUST_OPT_GOCART) .or. &
         (dust_opt == DUST_OPT_AFWA  ) .or. &
-        (seas_opt >= SEAS_OPT_DEFAULT)) then
+        (seas_opt /= SEAS_OPT_NONE  )) then
       call gocart_settling_driver(dt,t_phy,moist,  &
         chem,rho_phy,dz8w,p8w,p_phy,   &
         dusthelp,seashelp,dxy,grvity,  &
@@ -626,7 +666,7 @@ contains
     end if
 #endif
     ! -- add biomass burning emissions at every timestep
-    if (biomass_burn_opt == 1) then
+    if (biomass_burn_opt == BURN_OPT_ENABLE) then
       jp = jte
       factor3 = 0._CHEM_KIND_R4
       select case (plumerise_flag)
@@ -681,7 +721,7 @@ contains
 
     end if
     ! -- subgrid convective transport
-    if (chem_conv_tr == 2 )then
+    if (chem_conv_tr == CTRA_OPT_GRELL) then
       call grelldrvct(dt,ktau,                  &
         rho_phy,rcav,chem,tr_fall,              &
         u_phy,v_phy,t_phy,moist,dz8w,p_phy,p8w, &
@@ -836,7 +876,7 @@ contains
     end do
 
     ! -- calculate column mass density
-    call gocart_diag_cmass(config % chem_opt, nbegin, grvity, pr3d, tr3d_out, trcm)
+    call gocart_diag_cmass(chem_opt, nbegin, grvity, pr3d, tr3d_out, trcm)
 
     ! -- output anthropogenic emissions
     trab(:,:,1) = emis_ant(its:ite, kts, jts:jte, p_e_bc )
@@ -854,7 +894,7 @@ contains
     ! -- output large-scale wet deposition
     call gocart_diag_store(3, var_rmv, trdf)
     ! -- output convective-scale wet deposition
-    if (chem_conv_tr == 2) then
+    if (chem_conv_tr == CTRA_OPT_GRELL) then
       where (tr_fall > 0._CHEM_KIND_R4) wet_dep = tr_fall
       call gocart_diag_store(4, tr_fall, trdf)
     end if

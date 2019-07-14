@@ -8,18 +8,35 @@ module chem_config_mod
   implicit none
 
   ! -- Currently available modules
+  ! -- main GOCART options
   integer, parameter :: CHEM_OPT_NONE         = 0
   integer, parameter :: CHEM_OPT_GOCART       = 300
   integer, parameter :: CHEM_OPT_GOCART_RACM  = 301
   integer, parameter :: CHEM_OPT_RACM_SOA_VBS = 108
   integer, parameter :: CHEM_OPT_MAX          = 500
-
+  ! -- dust scheme
+  integer, parameter :: DUST_OPT_NONE   = 0
   integer, parameter :: DUST_OPT_GOCART = 1
   integer, parameter :: DUST_OPT_AFWA   = 3
-
+  ! -- sea salt scheme
+  integer, parameter :: SEAS_OPT_NONE   = 0
+  integer, parameter :: SEAS_OPT_GOCART = 1
+  integer, parameter :: SEAS_OPT_NGAC   = 2
+  integer, parameter :: seas_tune_bins  = 5
+  ! -- DMS emissions
+  integer, parameter :: DMSE_OPT_NONE   = 0
+  integer, parameter :: DMSE_OPT_ENABLE = 1
+  ! -- biomass burning emissions
+  integer, parameter :: BURN_OPT_NONE   = 0
+  integer, parameter :: BURN_OPT_ENABLE = 1
+  integer, parameter :: FIRE_OPT_NONE   = 0
   integer, parameter :: FIRE_OPT_MODIS  = 1
   integer, parameter :: FIRE_OPT_GBBEPx = 2
+  ! -- subgrid convective transport
+  integer, parameter :: CTRA_OPT_NONE  = 0
+  integer, parameter :: CTRA_OPT_GRELL = 2
 
+  ! -- input namelist file name
   character(len=*), parameter :: chem_file_nml = 'input.nml'
 
   ! -- data structure for configuration options
@@ -100,11 +117,16 @@ module chem_config_mod
     INTEGER :: ne_area         = 41
     INTEGER :: nmegan          = 1
     INTEGER :: mp_physics      = 0
-  ! -- configuration variables for output:
-  !  . grid level defined in FIM Makefile
+    ! -- configuration variables for output:
+    !  . grid level defined in FIM Makefile
     integer :: glvl            = 0
-  ! -- control variables
+    ! -- control variables
     logical :: call_gocart     = .false.
+    ! -- tuning parameters
+    real(CHEM_KIND_R4) :: dust_alpha
+    real(CHEM_KIND_R4) :: dust_gamma
+    real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
+    integer            :: seas_emis_scheme
 
     type(chem_species_type), pointer :: species => null()
 
@@ -119,16 +141,27 @@ module chem_config_mod
   public :: chem_config_read
   public :: chem_config_control_init
   public :: chem_config_species_init
+
+  public :: BURN_OPT_NONE,   &
+            BURN_OPT_ENABLE
   public :: CHEM_OPT_NONE,         &
             CHEM_OPT_GOCART,       &
             CHEM_OPT_GOCART_RACM,  &
             CHEM_OPT_RACM_SOA_VBS, &
             CHEM_OPT_MAX
-  public :: DUST_OPT_GOCART, &
+  public :: CTRA_OPT_NONE,   &
+            CTRA_OPT_GRELL
+  public :: DMSE_OPT_NONE,   &
+            DMSE_OPT_ENABLE
+  public :: DUST_OPT_NONE,   &
+            DUST_OPT_GOCART, &
             DUST_OPT_AFWA
-
-  public :: FIRE_OPT_MODIS, &
+  public :: FIRE_OPT_NONE,   &
+            FIRE_OPT_MODIS,  &
             FIRE_OPT_GBBEPx
+  public :: SEAS_OPT_NONE,   &
+            SEAS_OPT_GOCART, &
+            SEAS_OPT_NGAC
 
 contains
 
@@ -141,8 +174,8 @@ contains
     integer, parameter :: unit = 200
 
     integer                :: localrc, iostat
-    integer                :: buffer(25)
-    real(CHEM_KIND_R4)     :: rbuffer(6)
+    integer                :: buffer(26)
+    real(CHEM_KIND_R4)     :: rbuffer(8+seas_tune_bins)
     character(CHEM_MAXSTR) :: sbuffer(4)
 
     ! -- variables in input namelist
@@ -190,6 +223,10 @@ contains
     integer :: archive_step
     real(CHEM_KIND_R4) :: ash_mass
     real(CHEM_KIND_R4) :: ash_height
+    real(CHEM_KIND_R4) :: dust_alpha
+    real(CHEM_KIND_R4) :: dust_gamma
+    real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
+    integer            :: seas_emis_scheme
 
 
     namelist /chem_nml/          &
@@ -236,7 +273,11 @@ contains
       conv_tr_aqchem,            &
       archive_step,              &
       ash_mass,                  &
-      ash_height
+      ash_height,                &
+      dust_alpha,                &
+      dust_gamma,                &
+      seas_emis_scale,           &
+      seas_emis_scheme
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -251,27 +292,31 @@ contains
     photdt            = 60._CHEM_KIND_R4
     ash_mass          = -999._CHEM_KIND_R4
     ash_height        = -999._CHEM_KIND_R4
+    dust_alpha        = 0._CHEM_KIND_R4
+    dust_gamma        = 0._CHEM_KIND_R4
+    seas_emis_scale   = 0._CHEM_KIND_R4
+    seas_emis_scheme  = 0
     depo_fact         = 0._CHEM_KIND_R4
     drydep_opt        = 0
-    DUST_OPT          = 3
-    DMSEMIS_OPT       = 1
-    SEAS_OPT          = 1
-    EMISS_OPT         = 5
-    BIO_EMISS_OPT     = 0
-    BIOMASS_BURN_OPT  = 1
-    PLUMERISE_FLAG    = FIRE_OPT_MODIS
-    PLUMERISEFIRE_FRQ = 30
-    EMISS_INPT_OPT    = 1
-    GAS_BC_OPT        = 1
-    GAS_IC_OPT        = 1
-    AER_BC_OPT        = 1
-    AER_IC_OPT        = 1
+    dust_opt          = DUST_OPT_AFWA
+    dmsemis_opt       = DMSE_OPT_ENABLE
+    seas_opt          = SEAS_OPT_GOCART
+    emiss_opt         = 5
+    bio_emiss_opt     = 0
+    biomass_burn_opt  = BURN_OPT_ENABLE
+    plumerise_flag    = FIRE_OPT_MODIS
+    plumerisefire_frq = 30
+    emiss_inpt_opt    = 1
+    gas_bc_opt        = 1
+    gas_ic_opt        = 1
+    aer_bc_opt        = 1
+    aer_ic_opt        = 1
     gaschem_onoff     = 1
     aerchem_onoff     = 1
     gfdlmp_onoff      = 0
     cldchem_onoff     = 0
     vertmix_onoff     = 1
-    chem_conv_tr      = 1
+    chem_conv_tr      = CTRA_OPT_NONE
     aer_ra_feedback   = 0
     aer_op_opt        = 0
     chem_in_opt       = 0
@@ -312,19 +357,19 @@ contains
       chem_opt,          &
       kemit,             &
       phot_opt,          &
-      DUST_OPT,          &
-      DMSEMIS_OPT,       &
-      SEAS_OPT,          &
-      EMISS_OPT,         &
-      BIO_EMISS_OPT,     &
-      BIOMASS_BURN_OPT,  &
-      PLUMERISE_FLAG,    &
-      PLUMERISEFIRE_FRQ, &
-      EMISS_INPT_OPT,    &
-      GAS_BC_OPT,        &
-      GAS_IC_OPT,        &
-      AER_BC_OPT,        &
-      AER_IC_OPT,        &
+      dust_opt,          &
+      dmsemis_opt,       &
+      seas_opt,          &
+      emiss_opt,         &
+      bio_emiss_opt,     &
+      biomass_burn_opt,  &
+      plumerise_flag,    &
+      plumerisefire_frq, &
+      emiss_inpt_opt,    &
+      gas_bc_opt,        &
+      gas_ic_opt,        &
+      aer_bc_opt,        &
+      aer_ic_opt,        &
       gaschem_onoff,     &
       aerchem_onoff,     &
       gfdlmp_onoff,      &
@@ -333,7 +378,8 @@ contains
       chem_conv_tr,      &
       aer_ra_feedback,   &
       chem_in_opt,       &
-      archive_step       &
+      archive_step,      &
+      seas_emis_scheme   &
       /)
     ! -- broadcast integer buffer
     call chem_comm_bcast(buffer, rc=localrc)
@@ -364,9 +410,14 @@ contains
     config % aer_ra_feedback   = buffer( 23 )
     config % chem_in_opt       = buffer( 24 )
     config % archive_step      = buffer( 25 )
+    config % seas_emis_scheme  = buffer( 26 )
 
     ! -- pack real variables in buffer
-    rbuffer = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, depo_fact /)
+    rbuffer(1:8) = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, &
+                      depo_fact, dust_alpha, dust_gamma /)
+
+    if (seas_tune_bins > 0) rbuffer(9:8+seas_tune_bins) = seas_emis_scale
+
     ! -- broadcast real buffer
     call chem_comm_bcast(rbuffer, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -377,6 +428,9 @@ contains
     config % ash_mass   = rbuffer(4)
     config % ash_height = rbuffer(5)
     config % depo_fact  = rbuffer(6)
+    config % dust_alpha = rbuffer(7)
+    config % dust_gamma = rbuffer(8)
+    if (seas_tune_bins > 0) config % seas_emis_scale = rbuffer(9:8+seas_tune_bins)
 
     ! -- pack strings into buffer
     sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname /)
@@ -407,19 +461,10 @@ contains
     config % num_ebu    = 0
     config % num_ebu_in = 0
 
-    ! -- set number of atmospheric tracers
-    if (config % gfdlmp_onoff == 1) then
-      ! -- FV3 GFDL microphysics use 7 active tracers
-      config % ntra = 7
-    else
-      ! -- default microphysics only uses 3 tracers
-      config % ntra = 3
-    end if
-
     if (config % mp_physics == 0) then
 
       select case (config % chem_opt)
-        case(CHEM_OPT_GOCART)
+        case (CHEM_OPT_GOCART)
           config % num_chem            = 20
           config % num_ebu             = 7
           config % num_ebu_in          = 7
@@ -431,7 +476,7 @@ contains
           ! compute total # of tracers - no ice variable transported
           config % ntrb = config % ntrb + config % num_moist + config % num_chem - 3
 
-        case(CHEM_OPT_GOCART_RACM)
+        case (CHEM_OPT_GOCART_RACM)
           config % num_chem            = 66
           config % num_ebu             = 25
           config % num_ebu_in          = 25
@@ -444,7 +489,7 @@ contains
           ! compute total # of tracers - no ice variable transported
           config % ntrb = config % ntrb + config % num_moist + config % num_chem - 3
 
-        case(CHEM_OPT_RACM_SOA_VBS)
+        case (CHEM_OPT_RACM_SOA_VBS)
           config % num_chem            = 103
           config % num_ebu             = 25
           config % num_ebu_in          = 25
@@ -471,6 +516,80 @@ contains
       return
 
     end if
+
+    ! -- dust options
+    select case (config % dust_opt)
+      case (DUST_OPT_NONE, DUST_OPT_GOCART, DUST_OPT_AFWA)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="dust_opt not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- sea salt options
+    select case (config % seas_opt)
+      case (SEAS_OPT_NONE, SEAS_OPT_GOCART, SEAS_OPT_NGAC)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="seas_opt not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- DMS emissions options
+    select case (config % dmsemis_opt)
+      case (DMSE_OPT_NONE, DMSE_OPT_ENABLE)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="dmsemis_opt not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- biomass burning options
+    select case (config % biomass_burn_opt)
+      case (BURN_OPT_NONE, BURN_OPT_ENABLE)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="biomass_burn_opt not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- fire options
+    select case (config % plumerise_flag)
+      case (FIRE_OPT_NONE, FIRE_OPT_MODIS, FIRE_OPT_GBBEPx)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="plumerise_flag not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- convective transport options
+    select case (config % chem_conv_tr)
+      case(CTRA_OPT_NONE, CTRA_OPT_GRELL)
+        ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="chem_conv_tr not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- set number of atmospheric tracers based on microphysics scheme
+    select case (config % gfdlmp_onoff)
+      case (0)
+        ! -- default microphysics only uses 3 tracers
+        config % ntra = 3
+      case (1)
+        ! -- FV3 GFDL microphysics use 7 active tracers
+        config % ntra = 7
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="gfdlmp_onoff must be 0 or 1", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
 
     ! -- nbegin is the start address (-1) of the first chem variable in tr3d
     if (config % num_moist > 3) then

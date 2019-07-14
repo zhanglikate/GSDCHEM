@@ -204,7 +204,7 @@ contains
       end if
 
       ! -- emission from burning biomass
-      if (config % biomass_burn_opt > 0) then
+      if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
         if (.not.allocated(data % emiss_abu)) then
           allocate(data % emiss_abu(ids:ide,jds:jde,config % num_ebu_in), stat=localrc)
           if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
@@ -492,7 +492,7 @@ contains
       end if
 
       ! -- emissions from burning biomass
-      if (config % biomass_burn_opt > 0) then
+      if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
         ! -- emissions
         call chem_io_read('ebu_bc.dat', data % emiss_abu(:,:,config % species % p_e_bc), &
           path=trim(config % fireemi_inname), de=de, rc=localrc)
@@ -1004,7 +1004,7 @@ contains
       end if
 
       ! -- emissions from burning biomass
-      if (config % biomass_burn_opt > 0) then
+      if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
         ! -- emissions
         call chem_io_write('ebu_bc.dat', data % emiss_abu(:,:,config % species % p_e_bc), &
           path=trim(config % emi_outname), de=de, rc=localrc)

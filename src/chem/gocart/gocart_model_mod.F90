@@ -40,6 +40,11 @@ contains
     if (chem_rc_check(localrc, msg="Failed to set tracer pointers", &
       file=__FILE__, line=__LINE__, rc=rc)) return
 
+    ! -- initialize GOCART modules
+    call gocart_init(config, rc=localrc)
+    if (chem_rc_check(localrc, msg="Failed to initialize GOCART modules", &
+      file=__FILE__, line=__LINE__, rc=rc)) return
+
     ! -- print out model configuration
     if (chem_comm_isroot()) then
       write(6,'(28("-"))')
@@ -198,6 +203,5 @@ contains
 
 
   end subroutine gocart_model_advance
-
 
 end module gocart_model_mod

@@ -35,6 +35,8 @@ MODULE aero_soa_vbs_mod
 
   USE chem_tracers_mod, config => chem_config
 
+  USE chem_config_mod, ONLY : DUST_OPT_AFWA, DUST_OPT_GOCART
+
   USE aero_soa_vbs_data_mod
  
   USE dust_mod
@@ -7825,7 +7827,7 @@ SUBROUTINE soa_vbs_addemiss(  dtstep, u10, v10, alt, dz8w, xland, chem,         
 !           ims,ime, jms,jme, kms,kme,                             &
 !           its,ite, jts,jte, kts,kte                              )
 !  end if
-  if( dust_opt == 1 ) then
+  if( dust_opt == DUST_OPT_GOCART ) then
       call soa_vbs_dust_gocartemis(                                &
            ktau,dtstep,num_soil_layers,alt,u_phy,                 &
            v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,        &
@@ -7835,7 +7837,7 @@ SUBROUTINE soa_vbs_addemiss(  dtstep, u10, v10, alt, dz8w, xland, chem,         
            its,ite, jts,jte, kts,kte                              )
   end if
 
-    if( dust_opt == 3 ) then
+    if( dust_opt == DUST_OPT_AFWA ) then
       call soa_vbs_dust_afwaemis(                                &
            ktau,dtstep,num_soil_layers,alt,u_phy,                 &
            v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,        &

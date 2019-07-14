@@ -6,20 +6,17 @@ module seas_mod
   use chem_tracers_mod, only : p_seas_1, p_seas_2, p_seas_3, p_seas_4, p_seas_5, &
                                p_eseas1, p_eseas2, p_eseas3, p_eseas4, p_eseas5, &
                                config => chem_config
+  use chem_config_mod,  only : SEAS_OPT_GOCART, SEAS_OPT_NGAC
+
   use seas_data_mod
   use seas_ngac_mod
 
   implicit none
 
-  integer, parameter :: SEAS_OPT_DEFAULT = 1
-
-  ! -- NGAC parameters
-  integer, parameter :: emission_scheme = 3    ! GEOSS 2012
-
   private
 
-  public :: SEAS_OPT_DEFAULT
-
+  public :: number_ss_bins
+  public :: emission_scale, emission_scheme
   public :: gocart_seasalt_driver
 
 CONTAINS
@@ -133,7 +130,7 @@ CONTAINS
       case default
 
         select case (seas_opt)
-          case (1)
+          case (SEAS_OPT_GOCART)
             ! -- original GOCART sea salt scheme
             do j = jts, jte
               do i = its, ite
@@ -182,7 +179,7 @@ CONTAINS
               end do
             end do
 
-          case (2)
+          case (SEAS_OPT_NGAC)
             ! -- NGAC sea salt scheme
             do j = jts, jte
               do i = its, ite
