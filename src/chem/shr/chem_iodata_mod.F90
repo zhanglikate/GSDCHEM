@@ -785,29 +785,29 @@ contains
         call chem_io_write('erod1.dat', data % ero1, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero1 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % ero1)
+          localpe, de, tile, minval(data % ero1), maxval(data % ero1)
         call chem_io_write('erod2.dat', data % ero2, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero2 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % ero2)
+          localpe, de, tile, minval(data % ero2), maxval(data % ero2)
         call chem_io_write('erod3.dat', data % ero3, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % ero3)
+          localpe, de, tile, minval(data % ero3), maxval(data % ero3)
 
         ! -- bacground values for chemical species
         call chem_io_write('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % h2o2_backgd)
+          localpe, de, tile, minval(data % h2o2_backgd), maxval(data % h2o2_backgd)
         call chem_io_write('no3.dat', data % no3_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," no3 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % no3_backgd)
+          localpe, de, tile, minval(data % no3_backgd), maxval(data % no3_backgd)
         call chem_io_write('oh.dat', data % oh_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," oh - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % dm0), maxval(data % oh_backgd)
+          localpe, de, tile, minval(data % oh_backgd), maxval(data % oh_backgd)
 
         ! -- emissions
         call chem_io_write('e_bc.dat', data % emiss_ab(:,:,config % species % p_e_bc), &
@@ -857,11 +857,11 @@ contains
           call chem_io_write('clay.dat', data % clayfrac, path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % dm0), maxval(data % clayfrac)
+            localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
           call chem_io_write('sand.dat', data % sandfrac, path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % dm0), maxval(data % sandfrac)
+            localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
