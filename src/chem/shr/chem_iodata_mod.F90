@@ -125,6 +125,13 @@ contains
         data % ero3 = 0._CHEM_KIND_R4
       end if
 
+      ! -- PJZ sediment supply map
+      if (.not.allocated(data % ssm)) then
+        allocate(data % ssm(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % ssm = 0._CHEM_KIND_R4
+      end if
+
       ! -- chemical species background
       if (.not.allocated(data % h2o2_backgd)) then
         allocate(data % h2o2_backgd(ids:ide,jds:jde,config % nvl_gocart), stat=localrc)
@@ -190,18 +197,19 @@ contains
       end if
 
       ! -- additional dust quantities for AFWA
-      if (config % dust_opt == DUST_OPT_AFWA) then
-        if (.not.allocated(data % clayfrac)) then
-          allocate(data % clayfrac(ids:ide,jds:jde), stat=localrc)
-          if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-          data % clayfrac = 0._CHEM_KIND_R4
-        end if
-        if (.not.allocated(data % sandfrac)) then
-          allocate(data % sandfrac(ids:ide,jds:jde), stat=localrc)
-          if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-          data % sandfrac = 0._CHEM_KIND_R4
-        end if
-      end if
+      select case (config % dust_opt)
+        case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
+          if (.not.allocated(data % clayfrac)) then
+            allocate(data % clayfrac(ids:ide,jds:jde), stat=localrc)
+            if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+            data % clayfrac = 0._CHEM_KIND_R4
+          end if
+          if (.not.allocated(data % sandfrac)) then
+            allocate(data % sandfrac(ids:ide,jds:jde), stat=localrc)
+            if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+            data % sandfrac = 0._CHEM_KIND_R4
+          end if
+      end select
 
       ! -- emission from burning biomass
       if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
@@ -283,7 +291,7 @@ contains
         if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') &
           localpe, de, tile, minval(data % ero3), maxval(data % ero3)
 
-        ! -- bacground values for chemical species
+        ! -- background values for chemical species
         call chem_io_read('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') &
@@ -340,16 +348,24 @@ contains
           localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
         
-        if (config % dust_opt == DUST_OPT_AFWA) then
-           ! -- DUST_OPT_AFWA
-          call chem_io_read('clay.dat', data % clayfrac, path=trim(config % emi_inname), de=de, rc=localrc)
+        select case (config % dust_opt)
+          case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
+            call chem_io_read('clay.dat', data % clayfrac, path=trim(config % emi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
+            call chem_io_read('sand.dat', data % sandfrac, path=trim(config % emi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
+        end select
+
+        if (config % dust_opt == DUST_OPT_FENGSHA) then
+          ! -- PJZ sediment supply map
+          call chem_io_read('ssm.dat', data % ssm, path=trim(config % emi_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
-          call chem_io_read('sand.dat', data % sandfrac, path=trim(config % emi_inname), de=de, rc=localrc)
-          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
+          if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
+            localpe, de, tile, minval(data % ssm), maxval(data % ssm)
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
@@ -795,7 +811,7 @@ contains
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ero3 - min/max = "2g16.6)') &
           localpe, de, tile, minval(data % ero3), maxval(data % ero3)
 
-        ! -- bacground values for chemical species
+        ! -- background values for chemical species
         call chem_io_write('h2o2.dat', data % h2o2_backgd, path=trim(config % emi_outname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," h2o2 - min/max = "2g16.6)') &
@@ -852,16 +868,24 @@ contains
           localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
         
-        if (config % dust_opt == DUST_OPT_AFWA) then
-           ! -- DUST_OPT_AFWA
-          call chem_io_write('clay.dat', data % clayfrac, path=trim(config % emi_outname), de=de, rc=localrc)
+        select case (config % dust_opt)
+          case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
+            call chem_io_write('clay.dat', data % clayfrac, path=trim(config % emi_outname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
+            call chem_io_write('sand.dat', data % sandfrac, path=trim(config % emi_outname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
+        end select
+
+        if (config % dust_opt == DUST_OPT_FENGSHA) then
+          ! -- PJZ sediment supply map
+          call chem_io_write('ssm.dat', data % ssm, path=trim(config % emi_outname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
-          call chem_io_write('sand.dat', data % sandfrac, path=trim(config % emi_outname), de=de, rc=localrc)
-          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-          if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
-            localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
+          if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
+            localpe, de, tile, minval(data % ssm), maxval(data % ssm)
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &

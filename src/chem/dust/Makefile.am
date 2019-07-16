@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libdust.a
 
-libdust_a_SOURCES = dust_afwa_mod.F90 dust_data_mod.F90 dust_gocart_mod.F90 dust_mod.F90
+libdust_a_SOURCES = dust_afwa_mod.F90 dust_data_mod.F90 dust_fengsha_mod.F90 dust_gocart_mod.F90 dust_mod.F90
 
 libdust_a_FCFLAGS = -I ../shr/
 
@@ -15,5 +15,7 @@ clean-local: clean-modules
 
 
 libdust_a-dust_afwa_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
+libdust_a-dust_fengsha_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
 libdust_a-dust_gocart_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
-libdust_a-dust_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT) libdust_a-dust_gocart_mod.$(OBJEXT) libdust_a-dust_afwa_mod.$(OBJEXT)
+libdust_a-dust_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT) \
+	libdust_a-dust_afwa_mod.$(OBJEXT) libdust_a-dust_fengsha_mod.$(OBJEXT) libdust_a-dust_gocart_mod.$(OBJEXT)

@@ -8,25 +8,26 @@ module chem_data_mod
   type chem_data_type
     ! -- input
     real(CHEM_KIND_R4), dimension(:),     allocatable :: p_gocart          ! GOCART pressure levels
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: clayfrac          ! clay fraction (AFWA dust scheme)
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: clayfrac          ! clay fraction (AFWA & FENGSHA dust scheme)
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: dm0               ! dms reference emissions
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: emiss_ab          ! emissions for all available species
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: emiss_abu         ! emissions for all available species
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_ash_dt      ! ash emissions
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_ash_height  ! ash emissions
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_ash_mass    ! ash emissions
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_dt      ! ash emissions
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_height  ! ash emissions
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_mass    ! ash emissions
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_dt       ! ash emissions
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_height   ! ash emissions
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: emiss_tr_mass     ! ash emissions
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero1              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero2              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero3              ! dust erosion factor
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ssm               ! PJZ Sediment Supply Map (FENGSHA)
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: h2o2_backgd       ! H2O2 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: no3_backgd        ! NO3 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: oh_backgd         ! OH background for GOCART
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: plumefrp          ! fire info - GBBEPx
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: plumestuff        ! fire info - MODIS
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: sandfrac          ! sand fraction (AFWA dust scheme)
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: sandfrac          ! sand fraction (AFWA & FENGSHA dust scheme)
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: th_pvsrf
     ! -- output
     real(CHEM_KIND_R4), dimension(:,:),     allocatable :: aod2d
@@ -119,6 +120,10 @@ contains
     end if
     if (allocated(data % ero3)) then
       deallocate(data % ero3, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % ssm)) then
+      deallocate(data % ssm, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (allocated(data % h2o2_backgd)) then

@@ -14,7 +14,9 @@ module gocart_mod
                               CTRA_OPT_GRELL,        &
                               DMSE_OPT_ENABLE,       &
                               DUST_OPT_AFWA,         &
+                              DUST_OPT_FENGSHA,      &
                               DUST_OPT_GOCART,       &
+                              DUST_OPT_NONE,         &
                               FIRE_OPT_GBBEPx,       &
                               FIRE_OPT_MODIS,        &
                               SEAS_OPT_NONE
@@ -44,7 +46,7 @@ contains
    integer,     optional, intent(out) :: rc
 
    ! -- local variables
-   integer :: nbins
+   integer :: n
 
    ! -- begin
    if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -55,6 +57,13 @@ contains
      case (DUST_OPT_AFWA   )
        dust_alpha = afwa_alpha
        dust_gamma = afwa_gamma
+     case (DUST_OPT_FENGSHA)
+       dust_alpha = fengsha_alpha
+       dust_gamma = fengsha_gamma
+       if (any(config % dust_uthres > 0._CHEM_KIND_R4)) then
+         n = min(fengsha_maxstypes, size(config % dust_uthres))
+         dust_uthres(1:n) = config % dust_uthres(1:n)
+       end if
      case (DUST_OPT_GOCART )
        dust_alpha = gocart_alpha
        dust_gamma = gocart_gamma
@@ -70,8 +79,8 @@ contains
    ! -- initialize sea salt module
    ! -- replace first default nbins parameters with input values if available
    if (any(config % seas_emis_scale > 0._CHEM_KIND_R4)) then
-     nbins = min(number_ss_bins, size(config % seas_emis_scale))
-     emission_scale(1:nbins) = config % seas_emis_scale(1:nbins)
+     n = min(number_ss_bins, size(config % seas_emis_scale))
+     emission_scale(1:n) = config % seas_emis_scale(1:n)
    end if
    if (config % seas_emis_scheme > 0) emission_scheme = config % seas_emis_scheme
 
@@ -84,7 +93,7 @@ contains
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
-    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3,     &
+    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, ssm, &
     h2o2_backgd, no3_backgd, oh_backgd, plumefrp, plumestuff, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
@@ -136,6 +145,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero3
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ssm
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_dt
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_mass
@@ -579,22 +589,32 @@ contains
     endif
     store_arrays = .false.
     select case (dust_opt)
-      case (DUST_OPT_GOCART)
-        call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy,&
-          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
-          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
-          dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,   &
-          current_month,                                               &
-          ids,ide, jds,jde, kds,kde,                                   &
-          ims,ime, jms,jme, kms,kme,                                   &
-          its,ite, jts,jte, kts,kte)
-        store_arrays = .true.
       case (DUST_OPT_AFWA)
         call gocart_dust_afwa_driver(ktau,dt,rri,t_phy,moist,u_phy,    &
           v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
           vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
           dusthelp,ust,znt,clayf,sandf,                                &
           num_emis_dust,num_moist,num_chem,num_soil_layers,            &
+          ids,ide, jds,jde, kds,kde,                                   &
+          ims,ime, jms,jme, kms,kme,                                   &
+          its,ite, jts,jte, kts,kte)
+        store_arrays = .true.
+      case (DUST_OPT_FENGSHA)
+       call gocart_dust_fengsha_driver(ktau,dt,rri,t_phy,moist,u_phy,  &
+            v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ssm,        &
+            ivgtyp,isltyp,vegfra,snowh,xland,xlat,xlong,gsw,dxy,grvity,&
+            emis_dust,srce_dust,dusthelp,ust,znt,clayf,sandf,          &
+            num_emis_dust,num_moist,num_chem,num_soil_layers,          &
+            ids,ide, jds,jde, kds,kde,                                 &
+            ims,ime, jms,jme, kms,kme,                                 &
+            its,ite, jts,jte, kts,kte)
+        store_arrays = .true.
+      case (DUST_OPT_GOCART)
+        call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy,&
+          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
+          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
+          dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,   &
+          current_month,                                               &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
           its,ite, jts,jte, kts,kte)
@@ -629,9 +649,8 @@ contains
          its,ite, jts,jte, kts,kte)
     endif
 
-    if ((dust_opt == DUST_OPT_GOCART) .or. &
-        (dust_opt == DUST_OPT_AFWA  ) .or. &
-        (seas_opt /= SEAS_OPT_NONE  )) then
+    if ((dust_opt /= DUST_OPT_NONE) .or. &
+        (seas_opt /= SEAS_OPT_NONE)) then
       call gocart_settling_driver(dt,t_phy,moist,  &
         chem,rho_phy,dz8w,p8w,p_phy,   &
         dusthelp,seashelp,dxy,grvity,  &

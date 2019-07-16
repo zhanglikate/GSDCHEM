@@ -32,10 +32,29 @@ module dust_data_mod
   ! alpha      |      1.0 |       0.5 |
   ! gamma      |      1.6 |       1.0 |
   ! -----------+----------+-----------+
-  real, parameter :: afwa_alpha   = 0.3
-  real, parameter :: afwa_gamma   = 1.3
-  real, parameter :: gocart_alpha = 0.3
-  real, parameter :: gocart_gamma = 1.3
+  real, parameter :: afwa_alpha    = 0.3
+  real, parameter :: afwa_gamma    = 1.3
+  real, parameter :: gocart_alpha  = 0.3
+  real, parameter :: gocart_gamma  = 1.3
+  ! -- FENGSHA
+  real, parameter :: fengsha_alpha = 0.3
+  real, parameter :: fengsha_gamma = 1.8
+  ! -- FENGSHA threshold velocities based on Dale A. Gillette's data
+  integer, parameter :: fengsha_maxstypes = 13
+  real, dimension(fengsha_maxstypes) :: dust_uthres = &
+    (/ 0.08,   & ! Sand            - 1
+       0.20,   & ! Loamy Sand      - 2
+       0.30,   & ! Sandy Loam      - 3
+       0.30,   & ! Silt Loam       - 4
+       0.35,   & ! Silt            - 5
+       0.60,   & ! Loam            - 6
+       0.30,   & ! Sandy Clay Loam - 7
+       0.35,   & ! Silty Clay Loam - 8
+       0.45,   & ! Clay Loam       - 9
+       0.45,   & ! Sandy Clay      - 10
+       0.45,   & ! Silty Clay      - 11
+       0.60,   & ! Clay            - 12
+       9.999 /)  ! Other           - 13
 
   ! -- values set at initialization
   real :: dust_alpha = 0.

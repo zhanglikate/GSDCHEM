@@ -97,6 +97,7 @@ libdust_a_AR = $(AR) $(ARFLAGS)
 libdust_a_LIBADD =
 am_libdust_a_OBJECTS = libdust_a-dust_afwa_mod.$(OBJEXT) \
 	libdust_a-dust_data_mod.$(OBJEXT) \
+	libdust_a-dust_fengsha_mod.$(OBJEXT) \
 	libdust_a-dust_gocart_mod.$(OBJEXT) \
 	libdust_a-dust_mod.$(OBJEXT)
 libdust_a_OBJECTS = $(am_libdust_a_OBJECTS)
@@ -257,7 +258,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libdust.a
-libdust_a_SOURCES = dust_afwa_mod.F90 dust_data_mod.F90 dust_gocart_mod.F90 dust_mod.F90
+libdust_a_SOURCES = dust_afwa_mod.F90 dust_data_mod.F90 dust_fengsha_mod.F90 dust_gocart_mod.F90 dust_mod.F90
 libdust_a_FCFLAGS = -I ../shr/
 libdust_a_DEPENDENCIES = ../shr/libshr.a
 all: all-am
@@ -326,6 +327,12 @@ libdust_a-dust_data_mod.o: dust_data_mod.F90
 
 libdust_a-dust_data_mod.obj: dust_data_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdust_a_FCFLAGS) $(FCFLAGS) -c -o libdust_a-dust_data_mod.obj `if test -f 'dust_data_mod.F90'; then $(CYGPATH_W) 'dust_data_mod.F90'; else $(CYGPATH_W) '$(srcdir)/dust_data_mod.F90'; fi`
+
+libdust_a-dust_fengsha_mod.o: dust_fengsha_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdust_a_FCFLAGS) $(FCFLAGS) -c -o libdust_a-dust_fengsha_mod.o `test -f 'dust_fengsha_mod.F90' || echo '$(srcdir)/'`dust_fengsha_mod.F90
+
+libdust_a-dust_fengsha_mod.obj: dust_fengsha_mod.F90
+	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdust_a_FCFLAGS) $(FCFLAGS) -c -o libdust_a-dust_fengsha_mod.obj `if test -f 'dust_fengsha_mod.F90'; then $(CYGPATH_W) 'dust_fengsha_mod.F90'; else $(CYGPATH_W) '$(srcdir)/dust_fengsha_mod.F90'; fi`
 
 libdust_a-dust_gocart_mod.o: dust_gocart_mod.F90
 	$(AM_V_PPFC)$(FC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libdust_a_FCFLAGS) $(FCFLAGS) -c -o libdust_a-dust_gocart_mod.o `test -f 'dust_gocart_mod.F90' || echo '$(srcdir)/'`dust_gocart_mod.F90
@@ -547,8 +554,10 @@ clean-modules:
 clean-local: clean-modules
 
 libdust_a-dust_afwa_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
+libdust_a-dust_fengsha_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
 libdust_a-dust_gocart_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT)
-libdust_a-dust_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT) libdust_a-dust_gocart_mod.$(OBJEXT) libdust_a-dust_afwa_mod.$(OBJEXT)
+libdust_a-dust_mod.$(OBJEXT): libdust_a-dust_data_mod.$(OBJEXT) \
+	libdust_a-dust_afwa_mod.$(OBJEXT) libdust_a-dust_fengsha_mod.$(OBJEXT) libdust_a-dust_gocart_mod.$(OBJEXT)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

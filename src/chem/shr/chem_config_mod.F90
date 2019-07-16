@@ -15,9 +15,11 @@ module chem_config_mod
   integer, parameter :: CHEM_OPT_RACM_SOA_VBS = 108
   integer, parameter :: CHEM_OPT_MAX          = 500
   ! -- dust scheme
-  integer, parameter :: DUST_OPT_NONE   = 0
-  integer, parameter :: DUST_OPT_GOCART = 1
-  integer, parameter :: DUST_OPT_AFWA   = 3
+  integer, parameter :: DUST_OPT_NONE    = 0
+  integer, parameter :: DUST_OPT_GOCART  = 1
+  integer, parameter :: DUST_OPT_AFWA    = 3
+  integer, parameter :: DUST_OPT_FENGSHA = 5
+  integer, parameter :: dust_tune_uthres = 13
   ! -- sea salt scheme
   integer, parameter :: SEAS_OPT_NONE   = 0
   integer, parameter :: SEAS_OPT_GOCART = 1
@@ -125,6 +127,7 @@ module chem_config_mod
     ! -- tuning parameters
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
+    real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
 
@@ -142,25 +145,26 @@ module chem_config_mod
   public :: chem_config_control_init
   public :: chem_config_species_init
 
-  public :: BURN_OPT_NONE,   &
+  public :: BURN_OPT_NONE,    &
             BURN_OPT_ENABLE
   public :: CHEM_OPT_NONE,         &
             CHEM_OPT_GOCART,       &
             CHEM_OPT_GOCART_RACM,  &
             CHEM_OPT_RACM_SOA_VBS, &
             CHEM_OPT_MAX
-  public :: CTRA_OPT_NONE,   &
+  public :: CTRA_OPT_NONE,    &
             CTRA_OPT_GRELL
-  public :: DMSE_OPT_NONE,   &
+  public :: DMSE_OPT_NONE,    &
             DMSE_OPT_ENABLE
-  public :: DUST_OPT_NONE,   &
-            DUST_OPT_GOCART, &
-            DUST_OPT_AFWA
-  public :: FIRE_OPT_NONE,   &
-            FIRE_OPT_MODIS,  &
+  public :: DUST_OPT_NONE,    &
+            DUST_OPT_AFWA,    &
+            DUST_OPT_FENGSHA, &
+            DUST_OPT_GOCART
+  public :: FIRE_OPT_NONE,    &
+            FIRE_OPT_MODIS,   &
             FIRE_OPT_GBBEPx
-  public :: SEAS_OPT_NONE,   &
-            SEAS_OPT_GOCART, &
+  public :: SEAS_OPT_NONE,    &
+            SEAS_OPT_GOCART,  &
             SEAS_OPT_NGAC
 
 contains
@@ -173,9 +177,9 @@ contains
     ! -- local variables
     integer, parameter :: unit = 200
 
-    integer                :: localrc, iostat
+    integer                :: localrc, i, iostat, is
     integer                :: buffer(26)
-    real(CHEM_KIND_R4)     :: rbuffer(8+seas_tune_bins)
+    real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins)
     character(CHEM_MAXSTR) :: sbuffer(4)
 
     ! -- variables in input namelist
@@ -225,6 +229,7 @@ contains
     real(CHEM_KIND_R4) :: ash_height
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
+    real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
 
@@ -276,6 +281,7 @@ contains
       ash_height,                &
       dust_alpha,                &
       dust_gamma,                &
+      dust_uthres,               &
       seas_emis_scale,           &
       seas_emis_scheme
 
@@ -294,6 +300,7 @@ contains
     ash_height        = -999._CHEM_KIND_R4
     dust_alpha        = 0._CHEM_KIND_R4
     dust_gamma        = 0._CHEM_KIND_R4
+    dust_uthres       = 0._CHEM_KIND_R4
     seas_emis_scale   = 0._CHEM_KIND_R4
     seas_emis_scheme  = 0
     depo_fact         = 0._CHEM_KIND_R4
@@ -416,7 +423,15 @@ contains
     rbuffer(1:8) = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, &
                       depo_fact, dust_alpha, dust_gamma /)
 
-    if (seas_tune_bins > 0) rbuffer(9:8+seas_tune_bins) = seas_emis_scale
+    is = 8
+    do i = 1, dust_tune_uthres
+      rbuffer(i+is) = dust_uthres(i)
+    end do
+
+    is = 8 + dust_tune_uthres
+    do i = 1, seas_tune_bins
+      rbuffer(i+is) = seas_emis_scale(i)
+    end do
 
     ! -- broadcast real buffer
     call chem_comm_bcast(rbuffer, rc=localrc)
@@ -430,7 +445,16 @@ contains
     config % depo_fact  = rbuffer(6)
     config % dust_alpha = rbuffer(7)
     config % dust_gamma = rbuffer(8)
-    if (seas_tune_bins > 0) config % seas_emis_scale = rbuffer(9:8+seas_tune_bins)
+
+    is = 8
+    do i = 1, dust_tune_uthres
+      config % dust_uthres(i) = rbuffer(i+is)
+    end do
+
+    is = 8 + dust_tune_uthres
+    do i = 1, seas_tune_bins
+      config % seas_emis_scale(i) = rbuffer(i+is)
+    end do
 
     ! -- pack strings into buffer
     sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname /)
