@@ -32,7 +32,7 @@ module dust_data_mod
   ! alpha      |      1.0 |       0.5 |
   ! gamma      |      1.6 |       1.0 |
   ! -----------+----------+-----------+
-  real, parameter :: afwa_alpha    = 0.3
+  real, parameter :: afwa_alpha    = 0.2
   real, parameter :: afwa_gamma    = 1.3
   real, parameter :: gocart_alpha  = 0.3
   real, parameter :: gocart_gamma  = 1.3

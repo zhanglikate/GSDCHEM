@@ -16,7 +16,7 @@ module seas_data_mod
   ! -- NGAC sea salt mass emission method: 1 = Gong 2003, 2 = Gong 1997, 3 = GEOS5 2012 (default)
   integer                             :: emission_scheme = 3
   ! -- global scaling factors for sea salt emissions (originally 0.875 in NGAC namelist)
-  real,     dimension(number_ss_bins) :: emission_scale = (/ 0.080, 0.080, 0.080, 0.080, 0.080 /)
+  real,     dimension(number_ss_bins) :: emission_scale = (/ 0.100, 0.100, 0.100, 0.100, 0.100 /)
 
   public
 
