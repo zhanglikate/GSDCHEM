@@ -94,7 +94,7 @@ CONTAINS
         kpbli,ktop,csum,ipr
 
    INTEGER :: nv,i,j,k,ICLDCK,jpr,npr
-   REAL    :: tcrit,dp,dq
+   REAL    :: tcrit,dp,dq,trmax
    INTEGER :: itf,jtf,ktf,iopt
 
    jpr=0
@@ -214,9 +214,10 @@ CONTAINS
          do I=its,itf
            if(pret(i).gt.0.)then
              trfall(i,j,nv)=trdep(i,nv) !lzhang
+             trmax = maxval(chem(i,kts:ktf,j,nv))
              do k=kts,ktop(i)
-               chem(i,k,j,nv)=min(maxval(chem(i,1:kte,j,nv)),chem(i,k,j,nv)+tracert(i,k,nv)*dt)!lzhang
-               chem(i,k,j,nv)=max(epsilc,chem(i,k,j,nv)) !lzhang
+               chem(i,k,j,nv)=min(trmax,chem(i,k,j,nv)+tracert(i,k,nv)*dt)
+               chem(i,k,j,nv)=max(epsilc,chem(i,k,j,nv))
                if(nv.eq.npr)then
                  cu_co_ten(i,k,j)=tracert(i,k,npr)*dt
                endif
