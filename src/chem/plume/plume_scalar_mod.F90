@@ -183,7 +183,7 @@ subroutine plumerise(m1,m2,m3,ia,iz,ja,jz,firesize,mean_fct   &
 
         !- espessura da camada vertical
         !- distribui a emissao flaming entre os niveis k1 e k2
-        dzi= 1./(zzcon(k2)-zzcon(k1-1))
+        dzi= 1./(zzcon(k2+1)-zzcon(k1))
         do k=k1,k2
           !use this in case the emission src is already in mixing ratio
           !rhodzi= 1./(dn0(k,i,j) * dz_flam)
