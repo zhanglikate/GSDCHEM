@@ -543,7 +543,7 @@ contains
 
     ! -- dust options
     select case (config % dust_opt)
-      case (DUST_OPT_NONE, DUST_OPT_GOCART, DUST_OPT_AFWA)
+      case (DUST_OPT_NONE, DUST_OPT_AFWA, DUST_OPT_FENGSHA, DUST_OPT_GOCART)
         ! -- valid option
       case default
         call chem_rc_set(CHEM_RC_FAILURE, msg="dust_opt not implemented", &
