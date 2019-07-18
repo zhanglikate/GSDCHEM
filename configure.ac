@@ -38,8 +38,19 @@ AS_IF([test "x$esmfmk" = x], [AC_MSG_ERROR([Unable to find required ESMF library
   ]
 )
 
-# Checks for MPI Fortran compiler
+# Looks for Fortran compiler
+# Assume we are cross compiling by default to prevent issues on WCOSS-Cray
+save_cross_compiling=${cross_compiling}
+cross_compiling=yes
+# Silence resulting warning
+save_ac_tool_warned=${ac_tool_warned}
+ac_tool_warned=yes
 AC_PROG_FC([$FC $ESMF_FC mpiifort mpifort mpif90 mpixlf90_r mpxlf90_r])
+# Restore original cross compilation settings
+cross_compiling=${save_cross_compiling}
+ac_tool_warned=${save_ac_tool_warned}
+
+# Checks if Fortran compiler supports MPI
 AC_MSG_CHECKING([whether MPI is supported])
 AC_LANG_PUSH([Fortran])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([],[dnl

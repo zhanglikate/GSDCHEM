@@ -2682,7 +2682,13 @@ else
 
 fi
 
-# Checks for MPI Fortran compiler
+# Looks for Fortran compiler
+# Assume we are cross compiling by default to prevent issues on WCOSS-Cray
+save_cross_compiling=${cross_compiling}
+cross_compiling=yes
+# Silence resulting warning
+save_ac_tool_warned=${ac_tool_warned}
+ac_tool_warned=yes
 ac_ext=${ac_fc_srcext-f}
 ac_compile='$FC -c $FCFLAGS $ac_fcflags_srcext conftest.$ac_ext >&5'
 ac_link='$FC -o conftest$ac_exeext $FCFLAGS $LDFLAGS $ac_fcflags_srcext conftest.$ac_ext $LIBS >&5'
@@ -3126,6 +3132,11 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
+# Restore original cross compilation settings
+cross_compiling=${save_cross_compiling}
+ac_tool_warned=${save_ac_tool_warned}
+
+# Checks if Fortran compiler supports MPI
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether MPI is supported" >&5
 $as_echo_n "checking whether MPI is supported... " >&6; }
 ac_ext=${ac_fc_srcext-f}
