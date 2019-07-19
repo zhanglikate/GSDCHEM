@@ -524,13 +524,6 @@ contains
           localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_oc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_oc))
 
-        call chem_io_read('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
-          path=trim(config % fireemi_inname), de=de, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
-          maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
-
         call chem_io_read('ebu_pm_25.dat', data % emiss_abu(:,:,config % species % p_e_pm_25), &
           path=trim(config % fireemi_inname), de=de, rc=localrc)
         if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -545,15 +538,14 @@ contains
           localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_so2)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_so2))
 
-        call chem_io_read('ebu_sulf.dat', data % emiss_abu(:,:,config % species % p_e_sulf), &
-          path=trim(config % fireemi_inname), de=de, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_sulf)), &
-          maxval(data % emiss_abu(:,:,config % species % p_e_sulf))
-
         select case (config % plumerise_flag)
           case (FIRE_OPT_MODIS)
+            call chem_io_read('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
+              path=trim(config % fireemi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
+              maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
             call chem_io_read('plumestuff.dat', data % plumestuff, recrange=(/ 1, config % num_plumestuff /), &
               path=trim(config % fireemi_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -1044,12 +1036,14 @@ contains
           localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_oc)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_oc))
 
-        call chem_io_write('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
-          path=trim(config % emi_outname), de=de, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
-          maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
+        if (config % plumerise_flag == FIRE_OPT_MODIS) then
+          call chem_io_write('ebu_pm_10.dat', data % emiss_abu(:,:,config % species % p_e_pm_10), &
+            path=trim(config % emi_outname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
+            localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
+            maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
+        end if
 
         call chem_io_write('ebu_pm_25.dat', data % emiss_abu(:,:,config % species % p_e_pm_25), &
           path=trim(config % emi_outname), de=de, rc=localrc)
@@ -1064,13 +1058,6 @@ contains
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_so2 - min/max = "2g16.6)') &
           localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_so2)), &
           maxval(data % emiss_abu(:,:,config % species % p_e_so2))
-
-        call chem_io_write('ebu_sulf.dat', data % emiss_abu(:,:,config % species % p_e_sulf), &
-          path=trim(config % emi_outname), de=de, rc=localrc)
-        if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-        if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ebu_sulf - min/max = "2g16.6)') &
-          localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_sulf)), &
-          maxval(data % emiss_abu(:,:,config % species % p_e_sulf))
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
             (config % chem_opt == CHEM_OPT_RACM_SOA_VBS)) then
