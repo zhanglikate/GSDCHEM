@@ -312,7 +312,7 @@ contains
     bio_emiss_opt     = 0
     biomass_burn_opt  = BURN_OPT_ENABLE
     plumerise_flag    = FIRE_OPT_MODIS
-    plumerisefire_frq = 30
+    plumerisefire_frq = 60
     emiss_inpt_opt    = 1
     gas_bc_opt        = 1
     gas_ic_opt        = 1
