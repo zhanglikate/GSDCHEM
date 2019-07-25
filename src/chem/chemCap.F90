@@ -176,7 +176,6 @@ module CHM
     if (importFieldCount > 0) then
       call NUOPC_Advertise(importState, importFieldNames, &
         TransferOfferGeomObject="cannot provide", &
-        TransferOfferField="cannot provide", &
         SharePolicyField="share", &
         rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -189,7 +188,6 @@ module CHM
     if (exportFieldCount > 0) then
       call NUOPC_Advertise(exportState, exportFieldNames, &
         TransferOfferGeomObject="cannot provide", &
-        TransferOfferField="cannot provide", &
         SharePolicyField="share", &
         rc=rc)
       if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
