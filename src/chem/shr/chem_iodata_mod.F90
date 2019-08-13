@@ -219,17 +219,11 @@ contains
           data % emiss_abu = 0._CHEM_KIND_R4
         end if
         select case (config % plumerise_flag)
-          case (FIRE_OPT_MODIS)
-            if (.not.allocated(data % plumestuff)) then
-              allocate(data % plumestuff(ids:ide,jds:jde,config % num_plumestuff), stat=localrc)
+          case (FIRE_OPT_MODIS, FIRE_OPT_GBBEPx)
+            if (.not.allocated(data % plume)) then
+              allocate(data % plume(ids:ide,jds:jde,config % num_plume_data), stat=localrc)
               if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-              data % plumestuff = 0._CHEM_KIND_R4
-            end if
-          case (FIRE_OPT_GBBEPx)
-            if (.not.allocated(data % plumefrp)) then
-              allocate(data % plumefrp(ids:ide,jds:jde), stat=localrc)
-              if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-              data % plumefrp = 0._CHEM_KIND_R4
+              data % plume = 0._CHEM_KIND_R4
             end if
           case default
             ! -- no additional options
@@ -546,17 +540,17 @@ contains
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ebu_pm_10 - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % emiss_abu(:,:,config % species % p_e_pm_10)), &
               maxval(data % emiss_abu(:,:,config % species % p_e_pm_10))
-            call chem_io_read('plumestuff.dat', data % plumestuff, recrange=(/ 1, config % num_plumestuff /), &
+            call chem_io_read('plumestuff.dat', data % plume, recrange=(/ 1, config % num_plume_data /), &
               path=trim(config % fireemi_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumestuff - min/max = "2g16.6)') &
-              localpe, de, tile, minval(data % plumestuff), maxval(data % plumestuff)
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % plume), maxval(data % plume)
           case (FIRE_OPT_GBBEPx)
-            call chem_io_read('plumefrp.dat', data % plumefrp, &
+            call chem_io_read('plumefrp.dat', data % plume, &
               path=trim(config % fireemi_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
-            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plumefrp - min/max = "2g16.6)') &
-              localpe, de, tile, minval(data % plumefrp), maxval(data % plumefrp)
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % plume), maxval(data % plume)
           case default
             ! -- no further options available
         end select

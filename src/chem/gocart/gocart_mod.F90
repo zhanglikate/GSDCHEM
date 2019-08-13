@@ -94,15 +94,16 @@ contains
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
     emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, ssm, &
-    h2o2_backgd, no3_backgd, oh_backgd, plumefrp, plumestuff, sandfrac, th_pvsrf,  &
+    h2o2_backgd, no3_backgd, oh_backgd, plume, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
     ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
     rainl, rainc, ebu, &
-    nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, num_soil_layers, &
-    num_chem, num_moist, num_emis_vol, num_emis_ant, num_emis_dust, num_emis_seas, &
+    nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, &
+    num_plume_data, num_soil_layers, num_chem, num_moist, num_emis_vol, &
+    num_emis_ant, num_emis_dust, num_emis_seas, &
     num_asym_par, num_bscat_coef, num_ext_coef, deg_lon, deg_lat, &
     its, ite, jts, jte, kts, kte, &
     ims, ime, jms, jme, kms, kme, tile, verbose, rc)
@@ -128,8 +129,9 @@ contains
     integer,            intent(in) :: its, ite, jts, jte, kts, kte
     integer,            intent(in) :: ims, ime, jms, jme, kms, kme
     integer,            intent(in) :: nvl, nvi, ntra, ntrb, nvl_gocart, &
-                                      nbands, num_ebu, num_ebu_in, num_soil_layers, &
-                                      num_chem, num_moist, num_emis_vol, num_emis_ant, &
+                                      nbands, num_ebu, num_ebu_in, num_plume_data, &
+                                      num_soil_layers, num_chem, num_moist, &
+                                      num_emis_vol, num_emis_ant, &
                                       num_emis_dust, num_emis_seas
     integer,            intent(in) :: num_asym_par, num_bscat_coef, num_ext_coef
     integer,            intent(in) :: numgas
@@ -152,7 +154,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_ash_dt
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_height
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_mass
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: plumefrp
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: sandfrac
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: th_pvsrf
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: h2o2_backgd
@@ -160,7 +161,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, nvl_gocart),     intent(in) :: oh_backgd
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_emis_ant),   intent(in) :: emiss_ab
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(in) :: emiss_abu
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_plume_data), intent(in) :: plume
 
     ! -- input pointers: indexing must always start from 1
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
@@ -562,9 +563,9 @@ contains
                    u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy, &
                    t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                    rho_phy,smois,num_soil_layers,num_chem,num_moist,        &
-                   emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_emis_ant,       &
+                   emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_plume_data,num_emis_ant,     &
                    num_emis_vol,kemit,call_gocart,plumerise_flag, &
-                   plumefrp,plumestuff,plume_frp, &
+                   plume,plume_frp, &
                    mean_fct_agtf,mean_fct_agef,mean_fct_agsv, &
                    mean_fct_aggr,firesize_agtf,firesize_agef, &
                    firesize_agsv,firesize_aggr, &

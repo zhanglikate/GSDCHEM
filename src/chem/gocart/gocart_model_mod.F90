@@ -130,8 +130,7 @@ contains
         data % h2o2_backgd, &
         data % no3_backgd, &
         data % oh_backgd, &
-        data % plumefrp, &
-        data % plumestuff, &
+        data % plume, &
         data % sandfrac, &
         data % th_pvsrf, &
         ! -- imported atmospheric fields
@@ -185,8 +184,8 @@ contains
         ! -- array size
         nl, ni, &
         config % ntra, config % ntrb, config % nvl_gocart, config % nbands, &
-        config % numgas, config % num_ebu, &
-        config % num_ebu_in, config % num_soil_layers, config % num_chem, config % num_moist, &
+        config % numgas, config % num_ebu, config % num_ebu_in, config % num_plume_data, &
+        config % num_soil_layers, config % num_chem, config % num_moist, &
         config % num_emis_vol, config % num_emis_ant, &
         config % num_emis_dust, config % num_emis_seas, &
         config % num_asym_par, config % num_bscat_coef, &

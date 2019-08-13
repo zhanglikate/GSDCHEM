@@ -33,9 +33,9 @@ contains
                        u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy,      &
                        t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                        rho_phy,smois,num_soil_layers,num_chem,num_moist,             &
-                       emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_emis_ant,            &
+                       emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_plume_data,num_emis_ant, &
                        num_emis_vol,kemit,call_gocart,plumerise_flag,                &
-                       plumefrp,plumestuff,plumedist,                                &
+                       plume,plumedist,                                &
                        mean_fct_agtf,mean_fct_agef,mean_fct_agsv,                    &
                        mean_fct_aggr,firesize_agtf,firesize_agef,                    &
                        firesize_agsv,firesize_aggr,                                  &
@@ -51,8 +51,9 @@ contains
     LOGICAL,      INTENT(IN) :: readrestart
     INTEGER,      INTENT(IN) :: chem_opt,chem_in_opt
     INTEGER,      INTENT(IN) :: ktau,nvl,nvlp1,ntra,ntrb,nvl_gocart
-    INTEGER,      INTENT(IN) :: num_ebu_in,num_soil_layers,num_chem,num_moist, &
-                                num_emis_vol,num_emis_ant,kemit,plumerise_flag
+    INTEGER,      INTENT(IN) :: num_ebu_in,num_plume_data,num_soil_layers,    &
+                                num_chem,num_moist,num_emis_vol,num_emis_ant, &
+                                kemit,plumerise_flag
     INTEGER,      INTENT(IN) :: julday
     INTEGER,      INTENT(IN) :: ids,ide, jds,jde, kds,kde, &
                                 ims,ime, jms,jme, kms,kme, &
@@ -159,8 +160,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_emis_ant),   intent(in) :: emiss_ab
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(in) :: emiss_abu
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_ebu_in),     intent(out) :: ebu_in
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(in) :: plumefrp
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 8), intent(in) :: plumestuff
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_plume_data), intent(in) :: plume
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_frp_plume), intent(out) :: plumedist
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: mean_fct_agtf
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),    intent(out) :: mean_fct_agef
@@ -399,23 +399,23 @@ contains
               ebu_in(i,j,p_ebu_in_bc)   = emiss_abu(i,j,p_e_bc)
               ebu_in(i,j,p_ebu_in_pm25) = emiss_abu(i,j,p_e_pm_25)
               ebu_in(i,j,p_ebu_in_so2)  = emiss_abu(i,j,p_e_so2)
-              mean_fct_agtf(i,j)=plumestuff(i,j,1)
-              mean_fct_agef(i,j)=plumestuff(i,j,2)
-              mean_fct_agsv(i,j)=plumestuff(i,j,3)
-              mean_fct_aggr(i,j)=plumestuff(i,j,4)
-              firesize_agtf(i,j)=plumestuff(i,j,5)
-              firesize_agef(i,j)=plumestuff(i,j,6)
-              firesize_agsv(i,j)=plumestuff(i,j,7)
-              firesize_aggr(i,j)=plumestuff(i,j,8)
+              mean_fct_agtf(i,j)=plume(i,j,1)
+              mean_fct_agef(i,j)=plume(i,j,2)
+              mean_fct_agsv(i,j)=plume(i,j,3)
+              mean_fct_aggr(i,j)=plume(i,j,4)
+              firesize_agtf(i,j)=plume(i,j,5)
+              firesize_agef(i,j)=plume(i,j,6)
+              firesize_agsv(i,j)=plume(i,j,7)
+              firesize_aggr(i,j)=plume(i,j,8)
             case (FIRE_OPT_GBBEPx)
               ebu_in(i,j,p_ebu_in_oc)   = frpc * emiss_abu(i,j,p_e_oc)
               ebu_in(i,j,p_ebu_in_bc)   = frpc * emiss_abu(i,j,p_e_bc)
               ebu_in(i,j,p_ebu_in_pm25) = frpc * emiss_abu(i,j,p_e_pm_25)
               ebu_in(i,j,p_ebu_in_so2)  = frpc * emiss_abu(i,j,p_e_so2)
               plumedist(i,j,p_frp_flam_frac) = flaming(catb(ivgtyp(i,j)))
-              plumedist(i,j,p_frp_mean     ) = frp2plume * plumefrp(i,j)
-              plumedist(i,j,p_frp_std      ) = 0.3_CHEM_KIND_R4   * frp2plume * plumefrp(i,j)
-              plumedist(i,j,p_frp_mean_size) = msize(ivgtyp(i,j)) * frp2plume * plumefrp(i,j)
+              plumedist(i,j,p_frp_mean     ) = frp2plume * plume(i,j,1)
+              plumedist(i,j,p_frp_std      ) = 0.3_CHEM_KIND_R4   * frp2plume * plume(i,j,1)
+              plumedist(i,j,p_frp_mean_size) = msize(ivgtyp(i,j)) * frp2plume * plume(i,j,1)
               plumedist(i,j,p_frp_std_size ) = 0.5_CHEM_KIND_R4 * plumedist(i,j,p_frp_mean_size)
             case default
               ! -- no further option available

@@ -115,7 +115,7 @@ module chem_config_mod
     integer :: num_asym_par    = 3
     INTEGER :: num_emis_dust   = 5
     INTEGER :: num_emis_seas   = 5
-    INTEGER :: num_plumestuff  = 8
+    INTEGER :: num_plume_data  = 0
     INTEGER :: ne_area         = 41
     INTEGER :: nmegan          = 1
     INTEGER :: mp_physics      = 0
@@ -583,8 +583,13 @@ contains
 
     ! -- fire options
     select case (config % plumerise_flag)
-      case (FIRE_OPT_NONE, FIRE_OPT_MODIS, FIRE_OPT_GBBEPx)
+      case (FIRE_OPT_NONE)
         ! -- valid option
+      case (FIRE_OPT_MODIS)
+        config % num_plume_data = 8
+      case (FIRE_OPT_GBBEPx)
+        ! -- valid option
+        config % num_plume_data = 1
       case default
         call chem_rc_set(CHEM_RC_FAILURE, msg="plumerise_flag not implemented", &
           file=__FILE__, line=__LINE__, rc=rc)
