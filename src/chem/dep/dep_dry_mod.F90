@@ -2,7 +2,7 @@ module dep_dry_mod
 
   use chem_types_mod, only : CHEM_KIND_R8
   use chem_const_mod, only : epsilc
-  use chem_config_mod, only : GOCART_SIMPLE => CHEM_OPT_GOCART
+  use chem_config_mod, only : GOCART_SIMPLE => CHEM_OPT_GOCART, CTRA_OPT_NONE
   use chem_tracers_mod, only : p_o3,p_dust_1,p_vash_1,p_vash_4,p_vash_10,p_dms, &
             GOCARTRACM_KPP, &
             RADM2SORG_AQ,RACMSORG_AQ, &
@@ -135,7 +135,7 @@ contains
                  n, nr, ipr, jpr, nvr,   &
                  idrydep_onoff
 
-      INTEGER :: chem_opt
+      INTEGER :: chem_conv_tr, chem_opt
 
       LOGICAL :: highnh3, rainflag, vegflag, wetflag
 !     CHARACTER (4) :: luse_typ,mminlu_loc
@@ -161,7 +161,8 @@ contains
 ! .. Intrinsic Functions ..
       INTRINSIC max, min
 
-      chem_opt = config_flags % chem_opt
+      chem_opt     = config_flags % chem_opt
+      chem_conv_tr = config_flags % chem_conv_tr
 
 !
 ! compute dry deposition velocities = ddvel
@@ -269,11 +270,16 @@ contains
       do k=kts,kte+1
          zzfull(k)=z_at_w(i,k,j)-z_at_w(i,kts,j)
       enddo
-      do k=kts,kte
+
+      if (chem_conv_tr == CTRA_OPT_NONE) then
+        ekmfull = 0.
+      else
+        ekmfull(kts)=0.
+        do k=kts+1,kte
          ekmfull(k)=max(1.e-6,exch_h(i,k,j))
-      enddo
-      ekmfull(kts)=0.
-      ekmfull(kte+1)=0.
+        enddo
+        ekmfull(kte+1)=0.
+      end if
 
 !!$! UNCOMMENT THIS AND FINE TUNE LEVELS TO YOUR DOMAIN IF YOU WANT TO
 !!$! FORCE MIXING TO A CERTAIN DEPTH:
