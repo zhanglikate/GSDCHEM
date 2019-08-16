@@ -55,6 +55,8 @@ module dust_data_mod
        0.95,    & ! Silty Clay      - 11
        1.00,    & ! Clay            - 12
        9.999 /)   ! Other           - 13
+  ! -- FENGSHA uses precalculated drag partition from ASCAT. See: Prigent et al. (2012,2015)
+  integer :: dust_calcdrag = 1
 
   ! -- values set at initialization
   real :: dust_alpha = 0.

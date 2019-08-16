@@ -123,10 +123,11 @@ contains
         data % emiss_tr_dt, &
         data % emiss_tr_height, &
         data % emiss_tr_mass,   &
-        data % ero1, &
-        data % ero2, &
-        data % ero3, &
-        data % ssm,  &
+        data % ero1,  &
+        data % ero2,  &
+        data % ero3,  &
+        data % rdrag, &
+        data % ssm,   &
         data % h2o2_backgd, &
         data % no3_backgd, &
         data % oh_backgd, &

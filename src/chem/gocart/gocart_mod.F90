@@ -64,6 +64,7 @@ contains
          n = min(fengsha_maxstypes, size(config % dust_uthres))
          dust_uthres(1:n) = config % dust_uthres(1:n)
        end if
+       dust_calcdrag = config % dust_calcdrag
      case (DUST_OPT_GOCART )
        dust_alpha = gocart_alpha
        dust_gamma = gocart_gamma
@@ -93,7 +94,7 @@ contains
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
-    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, ssm, &
+    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, rdrag, ssm, &
     h2o2_backgd, no3_backgd, oh_backgd, plume, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
@@ -147,6 +148,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero1
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero3
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rdrag
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ssm
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_dt
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_height
@@ -604,7 +606,7 @@ contains
        call gocart_dust_fengsha_driver(ktau,dt,rri,t_phy,moist,u_phy,  &
             v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ssm,        &
             ivgtyp,isltyp,vegfra,snowh,xland,xlat,xlong,gsw,dxy,grvity,&
-            emis_dust,srce_dust,dusthelp,ust,znt,clayf,sandf,          &
+            emis_dust,srce_dust,dusthelp,ust,znt,clayf,sandf,rdrag,    &
             num_emis_dust,num_moist,num_chem,num_soil_layers,          &
             ids,ide, jds,jde, kds,kde,                                 &
             ims,ime, jms,jme, kms,kme,                                 &

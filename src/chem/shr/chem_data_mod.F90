@@ -21,6 +21,7 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero1              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero2              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero3              ! dust erosion factor
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: rdrag             ! Drag Partition Map (FENGSHA)
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ssm               ! PJZ Sediment Supply Map (FENGSHA)
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: h2o2_backgd       ! H2O2 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: no3_backgd        ! NO3 background for GOCART
@@ -119,6 +120,10 @@ contains
     end if
     if (allocated(data % ero3)) then
       deallocate(data % ero3, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
+    if (allocated(data % rdrag)) then
+      deallocate(data % rdrag, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (allocated(data % ssm)) then

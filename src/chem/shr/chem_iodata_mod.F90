@@ -125,6 +125,13 @@ contains
         data % ero3 = 0._CHEM_KIND_R4
       end if
 
+      ! -- drag partition map (FENGSHA)
+      if (.not.allocated(data % rdrag)) then
+        allocate(data % rdrag(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % rdrag = 0._CHEM_KIND_R4
+      end if
+
       ! -- PJZ sediment supply map
       if (.not.allocated(data % ssm)) then
         allocate(data % ssm(ids:ide,jds:jde), stat=localrc)
@@ -360,6 +367,13 @@ contains
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
             localpe, de, tile, minval(data % ssm), maxval(data % ssm)
+          if (config % dust_calcdrag == 1) then
+            ! -- drag partition map
+            call chem_io_read('rdrag.dat', data % rdrag, path=trim(config % emi_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," rdrag - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % rdrag), maxval(data % rdrag)
+          end if
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &
@@ -872,6 +886,13 @@ contains
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
             localpe, de, tile, minval(data % ssm), maxval(data % ssm)
+          if (config % dust_calcdrag == 1) then
+            ! -- drag partition map
+            call chem_io_write('rdrag.dat', data % rdrag, path=trim(config % emi_outname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+            if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," rdrag - min/max = "2g16.6)') &
+              localpe, de, tile, minval(data % rdrag), maxval(data % rdrag)
+          end if
         end if
 
         if ((config % chem_opt == CHEM_OPT_GOCART_RACM) .or. &

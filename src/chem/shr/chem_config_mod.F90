@@ -128,6 +128,7 @@ module chem_config_mod
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
     real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
+    integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
 
@@ -178,7 +179,7 @@ contains
     integer, parameter :: unit = 200
 
     integer                :: localrc, i, iostat, is
-    integer                :: buffer(26)
+    integer                :: buffer(27)
     real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins)
     character(CHEM_MAXSTR) :: sbuffer(4)
 
@@ -230,6 +231,7 @@ contains
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
     real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
+    integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
 
@@ -282,6 +284,7 @@ contains
       dust_alpha,                &
       dust_gamma,                &
       dust_uthres,               &
+      dust_calcdrag,             &
       seas_emis_scale,           &
       seas_emis_scheme
 
@@ -301,6 +304,7 @@ contains
     dust_alpha        = 0._CHEM_KIND_R4
     dust_gamma        = 0._CHEM_KIND_R4
     dust_uthres       = 0._CHEM_KIND_R4
+    dust_calcdrag     = 1
     seas_emis_scale   = 0._CHEM_KIND_R4
     seas_emis_scheme  = 0
     depo_fact         = 0._CHEM_KIND_R4
@@ -386,7 +390,8 @@ contains
       aer_ra_feedback,   &
       chem_in_opt,       &
       archive_step,      &
-      seas_emis_scheme   &
+      seas_emis_scheme,  &
+      dust_calcdrag      &
       /)
     ! -- broadcast integer buffer
     call chem_comm_bcast(buffer, rc=localrc)
@@ -418,6 +423,7 @@ contains
     config % chem_in_opt       = buffer( 24 )
     config % archive_step      = buffer( 25 )
     config % seas_emis_scheme  = buffer( 26 )
+    config % dust_calcdrag     = buffer( 27 )
 
     ! -- pack real variables in buffer
     rbuffer(1:8) = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, &
