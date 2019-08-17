@@ -304,7 +304,7 @@ contains
     dust_alpha        = 0._CHEM_KIND_R4
     dust_gamma        = 0._CHEM_KIND_R4
     dust_uthres       = 0._CHEM_KIND_R4
-    dust_calcdrag     = 1
+    dust_calcdrag     = 0
     seas_emis_scale   = 0._CHEM_KIND_R4
     seas_emis_scheme  = 0
     depo_fact         = 0._CHEM_KIND_R4
