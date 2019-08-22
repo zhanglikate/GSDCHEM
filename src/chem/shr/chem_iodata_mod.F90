@@ -351,11 +351,11 @@ contains
         
         select case (config % dust_opt)
           case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
-            call chem_io_read('clay.dat', data % clayfrac, path=trim(config % emi_inname), de=de, rc=localrc)
+            call chem_io_read('clay.dat', data % clayfrac, path=trim(config % dust_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," clayfrac - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % clayfrac), maxval(data % clayfrac)
-            call chem_io_read('sand.dat', data % sandfrac, path=trim(config % emi_inname), de=de, rc=localrc)
+            call chem_io_read('sand.dat', data % sandfrac, path=trim(config % dust_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," sandfrac - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % sandfrac), maxval(data % sandfrac)
@@ -363,13 +363,13 @@ contains
 
         if (config % dust_opt == DUST_OPT_FENGSHA) then
           ! -- PJZ sediment supply map
-          call chem_io_read('ssm.dat', data % ssm, path=trim(config % emi_inname), de=de, rc=localrc)
+          call chem_io_read('ssm.dat', data % ssm, path=trim(config % dust_inname), de=de, rc=localrc)
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
             localpe, de, tile, minval(data % ssm), maxval(data % ssm)
           if (config % dust_calcdrag == 1) then
             ! -- drag partition map
-            call chem_io_read('rdrag.dat', data % rdrag, path=trim(config % emi_inname), de=de, rc=localrc)
+            call chem_io_read('rdrag.dat', data % rdrag, path=trim(config % dust_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," rdrag - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % rdrag), maxval(data % rdrag)

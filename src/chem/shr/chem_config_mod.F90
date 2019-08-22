@@ -43,6 +43,7 @@ module chem_config_mod
 
   ! -- data structure for configuration options
   type chem_config_type
+    character(len=CHEM_MAXSTR) :: dust_inname        = ''
     character(len=CHEM_MAXSTR) :: emi_inname         = ''
     character(len=CHEM_MAXSTR) :: fireemi_inname     = ''
     character(len=CHEM_MAXSTR) :: emi_outname        = ''
@@ -181,9 +182,10 @@ contains
     integer                :: localrc, i, iostat, is
     integer                :: buffer(27)
     real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins)
-    character(CHEM_MAXSTR) :: sbuffer(4)
+    character(CHEM_MAXSTR) :: sbuffer(5)
 
     ! -- variables in input namelist
+    character(len=CHEM_MAXSTR) :: dust_inname
     character(len=CHEM_MAXSTR) :: emi_inname
     character(len=CHEM_MAXSTR) :: fireemi_inname
     character(len=CHEM_MAXSTR) :: emi_outname
@@ -237,6 +239,7 @@ contains
 
 
     namelist /chem_nml/          &
+      dust_inname,               &
       emi_inname,                &
       fireemi_inname,            &
       emi_outname,               &
@@ -335,6 +338,7 @@ contains
     conv_tr_aqchem    = 0
     have_bcs_chem     = .false.
     io_style_emissions = 0
+    dust_inname        = ""
     emi_inname         = ""
     fireemi_inname     = ""
     emi_outname        = ""
@@ -463,15 +467,17 @@ contains
     end do
 
     ! -- pack strings into buffer
-    sbuffer = (/ chem_hist_outname, emi_inname, fireemi_inname, emi_outname /)
+    sbuffer = (/ chem_hist_outname, dust_inname, &
+                 emi_inname, fireemi_inname, emi_outname /)
     ! -- broadcast string variable
     call chem_comm_bcast(sbuffer, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
     ! -- set string values to config
     config % chem_hist_outname = sbuffer(1)
-    config % emi_inname        = sbuffer(2)
-    config % fireemi_inname    = sbuffer(3)
-    config % emi_outname       = sbuffer(4)
+    config % dust_inname       = sbuffer(2)
+    config % emi_inname        = sbuffer(3)
+    config % fireemi_inname    = sbuffer(4)
+    config % emi_outname       = sbuffer(5)
 
   end subroutine chem_config_read
 
@@ -549,8 +555,13 @@ contains
 
     ! -- dust options
     select case (config % dust_opt)
-      case (DUST_OPT_NONE, DUST_OPT_AFWA, DUST_OPT_FENGSHA, DUST_OPT_GOCART)
+      case (DUST_OPT_NONE)
         ! -- valid option
+      case (DUST_OPT_AFWA, DUST_OPT_FENGSHA, DUST_OPT_GOCART)
+        ! -- valid option
+        ! -- use emission path for input files if not specified otherwise
+        if (len_trim(config % dust_inname) == 0) &
+          config % dust_inname = config % emi_inname
       case default
         call chem_rc_set(CHEM_RC_FAILURE, msg="dust_opt not implemented", &
           file=__FILE__, line=__LINE__, rc=rc)
