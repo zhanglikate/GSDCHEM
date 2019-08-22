@@ -24,14 +24,14 @@ contains
                        ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height,          &
                        emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,               &
                        emiss_tr_dt,snwdph2d,vfrac2d,vtype2d,stype2d,us3d,vs3d,ws3d,           &
-                       slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf,&
+                       slmsk2d,zorl2d,dqdt,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf,&
                        oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,            &
                        nvl_gocart, ttday,tcosz,gmt,julday,area,ero1,                 &
                        ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvlp1,ntra,       &
                        relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb,       &
                        g,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,              &
                        u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy,      &
-                       t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
+                       t8w,p8w,dqdti,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                        rho_phy,smois,num_soil_layers,num_chem,num_moist,             &
                        emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_plume_data,num_emis_ant, &
                        num_emis_vol,kemit,call_gocart,plumerise_flag,                &
@@ -77,6 +77,7 @@ contains
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
 
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: dqdt
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
@@ -142,6 +143,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: dxy
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: t8w
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: p8w
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: dqdti
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme), intent(out) :: exch_h
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: pbl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: hfx
@@ -454,6 +456,7 @@ contains
           t_phy(i,k,j)=tk3d(ip,jp,kkp)
           p_phy(i,k,j)=prl3d(ip,jp,kkp)
           u_phy(i,k,j)=us3d(ip,jp,kkp)
+          dqdti(i,k,j)=dqdt(ip,jp,kkp)
           exch_h(i,k,j)=exch(ip,jp,kkp)
           v_phy(i,k,j)=vs3d(ip,jp,kkp)
           rho_phy(i,k,j)=p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(ip,jp,kkp,p_atm_shum)))

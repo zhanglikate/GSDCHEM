@@ -17,7 +17,7 @@ CONTAINS
 
 SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
          chem,rho_phy,dz8w,p8w,p_phy,         &
-         dusthelp,seashelp,area,g, &
+         dusthelp,seashelp,area,sedim,g, &
          num_moist,num_chem,                  &
          ids,ide, jds,jde, kds,kde,                                        &
          ims,ime, jms,jme, kms,kme,                                        &
@@ -25,23 +25,25 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 
   IMPLICIT NONE
 
-   INTEGER,      INTENT(IN   ) ::                      &
+  INTEGER,      INTENT(IN   ) ::                      &
                                   num_moist,num_chem,                      &
                                   ids,ide, jds,jde, kds,kde,               &
                                   ims,ime, jms,jme, kms,kme,               &
                                   its,ite, jts,jte, kts,kte
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
+  REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
          INTENT(IN ) ::                                   moist
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
+  REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
          INTENT(INOUT ) ::                                   chem
-   REAL, DIMENSION( ims:ime, jms:jme ),                 &
+  REAL, DIMENSION( ims:ime, jms:jme ),                 &
          INTENT(IN ) :: dusthelp,seashelp
-   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
+  REAL, DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
           INTENT(IN   ) ::  t_phy,p_phy,dz8w,p8w,rho_phy
-   REAL,  DIMENSION( ims:ime ,  jms:jme ),                        &
+  REAL, DIMENSION( ims:ime ,  jms:jme ),                        &
           INTENT(IN   ) ::  area
-
   REAL, INTENT(IN   ) :: dt,g
+
+  REAL, DIMENSION( ims:ime, jms:jme, num_chem ), INTENT(OUT  ) :: sedim
+
   integer :: nv,nmx,i,j,k,kk,lmx,iseas,idust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
@@ -58,6 +60,8 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
   real(CHEM_KIND_R8), DIMENSION (5) :: bstl_seas
   real(CHEM_KIND_R8) conver,converi
   real(CHEM_KIND_R8),parameter::max_default=0.
+
+  sedim = 0.
 !      conver=1.e-9*mwdry
 !      converi=1.e9/mwdry
        conver=1.e-9
@@ -220,6 +224,9 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
                (3.80*exp(17.27*(t_phy(i,k,j)-273.)/ &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
+          do nv = 1, num_chem
+            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,j,k,nv)*p8w(i,j,k)/g
+          enddo
           enddo
 !
 ! max dust in column
@@ -314,6 +321,13 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
             chem(i,k,j,p_seas_5)=0.
           enddo
           endif   ! end seasopt==1
+
+          do nv = 1, num_chem
+            do k = kts,kte
+              sedim(i,j,nv) = sedim(i,j,nv) - chem(i,j,k,nv)*p8w(i,j,k)/g
+            enddo
+            sedim(i,j,nv) = sedim(i,j,nv) / dt
+          enddo
 !
 !
 !

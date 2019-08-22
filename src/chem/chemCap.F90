@@ -12,7 +12,7 @@ module CHM
   implicit none
 
   ! -- import fields
-  integer, parameter :: importFieldCount = 25
+  integer, parameter :: importFieldCount = 26
   character(len=*), dimension(importFieldCount), parameter :: &
     importFieldNames = (/ &
       "inst_pres_interface                  ", &
@@ -29,6 +29,7 @@ module CHM
       "surface_cell_area                    ", &
       "inst_convective_rainfall_amount      ", &
       "inst_exchange_coefficient_heat_levels", &
+      "inst_spec_humid_conv_tendency_levels ", &
       "inst_friction_velocity               ", &
       "inst_rainfall_amount                 ", &
       "inst_soil_moisture_content           ", &

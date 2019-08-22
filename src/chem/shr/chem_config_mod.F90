@@ -14,6 +14,7 @@ module chem_config_mod
   integer, parameter :: CHEM_OPT_GOCART_RACM  = 301
   integer, parameter :: CHEM_OPT_RACM_SOA_VBS = 108
   integer, parameter :: CHEM_OPT_MAX          = 500
+  integer, parameter :: chem_tune_tracers     = 20
   ! -- dust scheme
   integer, parameter :: DUST_OPT_NONE    = 0
   integer, parameter :: DUST_OPT_GOCART  = 1
@@ -37,6 +38,10 @@ module chem_config_mod
   ! -- subgrid convective transport
   integer, parameter :: CTRA_OPT_NONE  = 0
   integer, parameter :: CTRA_OPT_GRELL = 2
+  ! -- large scale wet deposition
+  integer, parameter :: WDLS_OPT_NONE  = 0
+  integer, parameter :: WDLS_OPT_GSD   = 1
+  integer, parameter :: WDLS_OPT_NGAC  = 2
 
   ! -- input namelist file name
   character(len=*), parameter :: chem_file_nml = 'input.nml'
@@ -76,6 +81,7 @@ module chem_config_mod
     integer :: biomass_burn_opt
     integer :: plumerise_flag
     integer :: plumerisefire_frq
+    integer :: wetdep_ls_opt
     integer :: emiss_inpt_opt
     integer :: gas_bc_opt
     integer :: gas_ic_opt
@@ -132,6 +138,7 @@ module chem_config_mod
     integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
+    real(CHEM_KIND_R4) :: wetdep_ls_alpha(chem_tune_tracers)
 
     type(chem_species_type), pointer :: species => null()
 
@@ -168,6 +175,9 @@ module chem_config_mod
   public :: SEAS_OPT_NONE,    &
             SEAS_OPT_GOCART,  &
             SEAS_OPT_NGAC
+  public :: WDLS_OPT_NONE,    &
+            WDLS_OPT_GSD,     &
+            WDLS_OPT_NGAC
 
 contains
 
@@ -180,8 +190,8 @@ contains
     integer, parameter :: unit = 200
 
     integer                :: localrc, i, iostat, is
-    integer                :: buffer(27)
-    real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins)
+    integer                :: buffer(28)
+    real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins+chem_tune_tracers)
     character(CHEM_MAXSTR) :: sbuffer(5)
 
     ! -- variables in input namelist
@@ -218,6 +228,7 @@ contains
     integer :: biomass_burn_opt
     integer :: plumerise_flag
     integer :: plumerisefire_frq
+    integer :: wetdep_ls_opt
     integer :: emiss_inpt_opt
     integer :: gas_bc_opt
     integer :: gas_ic_opt
@@ -236,6 +247,7 @@ contains
     integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
+    real(CHEM_KIND_R4) :: wetdep_ls_alpha(chem_tune_tracers)
 
 
     namelist /chem_nml/          &
@@ -263,6 +275,7 @@ contains
       chem_in_opt,               &
       phot_opt,                  &
       drydep_opt,                &
+      wetdep_ls_opt,             &
       depo_fact,                 &
       emiss_opt,                 &
       dust_opt,                  &
@@ -289,7 +302,8 @@ contains
       dust_uthres,               &
       dust_calcdrag,             &
       seas_emis_scale,           &
-      seas_emis_scheme
+      seas_emis_scheme,          &
+      wetdep_ls_alpha
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -320,6 +334,8 @@ contains
     biomass_burn_opt  = BURN_OPT_ENABLE
     plumerise_flag    = FIRE_OPT_MODIS
     plumerisefire_frq = 60
+    wetdep_ls_opt     = WDLS_OPT_GSD
+    wetdep_ls_alpha   = -999._CHEM_KIND_R4
     emiss_inpt_opt    = 1
     gas_bc_opt        = 1
     gas_ic_opt        = 1
@@ -395,7 +411,8 @@ contains
       chem_in_opt,       &
       archive_step,      &
       seas_emis_scheme,  &
-      dust_calcdrag      &
+      dust_calcdrag,     &
+      wetdep_ls_opt      &
       /)
     ! -- broadcast integer buffer
     call chem_comm_bcast(buffer, rc=localrc)
@@ -428,6 +445,7 @@ contains
     config % archive_step      = buffer( 25 )
     config % seas_emis_scheme  = buffer( 26 )
     config % dust_calcdrag     = buffer( 27 )
+    config % wetdep_ls_opt     = buffer( 28 )
 
     ! -- pack real variables in buffer
     rbuffer(1:8) = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, &
@@ -438,9 +456,14 @@ contains
       rbuffer(i+is) = dust_uthres(i)
     end do
 
-    is = 8 + dust_tune_uthres
+    is = is + dust_tune_uthres
     do i = 1, seas_tune_bins
       rbuffer(i+is) = seas_emis_scale(i)
+    end do
+
+    is = is + seas_tune_bins
+    do i = 1, chem_tune_tracers
+      rbuffer(i+is) = wetdep_ls_alpha(i)
     end do
 
     ! -- broadcast real buffer
@@ -461,9 +484,14 @@ contains
       config % dust_uthres(i) = rbuffer(i+is)
     end do
 
-    is = 8 + dust_tune_uthres
+    is = is + dust_tune_uthres
     do i = 1, seas_tune_bins
       config % seas_emis_scale(i) = rbuffer(i+is)
+    end do
+
+    is = is + seas_tune_bins
+    do i = 1, chem_tune_tracers
+      config % wetdep_ls_alpha(i) = rbuffer(i+is)
     end do
 
     ! -- pack strings into buffer
@@ -617,6 +645,20 @@ contains
     select case (config % chem_conv_tr)
       case(CTRA_OPT_NONE, CTRA_OPT_GRELL)
         ! -- valid option
+      case default
+        call chem_rc_set(CHEM_RC_FAILURE, msg="chem_conv_tr not implemented", &
+          file=__FILE__, line=__LINE__, rc=rc)
+        return
+    end select
+
+    ! -- large scale wet deposition
+    select case (config % wetdep_ls_opt)
+      case(WDLS_OPT_NONE, WDLS_OPT_GSD)
+        ! -- valid option
+      case(WDLS_OPT_NGAC)
+        if (chem_rc_test((config % chem_opt /= CHEM_OPT_GOCART), &
+          msg="NGAC large-scale wet deposition only works with GOCART", &
+          file=__FILE__, line=__LINE__, rc=rc)) return
       case default
         call chem_rc_set(CHEM_RC_FAILURE, msg="chem_conv_tr not implemented", &
           file=__FILE__, line=__LINE__, rc=rc)

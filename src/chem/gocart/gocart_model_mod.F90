@@ -106,7 +106,7 @@ contains
       call gocart_advance(config % readrestart, config % chem_opt,&
         config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
         config % seas_opt, config % dust_opt, config % dmsemis_opt, &
-        config % aer_ra_feedback, &
+        config % wetdep_ls_opt,  config % aer_ra_feedback, &
         config % call_chemistry, config % call_radiation, &
         config % plumerise_flag, config % plumerisefire_frq, &
         config % kemit, &
@@ -149,6 +149,7 @@ contains
         stateIn % vtype2d, &
         stateIn % vfrac2d, &
         stateIn % zorl2d, &
+        stateIn % dqdt, &
         stateIn % exch, &
         stateIn % ph3d, &
         stateIn % phl3d, &

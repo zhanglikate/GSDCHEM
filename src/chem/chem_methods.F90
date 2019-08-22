@@ -345,6 +345,12 @@ contains
               line=__LINE__, &
               file=__FILE__)) &
               return  ! bail
+          case ("inst_spec_humid_conv_tendency_levels")
+            call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % dqdt, rc=rc)
+            if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+              line=__LINE__, &
+              file=__FILE__)) &
+              return  ! bail
           case ("inst_friction_velocity")
             call ESMF_FieldGet(field, localDe=localDe, farrayPtr=stateIn % us2d, rc=rc)
             if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &

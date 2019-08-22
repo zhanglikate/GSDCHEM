@@ -22,6 +22,7 @@ module chem_state_mod
     real(CHEM_KIND_R8), dimension(:,:),     pointer :: zorl2d   => null()
 
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: exch     => null()
+    real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: dqdt     => null()
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: ph3d     => null()
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: phl3d    => null()
     real(CHEM_KIND_R8), dimension(:,:,:),   pointer :: pr3d     => null()

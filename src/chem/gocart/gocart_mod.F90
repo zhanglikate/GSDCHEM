@@ -19,7 +19,9 @@ module gocart_mod
                               DUST_OPT_NONE,         &
                               FIRE_OPT_GBBEPx,       &
                               FIRE_OPT_MODIS,        &
-                              SEAS_OPT_NONE
+                              SEAS_OPT_NONE,         &
+                              WDLS_OPT_GSD,          &
+                              WDLS_OPT_NGAC
 
   use gocart_prep_mod
   use gocart_settling_mod
@@ -46,7 +48,7 @@ contains
    integer,     optional, intent(out) :: rc
 
    ! -- local variables
-   integer :: n
+   integer :: localrc, n
 
    ! -- begin
    if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -85,11 +87,16 @@ contains
    end if
    if (config % seas_emis_scheme > 0) emission_scheme = config % seas_emis_scheme
 
+   ! -- initialize wet deposition module
+   call dep_wet_ls_init(config, localrc)
+   if (chem_rc_check(localrc, msg="Failure initializing wet deposition", &
+     file=__FILE__, line=__LINE__, rc=rc)) return
+
   end subroutine gocart_init
 
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
-    biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, aer_ra_feedback, &
+    biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, wetdep_ls_opt, aer_ra_feedback, &
     call_chemistry, call_rad, plumerise_flag, plumerisefire_frq, &
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
@@ -97,7 +104,7 @@ contains
     emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, rdrag, ssm, &
     h2o2_backgd, no3_backgd, oh_backgd, plume, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
-    ts2d, us2d, vtype2d, vfrac2d, zorl2d, exch, ph3d, phl3d, pr3d, prl3d, &
+    ts2d, us2d, vtype2d, vfrac2d, zorl2d, dqdt, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
     ext_cof, sscal, asymp, aod2d,&
     p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
@@ -117,6 +124,7 @@ contains
     integer,            intent(in) :: seas_opt
     integer,            intent(in) :: dust_opt
     integer,            intent(in) :: dmsemis_opt
+    integer,            intent(in) :: wetdep_ls_opt
     integer,            intent(in) :: aer_ra_feedback
     integer,            intent(in) :: call_chemistry
     integer,            intent(in) :: call_rad
@@ -183,6 +191,7 @@ contains
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
 
+    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: dqdt
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
     real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
@@ -247,6 +256,8 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: mean_fct_agtf
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: pbl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: raincv_b
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: precc
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: precl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rcav
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rnav
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rmol
@@ -278,6 +289,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: backg_oh
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: cor3
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: dz8w
+    real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: dqdti
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: exch_h
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: h2o2_t
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme) :: h2oai
@@ -328,6 +340,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: var_rmv
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: tr_fall
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: dry_fall
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem)       :: sedim
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_moist)      :: moist
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:16)             :: tauaerlw
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:4)              :: tauaersw
@@ -403,6 +416,8 @@ contains
     mean_fct_agtf = 0._CHEM_KIND_R4
     pbl           = 0._CHEM_KIND_R4
     raincv_b      = 0._CHEM_KIND_R4
+    precc         = 0._CHEM_KIND_R4
+    precl         = 0._CHEM_KIND_R4
     rcav          = 0._CHEM_KIND_R4
     rnav          = 0._CHEM_KIND_R4
     rmol          = 0._CHEM_KIND_R4
@@ -431,6 +446,7 @@ contains
     backg_oh      = 0._CHEM_KIND_R4
     cor3          = 0._CHEM_KIND_R4
     dz8w          = 0._CHEM_KIND_R4
+    dqdti         = 0._CHEM_KIND_R4
     exch_h        = 0._CHEM_KIND_R4
     h2o2_t        = 0._CHEM_KIND_R4
     h2oai         = 0._CHEM_KIND_R4
@@ -479,6 +495,7 @@ contains
     var_rmv       = 0._CHEM_KIND_R4
     tr_fall       = 0._CHEM_KIND_R4
     dry_fall      = 0._CHEM_KIND_R4
+    sedim         = 0._CHEM_KIND_R4
     moist         = 0._CHEM_KIND_R4
     tauaerlw      = 0._CHEM_KIND_R4
     tauaersw      = 0._CHEM_KIND_R4
@@ -542,6 +559,9 @@ contains
       jp = j - jts + 1
       do i = its, ite
         ip = i - its + 1
+        ! -- compute incremental large-scale rainfall
+        precc(i,j) = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
+        precl(i,j) = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)), 0._CHEM_KIND_R4)
         ! -- compute incremental large-scale and convective rainfall
         rcav(i,j)  = max(m2mm * rc2d(ip,jp)                 - rainc(i,j), 0._CHEM_KIND_R4)
         rnav(i,j)  = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)) - rainl(i,j), 0._CHEM_KIND_R4)
@@ -556,14 +576,14 @@ contains
                    ts2d,us2d,rsds,pr3d,prl3d,ph3d,phl3d,emiss_ash_mass,emiss_ash_height, &
                    emiss_ash_dt,dm0,emiss_tr_mass,emiss_tr_height,      &
                    emiss_tr_dt,snwdph2d,vfrac2d,vtype2d,stype2d,us3d,vs3d,ws3d,  &
-                   slmsk2d,zorl2d,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf, &
+                   slmsk2d,zorl2d,dqdt,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf, &
                    oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,   &
                    nvl_gocart,ttday,tcosz,gmt,julday,area,ero1,   &
                    ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvi,ntra, &
                    relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb, &
                    grvity,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,        &
                    u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy, &
-                   t8w,p8w,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
+                   t8w,p8w,dqdti,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                    rho_phy,smois,num_soil_layers,num_chem,num_moist,        &
                    emiss_abu,ebu_in,emiss_ab,num_ebu_in,num_plume_data,num_emis_ant,     &
                    num_emis_vol,kemit,call_gocart,plumerise_flag, &
@@ -655,7 +675,7 @@ contains
     if ((dust_opt /= DUST_OPT_NONE) .or. &
         (seas_opt /= SEAS_OPT_NONE)) then
       call gocart_settling_driver(dt,t_phy,moist,  &
-        chem,rho_phy,dz8w,p8w,p_phy,   &
+        chem,rho_phy,dz8w,p8w,p_phy,sedim, &
         dusthelp,seashelp,dxy,grvity,  &
         num_moist,num_chem,            &
         ids,ide, jds,jde, kds,kde,     &
@@ -768,11 +788,24 @@ contains
        its,ite, jts,jte, kts,kte)
 
      ! -- ls wet deposition
-     call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,num_moist, &
-         num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt,            &
-         ids,ide, jds,jde, kds,kde,                               &
-         ims,ime, jms,jme, kms,kme,                               &
-         its,ite, jts,jte, kts,kte)
+     select case (wetdep_ls_opt)
+       case (WDLS_OPT_GSD)
+         call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv, &
+                        num_moist,num_chem,numgas,p_qc,p_qi,&
+                        dz8w,vvel,chem_opt,                 &
+                        ids,ide, jds,jde, kds,kde,          &
+                        ims,ime, jms,jme, kms,kme,          &
+                        its,ite, jts,jte, kts,kte)
+       case (WDLS_OPT_NGAC)
+         call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
+                               num_chem,var_rmv,chem,p_phy,t_phy,  &
+                               rho_phy,dqdti,precc,precl,          &
+                               ims,ime, jms,jme, kms,kme, localrc)
+         if (chem_rc_check(localrc, msg="Failure in NGAC wet removal scheme", &
+           file=__FILE__, line=__LINE__, rc=rc)) return
+       case default
+         ! -- no further option implemented
+    end select
 
     if (call_gocart) then
       call gocart_chem_driver(ktau,dt,dtstep,gmt,julday,    &
@@ -911,6 +944,7 @@ contains
     trab(:,:,6) = ebu_in(its:ite, jts:jte, p_ebu_in_so2)
 
     ! -- output sedimentation and dry/wet deposition
+    call gocart_diag_store(1, sedim, trdf)
     ! -- output dry deposition
     call gocart_diag_store(2, dry_fall, trdf)
     ! -- output large-scale wet deposition
