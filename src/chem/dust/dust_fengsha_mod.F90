@@ -168,7 +168,8 @@ contains
              else
                 ! use the precalculated version derived from ASCAT; Prigent et al. (2012,2015)
                 ! doi:10.1109/TGRS.2014.2338913 & doi:10.5194/amt-5-2703-2012
-                if (rdrag(i,j) /= 0.) then
+                ! pick only valid values
+                if (rdrag(i,j) > 0.) then
                   R = real(rdrag(i,j), kind=CHEM_KIND_R8)
                 else
                   cycle
