@@ -459,6 +459,7 @@ CONTAINS
         zu(i,k)=0.
         zd(i,k)=0.
         hcot(i,k)=0.
+        he(i,k)=0.
         cd(i,k)=1.e-9 ! 1.*entr_rate
         cdd(i,k)=0.
       enddo
@@ -1510,10 +1511,10 @@ CONTAINS
         p,t,q
      real,    dimension (its:ite,kts:kte)                              &
         ,intent (out  )                   ::                           &
-        he,hes,qes
+        hes,qes
      real,    dimension (its:ite,kts:kte)                              &
         ,intent (inout)                   ::                           &
-        z
+        he,z
      real,    dimension (its:ite)                                      &
         ,intent (in   )                   ::                           &
         psur,z1
