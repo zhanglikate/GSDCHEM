@@ -119,40 +119,46 @@ contains
                        ids,ide, jds,jde, kds,kde,                    &
                        ims,ime, jms,jme, kms,kme,                    &
                        its,ite, jts,jte, kts,kte                     )
-   IMPLICIT NONE
+    IMPLICIT NONE
 
-   INTEGER,      INTENT(IN   ) :: num_chem,numgas,num_moist,p_qc, p_qi,    &
-                                  chem_opt,ids,ide, jds,jde, kds,kde,      &
-                                  ims,ime, jms,jme, kms,kme,               &
-                                  its,ite, jts,jte, kts,kte
-   real, INTENT(IN ) :: dt
-   REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
-         INTENT(IN ) ::                                   moist
-   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
-          INTENT(IN   ) :: rho,dz8w,vvel        
-   REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ,1:num_chem),             &
-          INTENT(INOUT) :: var        
-   REAL,  DIMENSION( ims:ime, jms:jme ),                                   &
-          INTENT(IN   ) :: rain
-   REAL,  DIMENSION( ims:ime ,  jms:jme,num_chem ),                        &
-          INTENT(INOUT   ) :: var_rmv
-   REAL,  DIMENSION( its:ite ,  jts:jte ) :: var_sum
-   REAL,  DIMENSION( its:ite ,  kts:kte, jts:jte ) :: var_rmvl
-   REAL,  DIMENSION( its:ite ,  jts:jte ) :: frc,var_sum_clw,rain_clw     
+    INTEGER,      INTENT(IN   ) :: num_chem,numgas,num_moist,p_qc, p_qi,    &
+                                   chem_opt,ids,ide, jds,jde, kds,kde,      &
+                                   ims,ime, jms,jme, kms,kme,               &
+                                   its,ite, jts,jte, kts,kte
+    real, INTENT(IN ) :: dt
+    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
+          INTENT(IN ) ::                                   moist
+    REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
+           INTENT(IN   ) :: rho,dz8w,vvel
+    REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ,1:num_chem),             &
+           INTENT(INOUT) :: var
+    REAL,  DIMENSION( ims:ime, jms:jme ),                                   &
+           INTENT(IN   ) :: rain
+    REAL,  DIMENSION( ims:ime ,  jms:jme,num_chem ),                        &
+           INTENT(INOUT   ) :: var_rmv
+    REAL,  DIMENSION( its:ite ,  jts:jte ) :: var_sum
+    REAL,  DIMENSION( its:ite ,  kts:kte, jts:jte ) :: var_rmvl
+    REAL,  DIMENSION( its:ite ,  jts:jte ) :: frc,var_sum_clw,rain_clw
     real :: dvar,factor,clsum,rho_water
-   integer :: nv,i,j,k,km,kb,kbeg
+    integer :: nv,i,j,k,km,kb,kbeg
+
     rho_water = 1000.
     var_rmv (:,:,:)=0.
-!   write(6,*) 'in wetdepls, p_qc = ',p_qc
-!   nv=p_bc1
-    do nv=1,num_chem
 
+    do nv=1,num_chem
+!
+! simple LS removal
+!
+
+!
+! proportionality constant
+!
+    frc(:,:)=0.1
     do i=its,ite
     do j=jts,jte
      var_sum_clw(i,j)=0.
      var_sum(i,j)=0.
      var_rmvl(i,:,j)=0.
-     frc(i,j)=0.
      rain_clw(i,j)=0.
      if(rain(i,j).gt.1.e-6)then
 ! convert rain back to rate
@@ -161,19 +167,9 @@ contains
 ! total cloud water
 !
         do k=1,kte
-           dvar=max(0.,(moist(i,k,j,p_qc)+moist(i,k,j,p_qi))*rho(i,k,j)*vvel(i,k,j)*dz8w(i,k,j))
+           dvar=max(0.,(moist(i,k,j,p_qc)+moist(i,k,j,p_qi)))
            var_sum_clw(i,j)=var_sum_clw(i,j)+dvar
-           var_sum(i,j)=var_sum(i,j)+var(i,k,j,nv)*rho(i,k,j)
         enddo
-        if(var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5 ) then
-!        assuming that frc is onstant, it is my conversion factor 
-!       (just like in convec. parameterization
-           frc(i,j)=rain_clw(i,j)/var_sum_clw(i,j)
-          ! frc(i,j)=max(1.e-6,min(frc(i,j),.004)) 
-          !frc(i,j)=max(1.e-6,min(frc(i,j),.008)) !lzhang, testing tuning factor
-           frc(i,j)=0.1 !lzhang, testing tuning factor
-     
-        endif
      endif
     enddo
     enddo
@@ -182,11 +178,10 @@ contains
 !
     do i=its,ite
     do j=jts,jte
-     if(rain(i,j).gt.1.e-6 .and. var_sum(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-5)then
+     if(rain(i,j).gt.1.e-6 .and. var_sum_clw(i,j).gt.1.e-10 ) then
        do k=kts,kte
         if(var(i,k,j,nv).gt.1.e-08 .and. (moist(i,k,j,p_qc)+moist(i,k,j,p_qi)).gt.1.e-8)then
         factor = max(0.,frc(i,j)*rho(i,k,j)*dz8w(i,k,j)*vvel(i,k,j))
-!       dvar=.05*alpha*factor/(1+factor)*var(i,k,j,nv)
         dvar=max(0.,alpha(nv)*factor/(1+factor)*var(i,k,j,nv))
         dvar=min(dvar,var(i,k,j,nv))
         var_rmvl(i,k,j)=dvar
@@ -199,7 +194,6 @@ contains
         var_rmv(i,j,nv)=var_rmv(i,j,nv)+var_rmvl(i,k,j)
         endif
        enddo
-!      var_rmv(i,j)=var_rmv(i,j)+var_rmvl(i,j)
     endif
     enddo
     enddo
