@@ -11,28 +11,25 @@ module dust_gocart_mod
 
 contains
 
-  subroutine gocart_dust_driver(chem_opt,ktau,dt,alt,t_phy,moist,u_phy,  &
-         v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,                  &
-         ivgtyp,isltyp,vegfra,xland,xlat,xlong,gsw,area,g,emis_dust,srce_dust,  & 
-         dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,           &
-         start_month,                                               &
-         ids,ide, jds,jde, kds,kde,                                        &
-         ims,ime, jms,jme, kms,kme,                                        &
-         its,ite, jts,jte, kts,kte                                         )
+  subroutine gocart_dust_driver(chem_opt,dt,u_phy,        &
+         v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,  &
+         isltyp,xland,area,g,emis_dust,srce_dust,         &
+         dusthelp,num_emis_dust,num_chem,num_soil_layers, &
+         start_month,                                     &
+         ids,ide, jds,jde, kds,kde,                       &
+         ims,ime, jms,jme, kms,kme,                       &
+         its,ite, jts,jte, kts,kte                        )
 
     IMPLICIT NONE
 
-     INTEGER,      INTENT(IN   ) :: chem_opt,ktau,start_month,               &
-           num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
+     INTEGER,      INTENT(IN   ) :: chem_opt,start_month,               &
+           num_emis_dust,num_chem,num_soil_layers,                 &
                                ids,ide, jds,jde, kds,kde,               &
                                     ims,ime, jms,jme, kms,kme,               &
                                     its,ite, jts,jte, kts,kte
      INTEGER,DIMENSION( ims:ime , jms:jme )                  ,               &
             INTENT(IN   ) ::                                                 &
-                                                       ivgtyp,               &
                                                        isltyp
-     REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ),                &
-           INTENT(IN ) ::                                   moist
      REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ),                 &
            INTENT(INOUT ) ::                                   chem
      REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),                    &
@@ -49,17 +46,12 @@ contains
             INTENT(IN   ) ::                                                 &
                                                        u10,                  &
                                                        v10,                  &
-                                                       gsw,                  &
-                                                    vegfra,                  &
                                                        xland,                &
-                                                       xlat,                 &
-                                                       xlong,area
+                                                       area
      REAL,  DIMENSION( ims:ime , jms:jme ),                        &
             INTENT(OUT  ) :: dusthelp
      REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ),                        &
             INTENT(IN   ) ::                                                 &
-                                                          alt,               &
-                                                        t_phy,               &
                                                        dz8w,p8w,             &
                                                 u_phy,v_phy,rho_phy
    
@@ -74,7 +66,6 @@ contains
     real(CHEM_KIND_R8), dimension (1,1) :: w10m,gwet,airden,airmas
     real(CHEM_KIND_R8), dimension (1) :: dxy
     real(CHEM_KIND_R8)  tcs,conver,converi
-    real dttt
     real(CHEM_KIND_R8),parameter::max_default=0.
 ! write(6,*)'in dust driver ',ktau,dt,start_month
 ! conver=1.e-9*mwdry
@@ -249,10 +240,6 @@ contains
   REAL               :: g
   REAL(CHEM_KIND_R8) :: den(nmx), diam(nmx)
   REAL(CHEM_KIND_R8) :: rhoa, tsrc, u_ts0, u_ts, dsrc, srce
-  REAL(CHEM_KIND_R8) :: tcmw(nmx), ar(nmx), tcvv(nmx)
-  REAL(CHEM_KIND_R8) :: ar_wetdep(nmx), kc(nmx)
-  CHARACTER(LEN=20)  :: tcname(nmx), tcunits(nmx)
-  LOGICAL            :: aerosol(nmx)
 
   REAL(CHEM_KIND_R8), PARAMETER :: gthresh = 0.5_CHEM_KIND_R8
 

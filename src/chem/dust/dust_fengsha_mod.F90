@@ -15,48 +15,38 @@ module dust_fengsha_mod
 
 contains
 
-  subroutine gocart_dust_fengsha_driver(ktau,dt,alt,t_phy,moist,u_phy,   &
-       v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ssm,               &
-       ivgtyp,isltyp,vegfra,snowh,xland,xlat,xlong,gsw,area,g,emis_dust, &
-       srce_dust,dustin,ust,znt,clay,sand,rdrag,                         &
+  subroutine gocart_dust_fengsha_driver(dt, &
+       chem,rho_phy,smois,p8w,ssm,               &
+       isltyp,vegfra,snowh,xland,area,g,emis_dust, &
+       ust,znt,clay,sand,rdrag,                         &
        num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
        ids,ide, jds,jde, kds,kde,                                        &
        ims,ime, jms,jme, kms,kme,                                        &
        its,ite, jts,jte, kts,kte)
     IMPLICIT NONE
 
-    INTEGER,      INTENT(IN   ) :: ktau,                     &
+    INTEGER,      INTENT(IN   ) ::                           &
          ids,ide, jds,jde, kds,kde,                          &
          ims,ime, jms,jme, kms,kme,                          &
          its,ite, jts,jte, kts,kte,                          &
          num_emis_dust,num_moist,num_chem,num_soil_layers
-    INTEGER,DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: ivgtyp, isltyp
-    REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_moist ), INTENT(IN) :: moist
+    INTEGER,DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: isltyp
     REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ), INTENT(INOUT) :: chem
     REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL, INTENT(INOUT) :: emis_dust
-    REAL, DIMENSION( ims:ime, 1, jms:jme,num_emis_dust),OPTIONAL, INTENT(INOUT) :: srce_dust
-    REAL, DIMENSION( ims:ime, num_soil_layers, jms:jme ), INTENT(INOUT) :: smois
-    REAL, DIMENSION( ims:ime , jms:jme, ndcls ), INTENT(IN) ::  erod
+    REAL, DIMENSION( ims:ime, num_soil_layers, jms:jme ), INTENT(IN) :: smois
     REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: ssm
-    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: u10,        &
-                                                        v10,        &
-                                                        gsw,        &
-                                                        vegfra,     &
+    REAL, DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: vegfra,     &
                                                         snowh,      &
                                                         xland,      &
-                                                        xlat,       &
-                                                        xlong,area, &
+                                                        area,       &
                                                         ust,        &
                                                         znt,        &
                                                         clay,       &
                                                         sand,       &
-                                                        rdrag,      &
-                                                        dustin
+                                                        rdrag
     REAL, DIMENSION( ims:ime , kms:kme , jms:jme ), INTENT(IN   ) ::   &
-         alt,                  &
-         t_phy,                &
-         dz8w,p8w,             &
-         u_phy,v_phy,rho_phy
+         p8w,             &
+         rho_phy
     REAL, INTENT(IN) :: dt,g
 
     ! Local variables
@@ -180,8 +170,8 @@ contains
              ! print *, "i,j=",i,j
              ! print *, "ustar before call=",ustar(1,1)
              call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
-                  erodtot, ilwi, dxy, gravsm, airden, airmas, &
-                  bems, g, drylimit, dust_alpha, dust_gamma, R, ssm(i,j), dust_uthres)
+                  erodtot, dxy, gravsm, airden, airmas, &
+                  bems, g, drylimit, dust_alpha, dust_gamma, R, dust_uthres)
 
              !     write(0,*)tc(1)
              !     write(0,*)tc(2)
@@ -220,15 +210,14 @@ contains
 
 
   SUBROUTINE source_dust(imx, jmx, lmx, nmx, smx, dt1, tc, ustar, massfrac, &
-       erod, ilwi, dxy, gravsm, airden, airmas, bems, g0, drylimit, alpha,  &
-       gamma, R, ssm, uthres)
+       erod, dxy, gravsm, airden, airmas, bems, g0, drylimit, alpha,  &
+       gamma, R, uthres)
 
     ! ****************************************************************************
     ! *  Evaluate the source of each dust particles size bin by soil emission
     ! *
     ! *  Input:
     ! *         EROD      Fraction of erodible grid cell                (-)
-    ! *         ILWI      Land/water flag                               (-)
     ! *         GRAVSM    Gravimetric soil moisture                     (g/g)
     ! *         DRYLIMIT  Upper GRAVSM limit for air-dry soil           (g/g)
     ! *         ALPHA     Constant to fudge the total emission of dust  (1/m)
@@ -243,7 +232,6 @@ contains
     ! *         JMX       Number of J points                            (-)
     ! *         LMX       Number of L points                            (-)
     ! *         R         Drag Partition                                (-)
-    ! *         SSM       Parajuli and Zender 2017 SSM                  (-)
     ! *         UTH       FENGSHA Dry Threshold Velocities              (m/s)
     ! *
     ! *  Data:
@@ -288,7 +276,6 @@ contains
     ! ****************************************************************************
 
     INTEGER, INTENT(IN)   :: nmx,imx,jmx,lmx,smx
-    INTEGER, INTENT(IN)   :: ilwi(imx,jmx)
     REAL(CHEM_KIND_R8), INTENT(IN)    :: erod(imx,jmx)
     REAL(CHEM_KIND_R8), INTENT(IN)    :: ustar(imx,jmx)
     REAL(CHEM_KIND_R8), INTENT(IN)    :: gravsm(imx,jmx)
@@ -303,10 +290,10 @@ contains
     REAL(CHEM_KIND_R8)    :: dvol(nmx), distr_dust(nmx), dlndp(nmx)
     REAL(CHEM_KIND_R8)    :: dsurface(smx), ds_rel(smx)
     REAL(CHEM_KIND_R8)    :: massfrac(3)
-    REAL(CHEM_KIND_R8)    :: u_ts0, u_ts, dsrc, srce, dmass, dvol_tot
+    REAL(CHEM_KIND_R8)    :: u_ts0, u_ts, dsrc, dmass, dvol_tot
     REAL(CHEM_KIND_R8)    :: salt,emit, emit_vol, stotal
     REAL      :: rhoa, g
-    INTEGER   :: i, j, m, s, n
+    INTEGER   :: i, j, n
 
     !! Sandblasting mass efficiency, aka "fudge factor" (based on Tegen et al,
     !! 2006 and Hemold et al, 2007)
@@ -340,7 +327,6 @@ contains
     REAL, PARAMETER :: gsd_dust=3.0     ! geom. std deviation
     REAL, PARAMETER :: lambda=12.0D-6   ! crack propogation length (m)
     REAL, PARAMETER :: cv=12.62D-6      ! normalization constant
-    real, intent(in) :: ssm
     real, dimension(fengsha_maxstypes), intent(in) :: uthres
 
     ! Calculate saltation surface area distribution from sand, silt, and clay

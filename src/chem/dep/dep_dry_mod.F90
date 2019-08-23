@@ -126,22 +126,16 @@ contains
 ! .. Parameters ..
 ! ..
 ! .. Local Scalars ..
-      REAL ::  clwchem,  dvfog, dvpart,  &
-        rad, rhchem, ta, ustar, z1,zntt
 
       REAL(CHEM_KIND_R8) :: cdt, factor
 
-      INTEGER :: iland, iprt, iseason, jce, jcs,  &
-                 n, nr, ipr, jpr, nvr,   &
-                 idrydep_onoff
+      INTEGER :: idrydep_onoff
 
       INTEGER :: chem_conv_tr, chem_opt
 
-      LOGICAL :: highnh3, rainflag, vegflag, wetflag
 !     CHARACTER (4) :: luse_typ,mminlu_loc
 ! ..
 ! .. Local Arrays ..
-      REAL :: p(kts:kte)
    REAL, DIMENSION( its:ite, jts:jte, num_chem ) ::   ddvel
 
 !  REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ) :: dryrho_phy
@@ -149,7 +143,7 @@ contains
 
 ! turbulent transport
       real :: pblst(kts:kte),ekmfull(kts:kte+1),zzfull(kts:kte+1),zz(kts:kte)
-      integer :: ii,jj,kk,i,j,k,nv
+      integer :: i,j,k,nv
 !
 ! necessary for aerosols (module dependent)
 !

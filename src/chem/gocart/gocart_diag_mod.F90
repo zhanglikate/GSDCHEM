@@ -95,9 +95,9 @@ contains
 
   subroutine gocart_diag_store(ipos, v, w)
 
-    integer,                                intent(in)  :: ipos
-    real(CHEM_KIND_R4), dimension(:,:,:),   intent(in)  :: v
-    real(CHEM_KIND_R8), dimension(:,:,:,:), intent(out) :: w
+    integer,                                intent(in)    :: ipos
+    real(CHEM_KIND_R4), dimension(:,:,:),   intent(in)    :: v
+    real(CHEM_KIND_R8), dimension(:,:,:,:), intent(inout) :: w
 
     ! -- local variables
     integer :: m, n, nd, nt

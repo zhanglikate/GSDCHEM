@@ -1321,7 +1321,6 @@ contains
     ! -- local variables
     integer :: localrc
     integer :: de, deCount
-    integer :: ids, ide, jds, jde
     integer :: n, p
     integer :: advanceCount
     type(chem_config_type),  pointer :: config   => null()

@@ -27,9 +27,9 @@ contains
                        slmsk2d,zorl2d,dqdt,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf,&
                        oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,            &
                        nvl_gocart, ttday,tcosz,gmt,julday,area,ero1,                 &
-                       ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvlp1,ntra,       &
-                       relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb,       &
-                       g,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,              &
+                       ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,ntra,       &
+                       relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,            &
+                       g,rd,erod,emis_ant,emis_vol,e_co,dms_0,              &
                        u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy,      &
                        t8w,p8w,dqdti,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                        rho_phy,smois,num_soil_layers,num_chem,num_moist,             &
@@ -50,7 +50,7 @@ contains
 
     LOGICAL,      INTENT(IN) :: readrestart
     INTEGER,      INTENT(IN) :: chem_opt,chem_in_opt
-    INTEGER,      INTENT(IN) :: ktau,nvl,nvlp1,ntra,ntrb,nvl_gocart
+    INTEGER,      INTENT(IN) :: ktau,ntra,nvl_gocart
     INTEGER,      INTENT(IN) :: num_ebu_in,num_plume_data,num_soil_layers,    &
                                 num_chem,num_moist,num_emis_vol,num_emis_ant, &
                                 kemit,plumerise_flag
@@ -59,7 +59,7 @@ contains
                                 ims,ime, jms,jme, kms,kme, &
                                 its,ite, jts,jte, kts,kte
     LOGICAL,      INTENT(IN) :: call_gocart
-    REAL(CHEM_KIND_R4), INTENT(IN) :: g,rd,p1000,cp,dtstep,gmt
+    REAL(CHEM_KIND_R4), INTENT(IN) :: g,rd,dtstep,gmt
 
     ! -- input pointers: indexing must always start from 1
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
@@ -178,8 +178,8 @@ contains
 
     ! -- local variables
     integer i,ip,j,jp,k,kp,kk,kkp,nv,jmax,jmaxi,l,ll,n,ndystep,ixhour
-    real(CHEM_KIND_R4) ::  maxv,factor,factor2,pu,pl,aln,pwant,rlat
-    real(CHEM_KIND_R4) ::  thv,xhour,xmin,gmtp,xlonn,xtime,real_time
+    real(CHEM_KIND_R4) ::  factor,factor2,pu,pl,aln,pwant,rlat
+    real(CHEM_KIND_R4) ::  xhour,xmin,gmtp,xlonn,xtime,real_time
     real(CHEM_KIND_R4), DIMENSION (1,1) :: sza,cosszax
     real(CHEM_KIND_R4), DIMENSION (ims:ime,jms:jme) :: so2_mass
 
@@ -187,7 +187,7 @@ contains
     integer :: ko,k_final,k_initial,kl,kk4,curr_hours,curr_secs
     real(CHEM_KIND_R4) :: x1,ashz_above_vent
     real(CHEM_KIND_R4), DIMENSION (kms:kme) :: vert_mass_dist
-    real(CHEM_KIND_R4) :: eh,h1,h2,h3,h4,h5,h6,maxth
+    real(CHEM_KIND_R4) :: eh,maxth
 #if 0
     logical, save :: first_init = .true.
 #endif
@@ -211,6 +211,55 @@ contains
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    ! -- initialize output arrays
+    backg_oh      = 0._CHEM_KIND_R4
+    backg_h2o2    = 0._CHEM_KIND_R4
+    backg_no3     = 0._CHEM_KIND_R4
+    ttday         = 0._CHEM_KIND_R4
+    tcosz         = 0._CHEM_KIND_R4
+    raincv_b      = 0._CHEM_KIND_R4
+    relhum        = 0._CHEM_KIND_R4
+    rri           = 0._CHEM_KIND_R4
+    t_phy         = 0._CHEM_KIND_R4
+    moist         = 0._CHEM_KIND_R4
+    u_phy         = 0._CHEM_KIND_R4
+    v_phy         = 0._CHEM_KIND_R4
+    p_phy         = 0._CHEM_KIND_R4
+    chem          = 0._CHEM_KIND_R4
+    tsk           = 0._CHEM_KIND_R4
+    e_co          = 0._CHEM_KIND_R4
+    dms_0         = 0._CHEM_KIND_R4
+    u10           = 0._CHEM_KIND_R4
+    v10           = 0._CHEM_KIND_R4
+    ivgtyp        = 0
+    isltyp        = 0
+    gsw           = 0._CHEM_KIND_R4
+    vegfra        = 0._CHEM_KIND_R4
+    rmol          = 0._CHEM_KIND_R4
+    ust           = 0._CHEM_KIND_R4
+    znt           = 0._CHEM_KIND_R4
+    xland         = 0._CHEM_KIND_R4
+    dxy           = 0._CHEM_KIND_R4
+    t8w           = 0._CHEM_KIND_R4
+    p8w           = 0._CHEM_KIND_R4
+    dqdti         = 0._CHEM_KIND_R4
+    exch_h        = 0._CHEM_KIND_R4
+    pbl           = 0._CHEM_KIND_R4
+    hfx           = 0._CHEM_KIND_R4
+    snowh         = 0._CHEM_KIND_R4
+    clayf         = 0._CHEM_KIND_R4
+    sandf         = 0._CHEM_KIND_R4
+    xlat          = 0._CHEM_KIND_R4
+    xlong         = 0._CHEM_KIND_R4
+    convfac       = 0._CHEM_KIND_R4
+    z_at_w        = 0._CHEM_KIND_R4
+    zmid          = 0._CHEM_KIND_R4
+    dz8w          = 0._CHEM_KIND_R4
+    vvel          = 0._CHEM_KIND_R4
+    rho_phy       = 0._CHEM_KIND_R4
+    smois         = 0._CHEM_KIND_R4
+    ebu_in        = 0._CHEM_KIND_R4
 
     ! -- initialize fire emissions
     plumedist     = 0._CHEM_KIND_R4
@@ -1076,8 +1125,7 @@ endif
     integer, intent(in):: year, month, day, hour
     integer, intent(in):: minute, sec
 ! Local:
-      integer n, m, ds, nday
-      real tsec
+      integer m, ds, nday
       integer days(12)
       data days /31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31/
 

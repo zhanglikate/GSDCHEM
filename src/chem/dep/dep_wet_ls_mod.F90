@@ -114,15 +114,15 @@ contains
 
 
 
-  subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,num_moist,      &
-                       num_chem,numgas,p_qc,p_qi,dz8w,vvel,chem_opt, &
-                       ids,ide, jds,jde, kds,kde,                    &
-                       ims,ime, jms,jme, kms,kme,                    &
-                       its,ite, jts,jte, kts,kte                     )
+  subroutine wetdep_ls(dt,var,rain,moist,rho,var_rmv,           &
+                       num_moist,num_chem,p_qc,p_qi,dz8w,vvel,  &
+                       ids,ide, jds,jde, kds,kde,               &
+                       ims,ime, jms,jme, kms,kme,               &
+                       its,ite, jts,jte, kts,kte                )
     IMPLICIT NONE
 
-    INTEGER,      INTENT(IN   ) :: num_chem,numgas,num_moist,p_qc, p_qi,    &
-                                   chem_opt,ids,ide, jds,jde, kds,kde,      &
+    INTEGER,      INTENT(IN   ) :: num_chem,num_moist,p_qc, p_qi,    &
+                                   ids,ide, jds,jde, kds,kde,      &
                                    ims,ime, jms,jme, kms,kme,               &
                                    its,ite, jts,jte, kts,kte
     real, INTENT(IN ) :: dt
@@ -139,8 +139,8 @@ contains
     REAL,  DIMENSION( its:ite ,  jts:jte ) :: var_sum
     REAL,  DIMENSION( its:ite ,  kts:kte, jts:jte ) :: var_rmvl
     REAL,  DIMENSION( its:ite ,  jts:jte ) :: frc,var_sum_clw,rain_clw
-    real :: dvar,factor,clsum,rho_water
-    integer :: nv,i,j,k,km,kb,kbeg
+    real :: dvar,factor,rho_water
+    integer :: nv,i,j,k
 
     rho_water = 1000.
     var_rmv (:,:,:)=0.
@@ -253,7 +253,7 @@ contains
 
 ! !Local Variables
    character(len=*), parameter :: myname = 'WetRemovalGOCART'
-   integer  ::  i, j, k, iit, n, nbins, LH, kk, ios,nv
+   integer  ::  i, j, k, n, nbins, LH, kk, ios,nv
    real :: pdog(i1:i2,k1:k2,j1:j2)      ! air mass factor dp/g [kg m-2]
    real :: pls, pcv, pac             ! ls, cv, tot precip [mm day-1]
    real :: qls(k1:k2), qcv(k1:k2)          ! ls, cv portion dqcond [kg m-3 s-1]

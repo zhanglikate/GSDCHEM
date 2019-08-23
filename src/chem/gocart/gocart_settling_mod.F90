@@ -44,7 +44,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
 
   REAL, DIMENSION( ims:ime, jms:jme, num_chem ), INTENT(OUT  ) :: sedim
 
-  integer :: nv,nmx,i,j,k,kk,lmx,iseas,idust
+  integer :: nv,i,j,k,kk,lmx,iseas,idust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: sea_salt
@@ -371,7 +371,7 @@ END SUBROUTINE gocart_settling_driver
 
   REAL(CHEM_KIND_R8)    :: tc1(imx,jmx,lmx,nmx), dt_settl(nmx), rcm(nmx), rho(nmx)
   INTEGER :: ndt_settl(nmx)
-  REAL(CHEM_KIND_R8)    :: dzmin, vsettl, dtmax, pres, rhb, rwet(nmx), ratio_r(nmx)
+  REAL(CHEM_KIND_R8)    :: dzmin, vsettl, dtmax, rhb, rwet(nmx), ratio_r(nmx)
   REAL(CHEM_KIND_R8)    :: c_stokes, free_path, c_cun, viscosity,  growth_fac
   REAL(CHEM_KIND_R8)    :: vd_cor(lmx),vd_wk1 
   INTEGER :: k, n, i, j, l, l2
@@ -383,6 +383,8 @@ END SUBROUTINE gocart_settling_driver
   REAL(CHEM_KIND_R8) :: rwet_priv(nmx), rho_priv(nmx)
 
   ! executable statements
+
+  bstl = 0._CHEM_KIND_R8
 
 ! IF (type) /= 'dust' .AND. TRIM(aero_type) /= 'sea_salt') RETURN
   if(idust.ne.1.and.iseas.ne.1)return
@@ -516,7 +518,7 @@ END SUBROUTINE gocart_settling_driver
   DO n = 1,nmx
      DO i = 1,imx
         DO j = 1,jmx
-           bstl(i,j,n) = 0.0
+           bstl(i,j,n) = 0._CHEM_KIND_R8
            DO l = 1,lmx
               IF (tc(i,j,l,n) < 0.0) tc(i,j,l,n) = 1.0D-32
               bstl(i,j,n) = bstl(i,j,n) + &

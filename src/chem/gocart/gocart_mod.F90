@@ -359,11 +359,9 @@ contains
     integer :: ids, ide, jds, jde, kds, kde
     real(CHEM_KIND_R4) :: dt
     real(CHEM_KIND_R8) :: curr_secs
-    real(CHEM_KIND_R4) :: dpsum
 
     real(CHEM_KIND_R4) :: factor, factor2, factor3
     real(CHEM_KIND_R4) :: dtstep, gmt
-    real(CHEM_KIND_R4) :: dust_alpha,dust_gamma
 
     real(CHEM_KIND_R4), parameter :: m2mm = 1.e+03_CHEM_KIND_R4
     real(CHEM_KIND_R4), parameter :: frpc = 1.e+06_CHEM_KIND_R4
@@ -372,18 +370,19 @@ contains
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     ! -- initialize output arrays
-    aod2d   = 0._CHEM_KIND_R4
-    wet_dep = 0._CHEM_KIND_R4
-    p10     = 0._CHEM_KIND_R4
-    pm25    = 0._CHEM_KIND_R4
-    ebu_oc  = 0._CHEM_KIND_R4
-    oh_bg   = 0._CHEM_KIND_R4
-    h2o2_bg = 0._CHEM_KIND_R4
-    no3_bg  = 0._CHEM_KIND_R4
-    ext_cof = 0._CHEM_KIND_R4
-    sscal   = 0._CHEM_KIND_R4
-    asymp   = 0._CHEM_KIND_R4
-    trdp    = 0._CHEM_KIND_R4
+    aod2d    = 0._CHEM_KIND_R4
+    wet_dep  = 0._CHEM_KIND_R4
+    p10      = 0._CHEM_KIND_R4
+    pm25     = 0._CHEM_KIND_R4
+    ebu_oc   = 0._CHEM_KIND_R4
+    oh_bg    = 0._CHEM_KIND_R4
+    h2o2_bg  = 0._CHEM_KIND_R4
+    no3_bg   = 0._CHEM_KIND_R4
+    ext_cof  = 0._CHEM_KIND_R4
+    sscal    = 0._CHEM_KIND_R4
+    asymp    = 0._CHEM_KIND_R4
+    trdp     = 0._CHEM_KIND_R4
+    tr3d_out = 0._CHEM_KIND_R4
 
     ! -- initialize output diagnostics
     trcm = 0._CHEM_KIND_R8
@@ -560,7 +559,10 @@ contains
       do i = its, ite
         ip = i - its + 1
         ! -- compute incremental large-scale rainfall
-        precc(i,j) = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
+        ! -- NOTE: In NGAC large-scale wet removal scheme we only use non-convective
+        ! -- precipitation, therefore convective precipitation is set to 0.
+        ! -- Please uncamment the following line to also provide convective precipitation.
+        ! precc(i,j) = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
         precl(i,j) = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)), 0._CHEM_KIND_R4)
         ! -- compute incremental large-scale and convective rainfall
         rcav(i,j)  = max(m2mm * rc2d(ip,jp)                 - rainc(i,j), 0._CHEM_KIND_R4)
@@ -579,9 +581,9 @@ contains
                    slmsk2d,zorl2d,dqdt,exch,pb2d,hf2d,clayfrac,clayf,sandfrac,sandf,th_pvsrf, &
                    oh_backgd,h2o2_backgd,no3_backgd,backg_oh,backg_h2o2,backg_no3,p_gocart,   &
                    nvl_gocart,ttday,tcosz,gmt,julday,area,ero1,   &
-                   ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,nvl,nvi,ntra, &
-                   relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk,ntrb, &
-                   grvity,rd,p1000,cp,erod,emis_ant,emis_vol,e_co,dms_0,        &
+                   ero2,ero3,rcav,raincv_b,deg_lat,deg_lon,ntra, &
+                   relhum,rri,t_phy,moist,u_phy,v_phy,p_phy,chem,tsk, &
+                   grvity,rd,erod,emis_ant,emis_vol,e_co,dms_0,        &
                    u10,v10,ivgtyp,isltyp,gsw,vegfra,rmol,ust,znt,xland,dxy, &
                    t8w,p8w,dqdti,exch_h,pbl,hfx,snowh,xlat,xlong,convfac,z_at_w,zmid,dz8w,vvel,&
                    rho_phy,smois,num_soil_layers,num_chem,num_moist,        &
@@ -623,20 +625,19 @@ contains
           its,ite, jts,jte, kts,kte)
         store_arrays = .true.
       case (DUST_OPT_FENGSHA)
-       call gocart_dust_fengsha_driver(ktau,dt,rri,t_phy,moist,u_phy,  &
-            v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ssm,        &
-            ivgtyp,isltyp,vegfra,snowh,xland,xlat,xlong,gsw,dxy,grvity,&
-            emis_dust,srce_dust,dusthelp,ust,znt,clayf,sandf,rdrag,    &
+       call gocart_dust_fengsha_driver(dt,chem,rho_phy,smois,p8w,ssm,  &
+            isltyp,vegfra,snowh,xland,dxy,grvity,emis_dust,ust,znt,    &
+            clayf,sandf,rdrag,                                         &
             num_emis_dust,num_moist,num_chem,num_soil_layers,          &
             ids,ide, jds,jde, kds,kde,                                 &
             ims,ime, jms,jme, kms,kme,                                 &
             its,ite, jts,jte, kts,kte)
         store_arrays = .true.
       case (DUST_OPT_GOCART)
-        call gocart_dust_driver(chem_opt,ktau,dt,rri,t_phy,moist,u_phy,&
-          v_phy,chem,rho_phy,dz8w,smois,u10,v10,p8w,erod,ivgtyp,isltyp,&
-          vegfra,xland,xlat,xlong,gsw,dxy,grvity,emis_dust,srce_dust,  &
-          dusthelp,num_emis_dust,num_moist,num_chem,num_soil_layers,   &
+        call gocart_dust_driver(chem_opt,dt,u_phy,v_phy,chem,rho_phy,  &
+          dz8w,smois,u10,v10,p8w,erod,isltyp,xland,dxy,grvity,         &
+          emis_dust,srce_dust,dusthelp,                                &
+          num_emis_dust,num_chem,num_soil_layers,                      &
           current_month,                                               &
           ids,ide, jds,jde, kds,kde,                                   &
           ims,ime, jms,jme, kms,kme,                                   &
@@ -790,11 +791,10 @@ contains
      ! -- ls wet deposition
      select case (wetdep_ls_opt)
        case (WDLS_OPT_GSD)
-         call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv, &
-                        num_moist,num_chem,numgas,p_qc,p_qi,&
-                        dz8w,vvel,chem_opt,                 &
-                        ids,ide, jds,jde, kds,kde,          &
-                        ims,ime, jms,jme, kms,kme,          &
+         call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,     &
+                        num_moist,num_chem,p_qc,p_qi,dz8w,vvel, &
+                        ids,ide, jds,jde, kds,kde,              &
+                        ims,ime, jms,jme, kms,kme,              &
                         its,ite, jts,jte, kts,kte)
        case (WDLS_OPT_NGAC)
          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &

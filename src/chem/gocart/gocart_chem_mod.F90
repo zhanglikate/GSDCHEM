@@ -256,20 +256,16 @@ SUBROUTINE chmdrv_su( imx,jmx,lmx,&
      CALL chem_dms(imx,jmx,lmx,nmx, ndt1, tmp, airden, airmas, oh, xno3, &
           tc, chldms_oh, chldms_no3, chldms_x, chpso2, chpmsa,cossza, &
           pso2_dms, pmsa_dms)
-!     WRITE(*,*) 'after CHEM_DMS'
      CALL chem_so2(imx,jmx,lmx,nmx, ndt1, tmp, airden, airmas, &
           cldf, oh, h2o2, tc, tdry, cossza,&
           chpso4, chlso2_oh, chlso2_aq, pso2_dms, pso4_so2)
 !          depso2, chpso4, chlso2_oh, chlso2_aq, pso2_dms, pso4_so2)
-!     WRITE(*,*) 'after CHEM_SO2'
      CALL chem_so4(imx,jmx,lmx,nmx, ndt1, airmas, tc, tdry,cossza, &
           pso4_so2)
 !          depso4, pso4_so2)
-!     WRITE(*,*) 'after CHEM_SO4'
      CALL chem_msa(imx,jmx,lmx,nmx, ndt1, airmas, tc, tdry, cossza,&
           pmsa_dms)
 !          depmsa, pmsa_dms)
-!     WRITE(*,*) 'after CHEM_MSA'
   
 END SUBROUTINE chmdrv_su
 
