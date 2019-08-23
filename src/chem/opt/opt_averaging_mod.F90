@@ -51,7 +51,7 @@
 !************************************************************************
         module opt_averaging_mod
 
-        USE chem_types_mod,   ONLY : CHEM_KIND_I4, CHEM_KIND_R8, CHEM_KIND_C16
+        USE chem_types_mod,   ONLY : CHEM_KIND_I4, CHEM_KIND_R8, CHEM_KIND_C8
 
         USE chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
               p_msa,p_dust_1,p_dust_2,p_seas_1,p_seas_5,p_sulf,p_p25,p_so2, &
@@ -1800,7 +1800,7 @@ END subroutine optical_prep_modal_soa_vbs
         parameter (ltype = 1)  ! bracket refractive indices based on information from Rahul, 2002/11/07
         integer nrefr,nrefi,nr,ni
         save nrefr,nrefi
-        complex(CHEM_KIND_C16) sforw,sback,tforw(2),tback(2)
+        complex(CHEM_KIND_C8) sforw,sback,tforw(2),tback(2)
         real(CHEM_KIND_R8) pmom(0:7,1)
         logical, save :: ini_fit  ! initial mie fit only for the first time step
         data ini_fit/.true./
@@ -1814,7 +1814,7 @@ END subroutine optical_prep_modal_soa_vbs
         data prnt/.false.,.false./
         integer numang,nmom,ipolzn,momdim
         data numang/0/
-        complex(CHEM_KIND_C16) s1(1),s2(1)
+        complex(CHEM_KIND_C8) s1(1),s2(1)
         real(CHEM_KIND_R8) mimcut
         data perfct/.false./,mimcut/0.0/
         data nmom/7/,ipolzn/0/,momdim/7/
@@ -1828,7 +1828,7 @@ END subroutine optical_prep_modal_soa_vbs
         real qabs4(nsiz)          !  extinction, real*4
         real asymm(nsiz)  ! array of asymmetry factor
         real sb2(nsiz)     ! JCB 2007/02/01 - 4*abs(sback)^2/(size parameter)^2 backscattering efficiency
-        complex(CHEM_KIND_C16) crefin,crefd,crefw
+        complex(CHEM_KIND_C8) crefin,crefd,crefw
         save crefw
         real, save :: rmin,rmax   ! min, max aerosol size bin
         real bma,bpa
@@ -2823,7 +2823,7 @@ END subroutine optical_prep_modal_soa_vbs
       integer  ipolzn, momdim, numang, nmom
       real(CHEM_KIND_R8)     gqsc, mimcut, pmom( 0:momdim, * ), qext, qsca,   &
                xmu(*), xx
-      complex(CHEM_KIND_C16)  crefin, sforw, sback, s1(*), s2(*), tforw(*),   &
+      complex(CHEM_KIND_C8)  crefin, sforw, sback, s1(*), s2(*), tforw(*),   &
                tback(*)
       integer maxang,mxang2,maxtrm
       real(CHEM_KIND_R8) onethr
@@ -2845,9 +2845,9 @@ END subroutine optical_prep_modal_soa_vbs
       real(CHEM_KIND_R8) rioriv,xmusav,xxsav,sq,fn,rn,twonp1,tcoef, coeff
       real(CHEM_KIND_R8) xinv,psinm1,chinm1,psin,chin,rtmp,taun
       real(CHEM_KIND_R8)      rbiga( maxtrm ), pin( maxang ), pinm1( maxang )
-      complex(CHEM_KIND_C16)   an, bn, anm1, bnm1, anp, bnp, anpm, bnpm, cresav,   &
+      complex(CHEM_KIND_C8)   an, bn, anm1, bnm1, anp, bnp, anpm, bnpm, cresav,   &
                 cior, cioriv, ctmp, zet, zetnm1, zetn
-      complex(CHEM_KIND_C16)   cbiga( maxtrm ), lita( maxtrm ), litb( maxtrm ),   &
+      complex(CHEM_KIND_C8)   cbiga( maxtrm ), lita( maxtrm ), litb( maxtrm ),   &
                 sp( maxang ), sm( maxang ), sps( mxang2 ), sms( mxang2 )
       equivalence  ( cbiga, rbiga )
       logical, save :: pass1
@@ -3199,7 +3199,7 @@ END subroutine optical_prep_modal_soa_vbs
       integer  numang, maxang, momdim, nmom, ipolzn, npquan
       real(CHEM_KIND_R8)    xx, xmu(*)
       integer i,l,j,ip
-      complex(CHEM_KIND_C16)  crefin
+      complex(CHEM_KIND_C8)  crefin
 !
       character*4  string
       logical  inperr
@@ -3305,7 +3305,7 @@ END subroutine optical_prep_modal_soa_vbs
       logical  calcmo(*)
       integer  ipolzn, momdim, nmom, ntrm, npquan
       real(CHEM_KIND_R8)    pmom( 0:momdim, * )
-      complex(CHEM_KIND_C16)  a(*), b(*)
+      complex(CHEM_KIND_C8)  a(*), b(*)
 !
 !           ** specification of local variables
 !
@@ -3342,7 +3342,7 @@ END subroutine optical_prep_modal_soa_vbs
                    maxrcp = 4*maxtrm + 2 )
       real(CHEM_KIND_R8)      am( 0:maxtrm ), bi( 0:mxmom2 ), bidel( 0:mxmom2 )
       real(CHEM_KIND_R8), save :: recip( maxrcp )
-      complex(CHEM_KIND_C16) cm( maxtrm ), dm( maxtrm ), cs( maxtrm ), ds( maxtrm ),   &
+      complex(CHEM_KIND_C8) cm( maxtrm ), dm( maxtrm ), cs( maxtrm ), ds( maxtrm ),   &
                  c( maxtrm ), d( maxtrm )
       integer k,j,l,nummom,ld2,idel,m,i,mmax,imax
       real(CHEM_KIND_R8) thesum
@@ -3575,7 +3575,7 @@ END subroutine optical_prep_modal_soa_vbs
       logical  calcmo(*)
       integer  ipolzn, momdim, nmom,nummom,l
       real(CHEM_KIND_R8)    pmom( 0:momdim, * ),sq,a1sq,b1sq
-      complex(CHEM_KIND_C16)  a(*), b(*), ctmp, a1b1c
+      complex(CHEM_KIND_C8)  a(*), b(*), ctmp, a1b1c
       sq( ctmp ) = dble( ctmp )**2 + dimag( ctmp )**2
 !
 !
@@ -3650,8 +3650,8 @@ END subroutine optical_prep_modal_soa_vbs
       logical  calcmo(*)
       integer  ipolzn, momdim, nmom,l,nummom
       real(CHEM_KIND_R8)    pmom( 0:momdim, * ),sq,pm1,pm2,a2sq,b2sq
-      complex(CHEM_KIND_C16)  a(*), b(*)
-      complex(CHEM_KIND_C16)  a2c, b2c, ctmp, ca, cac, cat, cb, cbc, cbt, cg, ch
+      complex(CHEM_KIND_C8)  a(*), b(*)
+      complex(CHEM_KIND_C8)  a2c, b2c, ctmp, ca, cac, cat, cb, cbc, cbt, cg, ch
       sq( ctmp ) = dble( ctmp )**2 + dimag( ctmp )**2
 !
 !
@@ -3793,8 +3793,8 @@ END subroutine optical_prep_modal_soa_vbs
       logical  down, noabs, yesang
       integer  ntrm,n
       real(CHEM_KIND_R8)    mre, mim, rbiga(*), xx, rezinv, rtmp, f1,f2,f3
-!      complex(CHEM_KIND_C16)  cior, ctmp, confra, cbiga(*), zinv
-      complex(CHEM_KIND_C16)  cior, ctmp,  cbiga(*), zinv
+!      complex(CHEM_KIND_C8)  cior, ctmp, confra, cbiga(*), zinv
+      complex(CHEM_KIND_C8)  cior, ctmp,  cbiga(*), zinv
       f1( mre ) =  - 8.0 + mre**2 * ( 26.22 + mre * ( - 0.4474   &
                    + mre**3 * ( 0.00204 - 0.000175 * mre ) ) )
       f2( mre ) = 3.9 + mre * ( - 10.8 + 13.78 * mre )
@@ -3870,7 +3870,7 @@ END subroutine optical_prep_modal_soa_vbs
       return
       end subroutine  biga  
 !**********************************************************************                                                   
-      complex(CHEM_KIND_C16) function  confra( n, zinv, xx )
+      complex(CHEM_KIND_C8) function  confra( n, zinv, xx )
 !
 !         compute bessel function ratio capital-a-sub-n from its
 !         continued fraction using lentz method ( ref. 1, pp. 17-20 )
@@ -3904,8 +3904,8 @@ END subroutine optical_prep_modal_soa_vbs
       real(CHEM_KIND_R8)     xx
       real(CHEM_KIND_R8), save :: eps1,eps2
       data  eps1 / 1.d-2 /, eps2 / 1.d-8 /
-      complex(CHEM_KIND_C16)   zinv
-      complex(CHEM_KIND_C16)   cak, capt, cdenom, cdtd, cnumer, cntn
+      complex(CHEM_KIND_C8)   zinv
+      complex(CHEM_KIND_C8)   cak, capt, cdenom, cdtd, cnumer, cntn
 !
 !                                      *** ref. 1, eqs. 25a, 27
       confra = ( n + 1 ) * zinv
@@ -3980,7 +3980,7 @@ END subroutine optical_prep_modal_soa_vbs
       integer  ipolzn, momdim, nmom, numang,i,m,j
       real(CHEM_KIND_R8)    gqsc, pmom( 0:momdim, * ), qext, qsca, xx, xmu(*)
       real(CHEM_KIND_R8) fi1,fi2,fnorm
-      complex(CHEM_KIND_C16)  crefin, sforw, sback, tforw(*), tback(*), s1(*), s2(*)
+      complex(CHEM_KIND_C8)  crefin, sforw, sback, tforw(*), tback(*), s1(*), s2(*)
       character*22  fmt
 !
 !
@@ -4061,11 +4061,11 @@ END subroutine optical_prep_modal_soa_vbs
       integer  numang,j
       real(CHEM_KIND_R8)    gqsc, qext, qsca, xx, xmu(*)
       real(CHEM_KIND_R8) twothr,fivthr,fivnin,sq,rtmp
-      complex(CHEM_KIND_C16)  a( 2 ), b( 2 ), sforw, sback, s1(*), s2(*),   &
+      complex(CHEM_KIND_C8)  a( 2 ), b( 2 ), sforw, sback, s1(*), s2(*),   &
                tforw(*), tback(*)
 !
       parameter  ( twothr = 2./3., fivthr = 5./3., fivnin = 5./9. )
-      complex(CHEM_KIND_C16)    ctmp
+      complex(CHEM_KIND_C8)    ctmp
       sq( ctmp ) = dble( ctmp )**2 + dimag( ctmp )**2
 !
 !
@@ -4126,11 +4126,11 @@ END subroutine optical_prep_modal_soa_vbs
       integer  numang,j
       real(CHEM_KIND_R8)    gqsc, qext, qsca, xx, xmu(*)
       real(CHEM_KIND_R8) twothr,fivthr,sq,rtmp
-      complex(CHEM_KIND_C16)  a( 2 ), b( 2 ), cior, sforw, sback, s1(*), s2(*),   &
+      complex(CHEM_KIND_C8)  a( 2 ), b( 2 ), cior, sforw, sback, s1(*), s2(*),   &
                tforw(*), tback(*)
 !
       parameter  ( twothr = 2./3., fivthr = 5./3. )
-      complex(CHEM_KIND_C16)  ctmp, ciorsq
+      complex(CHEM_KIND_C8)  ctmp, ciorsq
       sq( ctmp ) = dble( ctmp )**2 + dimag( ctmp )**2
 !
 !
@@ -4197,11 +4197,11 @@ END subroutine optical_prep_modal_soa_vbs
       implicit none
       integer momdim,m,n
       real(CHEM_KIND_R8)    qext, qsca, gqsc, pmom( 0:momdim, * )
-      complex(CHEM_KIND_C16)  sforw, sback, s1(*), s2(*), tforw(*), tback(*)
+      complex(CHEM_KIND_C8)  sforw, sback, s1(*), s2(*), tforw(*), tback(*)
       logical  ok, wrong
 !
       real(CHEM_KIND_R8)    accur, testqe, testqs, testgq, testpm( 0:1 )
-      complex(CHEM_KIND_C16) testsf, testsb,tests1,tests2,testtf(2), testtb(2)
+      complex(CHEM_KIND_C8) testsf, testsb,tests1,tests2,testtf(2), testtb(2)
       data   testqe / 2.459791 /,  testqs / 1.235144 /,   &
              testgq / 1.139235 /,  testsf / ( 61.49476, -3.177994 ) /,   &
              testsb / ( 1.493434, 0.2963657 ) /,   &
@@ -4549,7 +4549,7 @@ END subroutine optical_prep_modal_soa_vbs
                     k         ! Level loop index
 
       real(CHEM_KIND_R8) dp_wet_a,dp_core_a
-      complex(CHEM_KIND_C16) ri_shell_a,ri_core_a
+      complex(CHEM_KIND_C8) ri_shell_a,ri_core_a
       real(CHEM_KIND_R8) qextc,qscatc,qbackc,extc,scatc,backc,gscac
       real(CHEM_KIND_R8) vlambc
       integer n,kkk,jjj
@@ -4840,7 +4840,7 @@ END subroutine optical_prep_modal_soa_vbs
       REAL(CHEM_KIND_R8) S11N,S11(200),S12(200),S33(200),S34(200),SPOL(200),SP(200)
       real(CHEM_KIND_R8) pmom(0:7,1)
       real(CHEM_KIND_R8) dp_wet_a,dp_core_a
-      complex(CHEM_KIND_C16) ri_shell_a,ri_core_a
+      complex(CHEM_KIND_C8) ri_shell_a,ri_core_a
 !
         nang=2 ! only one angle
         nrgflagc=0 ! size distribution
@@ -4954,7 +4954,7 @@ END subroutine optical_prep_modal_soa_vbs
                 ELTRMX(4,IT,2), PIE(3,IT), TAU(3,IT), CSTHT(IT), &
                 SI2THT(IT), QBS, R,  RE2, TMAG2, WVNO
 
-      COMPLEX(CHEM_KIND_C16) ACAP(LL)
+      COMPLEX(CHEM_KIND_C8) ACAP(LL)
 
 !     /*--------------------------------------------------------*/
 !     /* Variables used in the calculations below.              */
@@ -4968,7 +4968,7 @@ END subroutine optical_prep_modal_soa_vbs
                 CC, DD, DENOM, REALP, AMAGP, QBSR, QBSI, RMM, &
                 PIG, RXP4
 !
-      COMPLEX(CHEM_KIND_C16) FNAP,      FNBP,      W,  &
+      COMPLEX(CHEM_KIND_C8) FNAP,      FNBP,      W,  &
                 FNA,       FNB,       RF,           RRF, &
                 RRFX,      WM1,       FN1,          FN2,   &
                 TC1,       TC2,       WFN(2),       Z(4), &
@@ -4977,7 +4977,7 @@ END subroutine optical_prep_modal_soa_vbs
                 DH2,       DH4,       P24H24,       P24H21, &
                 PSTORE,    HSTORE,    DUMMY,        DUMSQ
 ! jcb
-      complex(CHEM_KIND_C16) an(500),bn(500) ! a,b Mie coefficients, jcb  Hansen and Travis, eqn 2.44
+      complex(CHEM_KIND_C8) an(500),bn(500) ! a,b Mie coefficients, jcb  Hansen and Travis, eqn 2.44
       integer*4 ntrm
 !
 !     /*--------------------------------------------------------*/
@@ -5471,7 +5471,7 @@ END subroutine optical_prep_modal_soa_vbs
       REAL(CHEM_KIND_R8) ALAMB, RGmin, RGmax, RGV, SIGMAG, RGCFRAC, RFRS,RFIS, RFRC, RFIC
 
 ! for calculating the Legendre coefficient, jcb
-        complex(CHEM_KIND_C16) an(500),bn(500) ! a,b Mie coefficients, jcb  Hansen and Travis, eqn 2.44
+        complex(CHEM_KIND_C8) an(500),bn(500) ! a,b Mie coefficients, jcb  Hansen and Travis, eqn 2.44
         integer*4 ntrmj,ntrm,nmom,ipolzn,momdim
         real(CHEM_KIND_R8) pmom(0:7,1)
 
@@ -5633,7 +5633,7 @@ END subroutine optical_prep_modal_soa_vbs
       REAL(CHEM_KIND_R8) ALAMB, RGmin, RGmax, RGV, SIGMAG, RGCFRAC, RFRS, &
            RFIS, RFRC, RFIC
 
-      complex(CHEM_KIND_C16) an(500),bn(500)
+      complex(CHEM_KIND_C8) an(500),bn(500)
       integer*4 ntrm
 
 !     /*--------------------------------------------------------*/
@@ -5668,7 +5668,7 @@ END subroutine optical_prep_modal_soa_vbs
       REAL*8   ROUT, RFRO, RFIO, DQEXT, DQSCAT, CTBRQS, DQBS, &
               RIN,  RFRI, RFII, WNUM
  
-      COMPLEX(CHEM_KIND_C16)  ACAP(MXNWORK)
+      COMPLEX(CHEM_KIND_C8)  ACAP(MXNWORK)
  
       REAL(CHEM_KIND_R8)  COSPHI(2*MXNANG-1), SCTPHS(2*MXNANG-1)
 
@@ -5947,7 +5947,7 @@ END subroutine optical_prep_modal_soa_vbs
       implicit none
       integer  ipolzn, momdim, nmom, ntrm
       real(CHEM_KIND_R8)    pmom( 0:momdim,1 )  ! the ",1" dimension is for historical reasons
-      complex(CHEM_KIND_C16)  a(500), b(500)
+      complex(CHEM_KIND_C8)  a(500), b(500)
 !
 !           ** specification of local variables
 !
@@ -5982,7 +5982,7 @@ END subroutine optical_prep_modal_soa_vbs
       integer maxtrm,maxmom,mxmom2,maxrcp
       parameter  ( maxtrm = 1102, maxmom = 2*maxtrm, mxmom2 = maxmom/2, maxrcp = 4*maxtrm + 2 )
       real(CHEM_KIND_R8)      am( 0:maxtrm ), bi( 0:mxmom2 ), bidel( 0:mxmom2 ), recip( maxrcp )
-      complex(CHEM_KIND_C16) cm( maxtrm ), dm( maxtrm ), cs( maxtrm ), ds( maxtrm )
+      complex(CHEM_KIND_C8) cm( maxtrm ), dm( maxtrm ), cs( maxtrm ), ds( maxtrm )
       integer k,j,l,nummom,ld2,idel,m,i,mmax,imax
       real(CHEM_KIND_R8) sum
       logical    pass1, evenl
