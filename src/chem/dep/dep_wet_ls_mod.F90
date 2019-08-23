@@ -214,7 +214,7 @@ contains
 
   subroutine WetRemovalGOCART ( i1, i2, j1, j2, k1, k2, n1, n2, cdt, &
                                 num_chem, var_rmv, chem, ple, tmpu,  &
-                                rhoa, dqcond, precc1, precl,         &
+                                rhoa, dqcond, precc, precl,         &
                                 ims, ime, jms, jme, kms, kme, rc )
 
 ! !USES:
@@ -231,7 +231,7 @@ contains
    real, dimension(ims:ime, kms:kme, jms:jme),&
           INTENT(IN)     :: ple, tmpu, rhoa, dqcond
    real, dimension(ims:ime ,  jms:jme) , &
-          INTENT(IN)      :: precc1, precl
+          INTENT(IN)      :: precc, precl    ! cv, ls precip [mm day-1]
 
 ! !OUTPUT PARAMETERS:
    integer, intent(out)             :: rc          ! Error return code:
@@ -255,7 +255,6 @@ contains
    character(len=*), parameter :: myname = 'WetRemovalGOCART'
    integer  ::  i, j, k, iit, n, nbins, LH, kk, ios,nv
    real :: pdog(i1:i2,k1:k2,j1:j2)      ! air mass factor dp/g [kg m-2]
-   real :: precc(i1:i2,j1:j2)      ! cv precip [mm day-1]
    real :: pls, pcv, pac             ! ls, cv, tot precip [mm day-1]
    real :: qls(k1:k2), qcv(k1:k2)          ! ls, cv portion dqcond [kg m-3 s-1]
    real :: qmx, qd, A                ! temporary variables on moisture
@@ -292,7 +291,6 @@ contains
    Td_cv = cdt
    nbins = n2-n1+1
    var_rmv = 0.0
-   precc = 0.0
 
 !  Allocate the dynamic arrays
    allocate(fd(k1:k2,nbins),stat=ios)
