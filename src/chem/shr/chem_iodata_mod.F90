@@ -125,6 +125,18 @@ contains
         data % ero3 = 0._CHEM_KIND_R4
       end if
 
+      ! -- additional dust quantities for AFWA
+      if (.not.allocated(data % clayfrac)) then
+        allocate(data % clayfrac(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % clayfrac = 0._CHEM_KIND_R4
+      end if
+      if (.not.allocated(data % sandfrac)) then
+        allocate(data % sandfrac(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % sandfrac = 0._CHEM_KIND_R4
+      end if
+
       ! -- drag partition map (FENGSHA)
       if (.not.allocated(data % rdrag)) then
         allocate(data % rdrag(ids:ide,jds:jde), stat=localrc)
@@ -203,38 +215,16 @@ contains
         data % th_pvsrf = 0._CHEM_KIND_R4
       end if
 
-      ! -- additional dust quantities for AFWA
-      select case (config % dust_opt)
-        case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
-          if (.not.allocated(data % clayfrac)) then
-            allocate(data % clayfrac(ids:ide,jds:jde), stat=localrc)
-            if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-            data % clayfrac = 0._CHEM_KIND_R4
-          end if
-          if (.not.allocated(data % sandfrac)) then
-            allocate(data % sandfrac(ids:ide,jds:jde), stat=localrc)
-            if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-            data % sandfrac = 0._CHEM_KIND_R4
-          end if
-      end select
-
       ! -- emission from burning biomass
-      if (config % biomass_burn_opt == BURN_OPT_ENABLE) then
-        if (.not.allocated(data % emiss_abu)) then
-          allocate(data % emiss_abu(ids:ide,jds:jde,config % num_ebu_in), stat=localrc)
-          if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-          data % emiss_abu = 0._CHEM_KIND_R4
-        end if
-        select case (config % plumerise_flag)
-          case (FIRE_OPT_MODIS, FIRE_OPT_GBBEPx)
-            if (.not.allocated(data % plume)) then
-              allocate(data % plume(ids:ide,jds:jde,config % num_plume_data), stat=localrc)
-              if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-              data % plume = 0._CHEM_KIND_R4
-            end if
-          case default
-            ! -- no additional options
-        end select
+      if (.not.allocated(data % emiss_abu)) then
+        allocate(data % emiss_abu(ids:ide,jds:jde,config % num_ebu_in), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % emiss_abu = 0._CHEM_KIND_R4
+      end if
+      if (.not.allocated(data % plume)) then
+        allocate(data % plume(ids:ide,jds:jde,config % num_plume_data), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % plume = 0._CHEM_KIND_R4
       end if
 
     end do
