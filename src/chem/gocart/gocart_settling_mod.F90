@@ -15,13 +15,14 @@ module gocart_settling_mod
 
 CONTAINS
 
-SUBROUTINE gocart_settling_driver(dt,t_phy,moist,  &
-         chem,rho_phy,dz8w,p8w,p_phy,         &
-         dusthelp,seashelp,area,sedim,g, &
-         num_moist,num_chem,                  &
-         ids,ide, jds,jde, kds,kde,                                        &
-         ims,ime, jms,jme, kms,kme,                                        &
-         its,ite, jts,jte, kts,kte                                         )
+
+SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
+                                  chem,rho_phy,dz8w,p8w,p_phy,sedim,  &
+                                  dusthelp,seashelp,area,g,           &
+                                  num_moist,num_chem,                 &
+                                  ids,ide, jds,jde, kds,kde,          &
+                                  ims,ime, jms,jme, kms,kme,          &
+                                  its,ite, jts,jte, kts,kte           )
 
   IMPLICIT NONE
 
