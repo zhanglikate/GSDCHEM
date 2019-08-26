@@ -4,7 +4,7 @@ module chem_methods
   use NUOPC
   use chem_rc_mod
   use chem_comm_mod
-  use chem_types_mod, only : CHEM_MAXSTR
+  use chem_types_mod, only : CHEM_MAXSTR, CHEM_KIND_R8
   use chem_model_mod
   use chem_io_mod
   use chem_iodata_mod

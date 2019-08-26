@@ -478,7 +478,8 @@ module CHM
         rcToReturn=rc)
       return  ! bail out
     end if
-    call chem_model_clock_set(yy=yy, mm=mm, dd=dd, h=h, m=m, dts=dts, tz=0, rc=rc)
+    call chem_model_clock_set(yy=yy, mm=mm, dd=dd, h=h, m=m, &
+      dts=real(dts,kind=CHEM_KIND_R8), tz=0, rc=rc)
     if (chem_rc_check(rc)) then
       call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
         msg="Failed to initialize model clock", &

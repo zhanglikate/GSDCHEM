@@ -376,7 +376,7 @@ contains
   subroutine chem_model_domain_coord_set(coordDim, coord, de, rc)
 
     integer,            intent(in)  :: coordDim
-    real(CHEM_KIND_R8), pointer     :: coord(:,:)
+    real(CHEM_KIND_F8), pointer     :: coord(:,:)
     integer, optional,  intent(in)  :: de
     integer, optional,  intent(out) :: rc
 

@@ -174,43 +174,43 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, num_plume_data), intent(in) :: plume
 
     ! -- input pointers: indexing must always start from 1
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rc2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rn2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: area
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: hf2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: pb2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: rc2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: rn2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: rsds
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: slmsk2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: snwdph2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: stype2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: ts2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: us2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: vtype2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: vfrac2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: zorl2d
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
     real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
 
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: dqdt
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: dqdt
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: exch
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: ph3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: phl3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: pr3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: prl3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: sm3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: tk3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: us3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: vs3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: ws3d
 
-    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d_in
-    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: tr3d_out
+    real(CHEM_KIND_F8), dimension(:, :, :, :), intent(in)  :: tr3d_in
+    real(CHEM_KIND_F8), dimension(:, :, :, :), intent(out) :: tr3d_out
 
     ! -- output diagnostics
-    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: trcm
-    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: trab
-    real(CHEM_KIND_R8), dimension(:, :, :),    intent(out) :: truf
-    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(out) :: trdf
+    real(CHEM_KIND_F8), dimension(:, :, :),    intent(out) :: trcm
+    real(CHEM_KIND_F8), dimension(:, :, :),    intent(out) :: trab
+    real(CHEM_KIND_F8), dimension(:, :, :),    intent(out) :: truf
+    real(CHEM_KIND_F8), dimension(:, :, :, :), intent(out) :: trdf
 
     ! -- output tracers
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: aod2d
@@ -382,13 +382,13 @@ contains
     sscal    = 0._CHEM_KIND_R4
     asymp    = 0._CHEM_KIND_R4
     trdp     = 0._CHEM_KIND_R4
-    tr3d_out = 0._CHEM_KIND_R4
+    tr3d_out = 0._CHEM_KIND_F8
 
     ! -- initialize output diagnostics
-    trcm = 0._CHEM_KIND_R8
-    trab = 0._CHEM_KIND_R8
-    truf = 0._CHEM_KIND_R8
-    trdf = 0._CHEM_KIND_R8
+    trcm = 0._CHEM_KIND_F8
+    trab = 0._CHEM_KIND_F8
+    truf = 0._CHEM_KIND_F8
+    trdf = 0._CHEM_KIND_F8
 
     if (chem_opt == CHEM_OPT_NONE) return
 

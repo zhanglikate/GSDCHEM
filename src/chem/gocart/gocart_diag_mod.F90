@@ -3,7 +3,7 @@ module gocart_diag_mod
   use chem_config_mod,  only : CHEM_OPT_GOCART,      &
                                CHEM_OPT_GOCART_RACM, &
                                CHEM_OPT_RACM_SOA_VBS
-  use chem_types_mod,   only : CHEM_KIND_R4, CHEM_KIND_R8
+  use chem_types_mod,   only : CHEM_KIND_R4, CHEM_KIND_R8, CHEM_KIND_F8
   use chem_tracers_mod, only : p_p25, p_bc1, p_bc2, p_oc1, p_oc2, p_sulf, &
                                p_dust_1, p_dust_2, p_seas_1, p_seas_2,    &
                                p_p25i, p_p25j, p_eci, p_ecj, p_orgpai,    &
@@ -26,7 +26,7 @@ contains
     real,                                   intent(in)  :: g
     real(CHEM_KIND_R8), dimension(:,:,:),   intent(in)  :: pr
     real(CHEM_KIND_R8), dimension(:,:,:,:), intent(in)  :: tr
-    real(CHEM_KIND_R8), dimension(:,:,:),   intent(out) :: trcm
+    real(CHEM_KIND_F8), dimension(:,:,:),   intent(out) :: trcm
 
     ! -- local variables
     integer            :: i, j, k, ni, nj, nk
@@ -41,7 +41,7 @@ contains
     nj = size(pr,2)
     nk = size(pr,3) - 1
 
-    trcm = 0._CHEM_KIND_R8
+    trcm = 0._CHEM_KIND_F8
 
     select case (chem_opt)
       case (CHEM_OPT_GOCART, CHEM_OPT_GOCART_RACM)
@@ -97,7 +97,7 @@ contains
 
     integer,                                intent(in)    :: ipos
     real(CHEM_KIND_R4), dimension(:,:,:),   intent(in)    :: v
-    real(CHEM_KIND_R8), dimension(:,:,:,:), intent(inout) :: w
+    real(CHEM_KIND_F8), dimension(:,:,:,:), intent(inout) :: w
 
     ! -- local variables
     integer :: m, n, nd, nt

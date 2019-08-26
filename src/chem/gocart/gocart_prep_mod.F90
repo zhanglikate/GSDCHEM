@@ -62,34 +62,34 @@ contains
     REAL(CHEM_KIND_R4), INTENT(IN) :: g,rd,dtstep,gmt
 
     ! -- input pointers: indexing must always start from 1
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: area
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: hf2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: pb2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: rsds
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: slmsk2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: snwdph2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: stype2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: ts2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: us2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vtype2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: vfrac2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: zorl2d
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lat
-    real(CHEM_KIND_R8), dimension(:, :), intent(in) :: deg_lon
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: area
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: hf2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: pb2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: rsds
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: slmsk2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: snwdph2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: stype2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: ts2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: us2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: vtype2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: vfrac2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: zorl2d
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: deg_lat
+    real(CHEM_KIND_F8), dimension(:, :), intent(in) :: deg_lon
 
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: dqdt
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: exch
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ph3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: phl3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: pr3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: prl3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: sm3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: tk3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: us3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: vs3d
-    real(CHEM_KIND_R8), dimension(:, :, :), intent(in) :: ws3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: dqdt
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: exch
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: ph3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: phl3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: pr3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: prl3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: sm3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: tk3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: us3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: vs3d
+    real(CHEM_KIND_F8), dimension(:, :, :), intent(in) :: ws3d
 
-    real(CHEM_KIND_R8), dimension(:, :, :, :), intent(in)  :: tr3d
+    real(CHEM_KIND_F8), dimension(:, :, :, :), intent(in)  :: tr3d
 
     ! -- I/O arrays
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: emiss_ash_mass

@@ -33,9 +33,8 @@ module chem_domain_mod
     integer :: nl   = 0
     integer :: ns   = 0
     integer :: nt   = 0
-    real(CHEM_KIND_R8), pointer :: lon(:,:)  => null()
-    real(CHEM_KIND_R8), pointer :: lat(:,:)  => null()
-    real(CHEM_KIND_R8), pointer :: area(:,:) => null()
+    real(CHEM_KIND_F8), pointer :: lon(:,:)  => null()
+    real(CHEM_KIND_F8), pointer :: lat(:,:)  => null()
   end type chem_domain_type
 
 ! private
