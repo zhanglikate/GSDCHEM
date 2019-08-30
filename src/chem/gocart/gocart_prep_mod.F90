@@ -594,12 +594,13 @@ contains
                   kkp = kk - kts + 1
                   ! -- add initial constant into O3,CH4 and CO ect.
                   chem(i,k,j,p_o3)=epsilc
-                  maxth=min(400.,th_pvsrf(i,j))
-                  if (tr3d(ip,jp,kkp,p_atm_ptem) > maxth) then
-                    chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
-                  else
-                    chem(i,k,j,p_o3)=0.03 !ppm
-                  endif
+                  ! -- this section needs to be revisited before enabling the corresponding chem_opt options
+                  ! maxth=min(400.,th_pvsrf(i,j))
+                  ! if (tr3d(ip,jp,kkp,p_atm_ptem) > maxth) then
+                  !   chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
+                  ! else
+                  !   chem(i,k,j,p_o3)=0.03 !ppm
+                  ! endif
                   chem(i,k,j,p_ch4)=1.85 !ppm
                   chem(i,k,j,p_co)=0.06 !ppm
                   chem(i,k,j,p_co2)=380.
@@ -626,10 +627,11 @@ contains
               kkp = kk - kts + 1
               do i=its,ite
                 ip = i - its + 1
-                maxth=min(400.,th_pvsrf(i,j))
-                if (tr3d(ip,jp,kkp,p_atm_ptem) >= maxth) then
-                  chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
-                endif !380K
+                ! -- this section needs to be revisited before enabling the corresponding chem_opt options
+                ! maxth=min(400.,th_pvsrf(i,j))
+                ! if (tr3d(ip,jp,kkp,p_atm_ptem) >= maxth) then
+                !   chem(i,k,j,p_o3)=(airmw/48.)*tr3d(ip,jp,kkp,p_atm_o3mr)*1e6 !convert kg/kg to ppm
+                ! endif !380K
               enddo
             enddo
           enddo
