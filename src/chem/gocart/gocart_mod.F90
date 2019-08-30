@@ -922,7 +922,7 @@ contains
           do i = its, ite
             ip = ip + 1
             ! -- export updated tracers
-            tr3d_out(ip,jp,kp,nvv) = real(ppm2ugkg(nv) * max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_R8)
+            tr3d_out(ip,jp,kp,nvv) = real(ppm2ugkg(nv) * max(epsilc,chem(i,k,j,nv)), kind=CHEM_KIND_F8)
             ! -- compute auxiliary array trdp
             trdp(i,j,k,nvv) = tr3d_out(ip,jp,kp,nvv)*(pr3d(ip,jp,kp)-pr3d(ip,jp,kp+1))
           end do
