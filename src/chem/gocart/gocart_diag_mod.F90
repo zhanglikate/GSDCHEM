@@ -50,8 +50,6 @@ contains
           do j = 1, nj
             do i = 1, ni
               coef = 1.e-6_CHEM_KIND_R8 * (pr(i,j,k)-pr(i,j,k+1)) / g
-              ! -- pm2.5 aerosol
-              trcm(i,j,1) = trcm(i,j,1) + coef * tr(i,j,k,nbegin + p_p25)
               ! -- black carbon
               trcm(i,j,2) = trcm(i,j,2) + coef * (tr(i,j,k,nbegin + p_bc1) + tr(i,j,k,nbegin + p_bc2))
               ! -- organic carbon
@@ -62,6 +60,14 @@ contains
               trcm(i,j,5) = trcm(i,j,5) + coef * (tr(i,j,k,nbegin + p_dust_1) + fdust2 * tr(i,j,k,nbegin + p_dust_2))
               ! -- seas
               trcm(i,j,6) = trcm(i,j,6) + coef * (tr(i,j,k,nbegin + p_seas_1) + fseas2 * tr(i,j,k,nbegin + p_seas_2))
+            end do
+          end do
+        end do
+        ! -- pm2.5 aerosol includes all tracers above (note: p25 emissions are added to oc1)
+        do k = 2, 6
+          do j = 1, nj
+            do i = 1, ni
+              trcm(i,j,1) = trcm(i,j,1) + trcm(i,j,k)
             end do
           end do
         end do
@@ -82,6 +88,14 @@ contains
               trcm(i,j,4) = trcm(i,j,4) + coef * (tr(i,j,k,nbegin + p_so4ai) + tr(i,j,k,nbegin + p_so4aj))
               ! -- dust
               trcm(i,j,5) = trcm(i,j,5) + coef * tr(i,j,k,nbegin + p_soila)
+            end do
+          end do
+        end do
+        ! -- pm2.5 aerosol includes all tracers above
+        do k = 2, 5
+          do j = 1, nj
+            do i = 1, ni
+              trcm(i,j,1) = trcm(i,j,1) + trcm(i,j,k)
             end do
           end do
         end do

@@ -390,7 +390,7 @@ contains
         do i=its,ite
           k=1
           emis_ant(i,k,j,p_e_bc)=emiss_ab(i,j,p_e_bc)
-          emis_ant(i,k,j,p_e_oc)=emiss_ab(i,j,p_e_oc)
+          emis_ant(i,k,j,p_e_oc)=emiss_ab(i,j,p_e_oc) + emiss_ab(i,j,p_e_pm_25)
           emis_ant(i,k,j,p_e_sulf)=emiss_ab(i,j,p_e_sulf)
           emis_ant(i,k,j,p_e_so2)=frac_so2_ant * emiss_ab(i,j,p_e_so2)
           emis_ant(i,k,j,p_e_dms)= 0. !emiss_ab(j,p_e_dms)
@@ -459,9 +459,9 @@ contains
               firesize_agsv(i,j)=plume(i,j,7)
               firesize_aggr(i,j)=plume(i,j,8)
             case (FIRE_OPT_GBBEPx)
-              ebu_in(i,j,p_ebu_in_oc)   = frpc * emiss_abu(i,j,p_e_oc)
+              ebu_in(i,j,p_ebu_in_oc)   = frpc * (emiss_abu(i,j,p_e_pm25) - emiss_abu(i,j,p_e_bc))
               ebu_in(i,j,p_ebu_in_bc)   = frpc * emiss_abu(i,j,p_e_bc)
-              ebu_in(i,j,p_ebu_in_pm25) = frpc * emiss_abu(i,j,p_e_pm_25)
+              ebu_in(i,j,p_ebu_in_pm25) = frpc * (emiss_abu(i,j,p_e_pm_25) - emiss_abu(i,j,p_e_bc) - emiss_abu(i,j,p_e_oc))
               ebu_in(i,j,p_ebu_in_so2)  = frpc * emiss_abu(i,j,p_e_so2)
               plumedist(i,j,p_frp_flam_frac) = flaming(catb(ivgtyp(i,j)))
               plumedist(i,j,p_frp_mean     ) = frp2plume * plume(i,j,1)
