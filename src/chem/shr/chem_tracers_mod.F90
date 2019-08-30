@@ -5,9 +5,6 @@ module chem_tracers_mod
 
   implicit none
 
-! logical :: readrestart = .false.
-! integer :: kemit
-
   !-----------------------------------------------------------------------  
   ! tracer info
   !-----------------------------------------------------------------------
@@ -1125,16 +1122,12 @@ contains
 
   subroutine chem_tracers_set(config, rc)
     type(chem_config_type), pointer     :: config
-!   type(chem_config_type), intent(in)  :: config
     integer, optional,      intent(out) :: rc
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     chem_config    => config
-
-!   num_chem       = config % num_chem
-!   num_moist      = config % num_moist
 
     p_atm_shum     = config % species % p_atm_shum
     p_atm_cldq     = config % species % p_atm_cldq

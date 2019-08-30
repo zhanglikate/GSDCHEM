@@ -5,7 +5,6 @@ module chem_const_mod
   implicit none
 
   real, parameter :: RGASUNIV   = 8.314510e0    ! universal gas constant [ J/mol-K ]
-! real, parameter :: airmw      = 28.97
   real, parameter :: epsilc     = 1.e-16
 
   !..................................................................
