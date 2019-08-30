@@ -5,7 +5,7 @@ module gocart_settling_mod
                                p_dust_1, p_dust_2, p_dust_3, p_dust_4, p_dust_5, &
                                p_qv, &
                                config => chem_config
-  use chem_config_mod,  only : DUST_OPT_AFWA, DUST_OPT_GOCART, SEAS_OPT_NONE
+  use chem_config_mod,  only : DUST_OPT_AFWA, DUST_OPT_FENGSHA, DUST_OPT_GOCART, SEAS_OPT_NONE
 
 
   use dust_data_mod, only : den_dust, reff_dust, dyn_visc
@@ -99,7 +99,8 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
 ! dust first
 !
           if((config % dust_opt == DUST_OPT_GOCART) .or. &
-             (config % dust_opt == DUST_OPT_AFWA  )) then
+               (config % dust_opt == DUST_OPT_AFWA) .or. &
+               (config % dust_opt == DUST_OPT_FENGSHA)) then
           iseas=0
           idust=1
           maxdust(:)=0.
@@ -233,7 +234,8 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
 ! max dust in column
 !
           if((config % dust_opt == DUST_OPT_GOCART) .or. &
-             (config % dust_opt == DUST_OPT_AFWA  )) then
+               (config % dust_opt == DUST_OPT_AFWA  ) .or. &
+               (config % dust_opt == DUST_OPT_FENGSHA)) then
           iseas=0
           idust=1
           maxdust(:)=0.
