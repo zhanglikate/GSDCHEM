@@ -384,11 +384,11 @@ contains
     factor=0.
     jmax=0
     jmaxi=0
-    k=1
+    k=kts
     if ((p_bc2 > 1) .or. (chem_opt == CHEM_OPT_RACM_SOA_VBS)) then  ! "regular" chem options
       do j=jts,jte
         do i=its,ite
-          k=1
+          k=kts
           emis_ant(i,k,j,p_e_bc)=emiss_ab(i,j,p_e_bc)
           emis_ant(i,k,j,p_e_oc)=emiss_ab(i,j,p_e_oc) + emiss_ab(i,j,p_e_pm_25)
           emis_ant(i,k,j,p_e_sulf)=emiss_ab(i,j,p_e_sulf)
@@ -742,7 +742,7 @@ endif
 
 !   emis_ant=0.
     nv=1
-    k=1
+    k=kts
     factor2=0.
     factor=0.
     if (p_bc2 > 1)then
