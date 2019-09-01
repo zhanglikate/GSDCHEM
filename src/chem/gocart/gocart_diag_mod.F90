@@ -120,11 +120,11 @@ contains
     if (ipos > nd) return
 
     nt = size(v, dim=3)
+    if (nt > size(w, dim=3) + 2) return
 
     m = 0
     do n = 1, nt
       if (n == p_so2) cycle
-      if (n == p_dms) cycle
       if (n == p_msa) cycle
       m = m + 1
       w(:,:,m,ipos) = v(:,:,n)
