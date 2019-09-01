@@ -504,7 +504,6 @@ contains
           p_phy(i,k,j)=prl3d(ip,jp,kkp)
           u_phy(i,k,j)=us3d(ip,jp,kkp)
           dqdti(i,k,j)=dqdt(ip,jp,kkp)
-          exch_h(i,k,j)=exch(ip,jp,kkp)
           v_phy(i,k,j)=vs3d(ip,jp,kkp)
           rho_phy(i,k,j)=p_phy(i,k,j)/(RD*T_phy(i,k,j)*(1.+.608*tr3d(ip,jp,kkp,p_atm_shum)))
           rri(i,k,j)=1./rho_phy(i,k,j)
@@ -526,6 +525,18 @@ contains
             (3.80*exp(17.27*(t_phy(i,k,j)-273.)/ &
             (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           relhum(i,k,j)=max(0.1,relhum(i,k,j))
+        enddo
+      enddo
+    enddo
+
+    ! -- the imported atmospheric heat diffusivity is only available up to kte-1
+    do j=jts,jte
+      jp = j - jts + 1
+      do k=kts,kte-1
+        kkp = k - kts + 1
+        do i=its,ite
+          ip = i - its + 1
+          exch_h(i,k,j)=exch(ip,jp,kkp)
         enddo
       enddo
     enddo
