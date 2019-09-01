@@ -68,7 +68,6 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
        conver=1.e-9
        converi=1.e9
        lmx=kte-kts+1
-!        write(6,*)'in settle'
        select case (config % chem_opt)
        case (304, 316, 317)
 !
@@ -227,7 +226,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
           do nv = 1, num_chem
-            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,j,k,nv)*p8w(i,j,k)/g
+            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,k,j,nv)*p8w(i,k,j)/g
           enddo
           enddo
 !
@@ -303,7 +302,6 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
                  if(chem(i,k,j,nv).gt.maxseas(kk)) maxseas(kk)=chem(i,k,j,nv)
              enddo
           enddo
-!         write(0,*)i,j,bstl_dust(3),bstl_dust(4),chem(i,1,j,p_dust_4)
              call settling(1, 1, lmx, 5, g,dyn_visc,&
                     sea_salt, tmp, p_mid, delz, airmas, &
                     den_seas, reff_seas, dt, bstl_seas, rh, idust, iseas,airden)
@@ -327,7 +325,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
 
           do nv = 1, num_chem
             do k = kts,kte
-              sedim(i,j,nv) = sedim(i,j,nv) - chem(i,j,k,nv)*p8w(i,j,k)/g
+              sedim(i,j,nv) = sedim(i,j,nv) - chem(i,k,j,nv)*p8w(i,k,j)/g
             enddo
             sedim(i,j,nv) = sedim(i,j,nv) / dt
           enddo
