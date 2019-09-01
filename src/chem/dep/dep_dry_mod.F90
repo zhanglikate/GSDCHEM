@@ -139,7 +139,7 @@ contains
    REAL, DIMENSION( its:ite, jts:jte, num_chem ) ::   ddvel
 
 !  REAL,  DIMENSION( ims:ime , kms:kme , jms:jme ) :: dryrho_phy
-   REAL,  DIMENSION( kms:kme ) :: dryrho_1d
+   REAL,  DIMENSION( kts:kte ) :: dryrho_1d
 
 ! turbulent transport
       real :: pblst(kts:kte),ekmfull(kts:kte+1),zzfull(kts:kte+1),zz(kts:kte)
