@@ -388,7 +388,6 @@ contains
     if ((p_bc2 > 1) .or. (chem_opt == CHEM_OPT_RACM_SOA_VBS)) then  ! "regular" chem options
       do j=jts,jte
         do i=its,ite
-          k=kts
           emis_ant(i,k,j,p_e_bc)=emiss_ab(i,j,p_e_bc)
           emis_ant(i,k,j,p_e_oc)=emiss_ab(i,j,p_e_oc) + emiss_ab(i,j,p_e_pm_25)
           emis_ant(i,k,j,p_e_sulf)=emiss_ab(i,j,p_e_sulf)
@@ -479,7 +478,6 @@ contains
       ! -- tracer run
       do j=jts,jte
         do i=its,ite
-          k=kts
           emis_ant(i,k,j,p_e_tr1)=emiss_ab(i,j,p_e_tr1)
           emis_ant(i,k,j,p_e_tr2)=emiss_ab(i,j,p_e_tr2)
         enddo
@@ -1034,7 +1032,6 @@ endif
             return
           end if
           do j=jts,jte
-            !do k=kts,kte-2
             do k=kts,kte
               do i=its,ite
                 if (emiss_ash_dt(i,j) <= 0.) cycle
