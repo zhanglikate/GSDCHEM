@@ -3384,9 +3384,9 @@ fi ;; #(
   ibm) :
     perf_opts="-O2" ;; #(
   intel) :
-                        perf_opts="-O3"
+                        perf_opts="-O2"
                     if test "x$enable_safe_fp" != xno; then :
-  perf_opts="${perf_opts} -fp-model precise"
+  perf_opts="${perf_opts} -fp-model source -ftz -align array64byte -xCORE-AVX2 -qno-opt-dynamic-align"
 fi ;; #(
   portland) :
                         perf_opts="-O2"
