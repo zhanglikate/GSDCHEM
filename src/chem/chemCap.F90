@@ -516,16 +516,14 @@ module CHM
     end if
 
     ! -- read-in background fields
-    if (.not.restart) then
-      call chem_backgd_read(verbose=btest(verbosity,0), rc=rc)
-      if (chem_rc_check(rc)) then
-        call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-          msg="Failed to read background/emission values", &
-          line=__LINE__, &
-          file=__FILE__, &
-          rcToReturn=rc)
-        return  ! bail out
-      end if
+    call chem_backgd_read(verbose=btest(verbosity,0), rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to read background/emission values", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
     end if
 
     ! -- connect import fields to model
