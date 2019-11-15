@@ -223,9 +223,11 @@ module CHM
     integer, dimension(:,:), allocatable :: minIndexPDe, maxIndexPDe, minIndexPTile, maxIndexPTile
     integer, dimension(:,:), allocatable :: computationalLBound, computationalUBound
 
+    logical                    :: restart
     integer                    :: yy, mm, dd, h, m
+    integer(ESMF_KIND_I8)      :: advanceCount
     real(ESMF_KIND_R8)         :: dts
-    type(ESMF_Time)            :: startTime
+    type(ESMF_Time)            :: startTime, currTime
     type(ESMF_TimeInterval)    :: TimeStep
     character(len=255) :: msgString
 
@@ -435,25 +437,27 @@ module CHM
       return  ! bail out
     end if
 
-    ! -- read-in emission and background fields, setup internal parameters
-    call chem_model_config_init(rc=rc)
-    if (chem_rc_check(rc)) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to initialize model configuration", &
-        line=__LINE__, &
-        file=__FILE__, &
-        rcToReturn=rc)
-      return  ! bail out
-    end if
-
     ! -- initialize internal clock
     ! -- get clock information
-    call ESMF_ClockGet(clock, startTime=startTime, timeStep=timeStep, rc=localrc)
+    call ESMF_ClockGet(clock, startTime=startTime, currTime=currTime, &
+      timeStep=timeStep, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
       rcToReturn=rc)) &
       return  ! bail out
+    ! -- set restart flag
+    restart = (currTime > startTime)
+    ! -- reset advanceCount if model is restarting
+    if (restart) then
+      advanceCount = (currTime - startTime) / timeStep
+      call ESMF_ClockSet(clock, advanceCount=advanceCount, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
+    end if
     ! -- get forecast initial time
     call ESMF_TimeGet(startTime, yy=yy, mm=mm, dd=dd, h=h, m=m, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -489,6 +493,17 @@ module CHM
       return  ! bail out
     end if
 
+    ! -- read-in namelist options and setup internal parameters
+    call chem_model_config_init(restart=restart, rc=rc)
+    if (chem_rc_check(rc)) then
+      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+        msg="Failed to initialize model configuration", &
+        line=__LINE__, &
+        file=__FILE__, &
+        rcToReturn=rc)
+      return  ! bail out
+    end if
+
     ! -- allocate memory for background fields
     call chem_backgd_init(rc=rc)
     if (chem_rc_check(rc)) then
@@ -500,15 +515,17 @@ module CHM
       return  ! bail out
     end if
 
-    ! -- read-in emission and background fields
-    call chem_backgd_read(verbose=btest(verbosity,0), rc=rc)
-    if (chem_rc_check(rc)) then
-      call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
-        msg="Failed to read background/emission values", &
-        line=__LINE__, &
-        file=__FILE__, &
-        rcToReturn=rc)
-      return  ! bail out
+    ! -- read-in background fields
+    if (.not.restart) then
+      call chem_backgd_read(verbose=btest(verbosity,0), rc=rc)
+      if (chem_rc_check(rc)) then
+        call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+          msg="Failed to read background/emission values", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return  ! bail out
+      end if
     end if
 
     ! -- connect import fields to model

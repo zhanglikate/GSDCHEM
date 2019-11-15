@@ -277,7 +277,8 @@ contains
   end subroutine chem_model_clock_set
 
 
-  subroutine chem_model_config_init(rc)
+  subroutine chem_model_config_init(restart, rc)
+    logical, optional, intent(in)  :: restart
     integer, optional, intent(out) :: rc
 
     ! -- local variables
@@ -306,6 +307,8 @@ contains
       ! -- setup internal indexes for chemical species
       call chem_config_species_init(model % config, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+      ! -- set restart flag if provided
+      if (present(restart)) model % config % readrestart = restart
       ! -- populate pointers on other local DEs
       do de = 1, deCount-1
         call chem_model_set(de=de, config=model % config, rc=localrc)
