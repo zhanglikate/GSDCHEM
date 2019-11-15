@@ -215,7 +215,7 @@ module CHM
     type(ESMF_DistGrid)           :: distgrid
     type(ESMF_Array)              :: array
     integer                       :: de, item, localrc, localDe, tile
-    integer                       :: comm, localPet
+    integer                       :: comm
     real(ESMF_KIND_R8), dimension(:,:), pointer :: coord
 
     integer :: dimCount, tileCount, deCount, localDeCount
@@ -229,7 +229,7 @@ module CHM
     real(ESMF_KIND_R8)         :: dts
     type(ESMF_Time)            :: startTime, currTime
     type(ESMF_TimeInterval)    :: TimeStep
-    character(len=255) :: msgString
+    character(len=255)         :: msgString
 
     ! begin
     rc = ESMF_SUCCESS
@@ -330,12 +330,6 @@ module CHM
           rcToReturn=rc)
         return  ! bail out
       end if
-
-      call ESMF_VMGet(vm, localPet=localPet, rc=rc)
-      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-        line=__LINE__, &
-        file=__FILE__)) &
-        return  ! bail out
 
       do localDe = 0, localDeCount-1
         de   = localDeToDeMap(localDe+1) + 1
