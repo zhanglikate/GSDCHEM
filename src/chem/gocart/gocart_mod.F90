@@ -524,7 +524,7 @@ contains
     ! -- set control flags
     call_plume       = (biomass_burn_opt == BURN_OPT_ENABLE) .and. (plumerisefire_frq > 0)
     if (call_plume) &
-       call_plume    = (mod(ktau, max(1, int(60*plumerisefire_frq/dts))) == 0) &
+       call_plume    = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) &
                         .or. (ktau == 1)
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
     call_radiation   = (mod(ktau, call_rad)       == 0) .or. (ktau == 1)
