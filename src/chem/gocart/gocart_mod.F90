@@ -534,7 +534,7 @@ contains
     if (present(verbose)) then
       if (verbose) &
        call gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
-         firstfire, call_gocart, call_plume, call_radiation)
+         firstfire, call_gocart, call_plume, call_radiation, readrestart)
     end if
 
     ! -- compute accumulated large-scale and convective rainfall since last call
@@ -944,7 +944,7 @@ contains
   end subroutine gocart_advance
 
   subroutine gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
-    firstfire, call_gocart, call_plume, call_radiation)
+    firstfire, call_gocart, call_plume, call_radiation, readrestart)
 
     ! -- arguments
     integer, intent(in) :: ktau
@@ -954,6 +954,7 @@ contains
     logical, intent(in) :: call_gocart
     logical, intent(in) :: call_plume
     logical, intent(in) :: call_radiation
+    logical, intent(in) :: readrestart
 
     ! -- local parameters
     character(len=3), dimension(0:1), parameter :: switch = (/"OFF", "ON "/)
@@ -963,7 +964,11 @@ contains
 
     ! -- begin
     write(6,'(38("-"))')
-    write(6,'(1x,"Running GSDCHEM @ step: ",i0)') ktau
+    if (readrestart) then
+      write(6,'(1x,"Restarting GSDCHEM @ step: ",i0)') ktau
+    else
+      write(6,'(1x,"Running GSDCHEM @ step: ",i0)') ktau
+    end if
     write(6,'(14("-")," Modules: ",14("-"))')
     state = 0
     if (call_gocart) state = 1

@@ -209,11 +209,13 @@ module CHM
     type(ESMF_State)              :: importState, exportState
     type(ESMF_Field)              :: field
     type(ESMF_Clock)              :: clock
+    type(ESMF_Alarm)              :: alarm
     type(ESMF_Grid)               :: grid
     type(ESMF_VM)                 :: vm
     type(ESMF_GeomType_flag)      :: geomtype
     type(ESMF_DistGrid)           :: distgrid
     type(ESMF_Array)              :: array
+    type(ESMF_Config)             :: cf
     integer                       :: de, item, localrc, localDe, tile
     integer                       :: comm
     real(ESMF_KIND_R8), dimension(:,:), pointer :: coord
@@ -224,12 +226,15 @@ module CHM
     integer, dimension(:,:), allocatable :: computationalLBound, computationalUBound
 
     logical                    :: restart
+    integer                    :: restart_interval
     integer                    :: yy, mm, dd, h, m
     integer(ESMF_KIND_I8)      :: advanceCount
     real(ESMF_KIND_R8)         :: dts
     type(ESMF_Time)            :: startTime, currTime
     type(ESMF_TimeInterval)    :: TimeStep
     character(len=255)         :: msgString
+
+    character(len=*), parameter :: config_file = "model_configure"
 
     ! begin
     rc = ESMF_SUCCESS
@@ -452,8 +457,8 @@ module CHM
         rcToReturn=rc)) &
         return  ! bail out
     end if
-    ! -- get forecast initial time
-    call ESMF_TimeGet(startTime, yy=yy, mm=mm, dd=dd, h=h, m=m, rc=localrc)
+    ! -- get forecast starting time
+    call ESMF_TimeGet(currTime, yy=yy, mm=mm, dd=dd, h=h, m=m, rc=localrc)
     if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__,  &
       file=__FILE__,  &
@@ -485,6 +490,46 @@ module CHM
         file=__FILE__, &
         rcToReturn=rc)
       return  ! bail out
+    end if
+
+    ! -- read-in model configuration options
+    cf = ESMF_ConfigCreate(rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+
+    call ESMF_ConfigLoadFile(cf, config_file, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+
+    call ESMF_ConfigGetAttribute(cf, restart_interval, &
+      label="restart_interval:", default=0, rc=localrc)
+    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__,  &
+      file=__FILE__,  &
+      rcToReturn=rc)) &
+      return  ! bail out
+
+    ! -- if restart_interval > 0, create alarm to write restart files
+    if (restart_interval > 0) then
+      call ESMF_TimeIntervalSet(timeStep, h=restart_interval, rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
+      alarm = ESMF_AlarmCreate(clock, ringInterval=timeStep, &
+        ringTime=(startTime + timeStep), name="chemistry_restart", rc=localrc)
+      if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
     end if
 
     ! -- read-in namelist options and setup internal parameters
@@ -547,6 +592,19 @@ module CHM
       return  ! bail out
     end if
 
+    ! -- restore internal buffers after restart
+    if (restart) then
+      call chem_restart_read(verbose=btest(verbosity,0), rc=rc)
+      if (chem_rc_check(rc)) then
+        call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+          msg="Failed to read restart data", &
+          line=__LINE__, &
+          file=__FILE__, &
+          rcToReturn=rc)
+        return  ! bail out
+      end if
+    end if
+
     ! -- initialize internal component (GOCART)
     call chem_comp_init(rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
@@ -588,7 +646,11 @@ module CHM
     type(ESMF_TimeInterval)       :: timeStep
     type(ESMF_Field)              :: field
     type(ESMF_VM)                 :: vm
-    integer                       :: item
+    type(ESMF_Alarm), pointer     :: alarmList(:)
+    integer                       :: alarmCount, item, localrc
+    integer                       :: yy, mm, dd, h, m, s
+    character(len=ESMF_MAXSTR)    :: alarmName
+    character(len=15)             :: timeStamp
 
     ! begin
     rc = ESMF_SUCCESS
@@ -668,6 +730,60 @@ module CHM
         file=__FILE__, &
         rcToReturn=rc)
       return  ! bail out
+    end if
+
+    ! write restart file if requested
+    call ESMF_ClockGetAlarmList(clock, ESMF_ALARMLIST_NEXTRINGING, &
+      alarmCount=alarmCount, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+
+    if (alarmCount > 0) then
+      allocate(alarmList(alarmCount), stat=localrc)
+      if (ESMF_LogFoundAllocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
+      call ESMF_ClockGetAlarmList(clock, ESMF_ALARMLIST_NEXTRINGING, &
+        alarmList=alarmList, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      do item = 1, alarmCount
+        call ESMF_AlarmGet(alarmList(item), name=alarmName, rc=rc)
+        if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+          line=__LINE__, &
+          file=__FILE__)) &
+          return  ! bail out
+        if (trim(alarmName) == "chemistry_restart") then
+          call ESMF_TimeGet(currTime + timeStep, yy=yy, mm=mm, dd=dd, &
+            h=h, m=m, s=s, rc=rc)
+          if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+            line=__LINE__, &
+            file=__FILE__)) &
+            return  ! bail out
+          write(timeStamp, '(i4.4,2i2.2,".",3i2.2)') yy, mm, dd, h, m, s
+          call chem_restart_write(timeStamp=timeStamp, rc=rc)
+          if (chem_rc_check(rc)) then
+            call ESMF_LogSetError(ESMF_RC_INTNRL_BAD, &
+              msg="Failed to write chemistry restart file", &
+              line=__LINE__, &
+              file=__FILE__, &
+              rcToReturn=rc)
+            return  ! bail out
+          end if
+        end if
+      end do
+      deallocate(alarmList, stat=localrc)
+      if (ESMF_LogFoundDeallocError(statusToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__,  &
+        file=__FILE__,  &
+        rcToReturn=rc)) &
+        return  ! bail out
     end if
 
   end subroutine ModelAdvance

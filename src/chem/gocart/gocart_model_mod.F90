@@ -201,6 +201,8 @@ contains
           file=__FILE__, line=__LINE__, rc=rc)) return
     end do
 
+    ! -- reset readrestart flag after first step
+    config % readrestart = .false.
 
   end subroutine gocart_model_advance
 

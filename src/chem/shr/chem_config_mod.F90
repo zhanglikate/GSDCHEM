@@ -53,6 +53,8 @@ module chem_config_mod
     character(len=CHEM_MAXSTR) :: fireemi_inname     = ''
     character(len=CHEM_MAXSTR) :: emi_outname        = ''
     character(len=CHEM_MAXSTR) :: fireemi_outname    = ''
+    character(len=CHEM_MAXSTR) :: restart_inname     = ''
+    character(len=CHEM_MAXSTR) :: restart_outname    = ''
     character(len=CHEM_MAXSTR) :: input_chem_inname  = ''
     character(len=CHEM_MAXSTR) :: input_chem_outname = ''
     character(len=CHEM_MAXSTR) :: chem_hist_outname  = 'fim_out_'
@@ -192,7 +194,7 @@ contains
     integer                :: localrc, i, iostat, is
     integer                :: buffer(28)
     real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins+chem_tune_tracers)
-    character(CHEM_MAXSTR) :: sbuffer(5)
+    character(CHEM_MAXSTR) :: sbuffer(7)
 
     ! -- variables in input namelist
     character(len=CHEM_MAXSTR) :: dust_inname
@@ -200,6 +202,8 @@ contains
     character(len=CHEM_MAXSTR) :: fireemi_inname
     character(len=CHEM_MAXSTR) :: emi_outname
     character(len=CHEM_MAXSTR) :: fireemi_outname
+    character(len=CHEM_MAXSTR) :: restart_inname
+    character(len=CHEM_MAXSTR) :: restart_outname
     character(len=CHEM_MAXSTR) :: input_chem_inname
     character(len=CHEM_MAXSTR) :: input_chem_outname
     character(len=CHEM_MAXSTR) :: chem_hist_outname
@@ -256,6 +260,8 @@ contains
       fireemi_inname,            &
       emi_outname,               &
       fireemi_outname,           &
+      restart_inname,            &
+      restart_outname,           &
       input_chem_inname,         &
       input_chem_outname,        &
       chem_hist_outname,         &
@@ -359,6 +365,8 @@ contains
     fireemi_inname     = ""
     emi_outname        = ""
     fireemi_outname    = ""
+    restart_inname     = ""
+    restart_outname    = ""
     input_chem_inname  = ""
     input_chem_outname = ""
     chem_hist_outname  = "chem_out_"
@@ -495,8 +503,9 @@ contains
     end do
 
     ! -- pack strings into buffer
-    sbuffer = (/ chem_hist_outname, dust_inname, &
-                 emi_inname, fireemi_inname, emi_outname /)
+    sbuffer = (/ chem_hist_outname, dust_inname,          &
+                 emi_inname, fireemi_inname, emi_outname, &
+                 restart_inname, restart_outname          /)
     ! -- broadcast string variable
     call chem_comm_bcast(sbuffer, rc=localrc)
     if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -506,6 +515,8 @@ contains
     config % emi_inname        = sbuffer(3)
     config % fireemi_inname    = sbuffer(4)
     config % emi_outname       = sbuffer(5)
+    config % restart_inname    = sbuffer(6)
+    config % restart_outname   = sbuffer(7)
 
   end subroutine chem_config_read
 
