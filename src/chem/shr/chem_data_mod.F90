@@ -44,8 +44,6 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:,:,:), allocatable :: tr3d
     real(CHEM_KIND_R4), dimension(:,:,:,:), allocatable :: trdp
     ! -- internal buffers
-    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: rainl
-    real(CHEM_KIND_R4), dimension(:,:),     allocatable :: rainc
     real(CHEM_KIND_R4), dimension(:,:,:,:), allocatable :: eburn
   end type chem_data_type
 
@@ -204,14 +202,6 @@ contains
     end if
     if (allocated(data % trdp)) then
       deallocate(data % trdp, stat=localrc)
-      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-    end if
-    if (allocated(data % rainl)) then
-      deallocate(data % rainl, stat=localrc)
-      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-    end if
-    if (allocated(data % rainc)) then
-      deallocate(data % rainc, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
     if (allocated(data % eburn)) then

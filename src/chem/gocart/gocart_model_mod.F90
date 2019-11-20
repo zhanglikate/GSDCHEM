@@ -180,8 +180,6 @@ contains
         data % no3_bg, &
         data % wet_dep, &
         ! -- buffers
-        data % rainl, &
-        data % rainc, &
         data % eburn, &
         ! -- array size
         nl, ni, &

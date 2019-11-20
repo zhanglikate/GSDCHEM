@@ -107,8 +107,7 @@ contains
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, dqdt, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
     ext_cof, sscal, asymp, aod2d,&
-    p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, &
-    rainl, rainc, ebu, &
+    p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, ebu, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, &
     num_plume_data, num_soil_layers, num_chem, num_moist, num_emis_vol, &
     num_emis_ant, num_emis_dust, num_emis_seas, &
@@ -227,8 +226,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: trdp
 
     ! -- buffers
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainl
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(inout) :: rainc
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: ebu
 
     ! -- local variables
@@ -257,7 +254,6 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: pbl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: raincv_b
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: precc
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: precl
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rcav
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rnav
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme) :: rmol
@@ -416,7 +412,6 @@ contains
     pbl           = 0._CHEM_KIND_R4
     raincv_b      = 0._CHEM_KIND_R4
     precc         = 0._CHEM_KIND_R4
-    precl         = 0._CHEM_KIND_R4
     rcav          = 0._CHEM_KIND_R4
     rnav          = 0._CHEM_KIND_R4
     rmol          = 0._CHEM_KIND_R4
@@ -548,28 +543,19 @@ contains
       ! -- retrieve stored emissions
     else
       dtstep = dt
-      ! -- initialize buffers
-      rainl = 0._CHEM_KIND_R4
-      rainc = 0._CHEM_KIND_R4
-      ebu   = 0._CHEM_KIND_R4
     end if
 
     do j = jts, jte
       jp = j - jts + 1
       do i = its, ite
         ip = i - its + 1
-        ! -- compute incremental large-scale rainfall
-        ! -- NOTE: In NGAC large-scale wet removal scheme we only use non-convective
+        ! -- compute incremental convective and large-scale rainfall
+        rcav(i,j)  = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
+        rnav(i,j)  = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)), 0._CHEM_KIND_R4)
+        ! -- In NGAC large-scale wet removal scheme we only use non-convective
         ! -- precipitation, therefore convective precipitation is set to 0.
         ! -- Please uncamment the following line to also provide convective precipitation.
-        ! precc(i,j) = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
-        precl(i,j) = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)), 0._CHEM_KIND_R4)
-        ! -- compute incremental large-scale and convective rainfall
-        rcav(i,j)  = max(m2mm * rc2d(ip,jp)                 - rainc(i,j), 0._CHEM_KIND_R4)
-        rnav(i,j)  = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)) - rainl(i,j), 0._CHEM_KIND_R4)
-        ! -- store to buffers
-        rainc(i,j) = m2mm * rc2d(ip,jp)
-        rainl(i,j) = m2mm * rn2d(ip,jp) - rainc(i,j)
+        ! precc(i,j) = rcav(i,j)
       end do
     end do
 
@@ -799,7 +785,7 @@ contains
        case (WDLS_OPT_NGAC)
          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
                                num_chem,var_rmv,chem,p_phy,t_phy,  &
-                               rho_phy,dqdti,precc,precl,          &
+                               rho_phy,dqdti,precc,rnav,           &
                                ims,ime, jms,jme, kms,kme, localrc)
          if (chem_rc_check(localrc, msg="Failure in NGAC wet removal scheme", &
            file=__FILE__, line=__LINE__, rc=rc)) return

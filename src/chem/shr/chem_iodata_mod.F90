@@ -44,19 +44,6 @@ contains
       call chem_model_domain_get(de=de, ids=ids, ide=ide, jds=jds, jde=jde, ni=ni, rc=localrc)
       if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
-      ! -- rain buffers
-      if (.not.allocated(data % rainl)) then
-        allocate(data % rainl(ids:ide,jds:jde), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % rainl = 0._CHEM_KIND_R4
-      end if
-
-      if (.not.allocated(data % rainc)) then
-        allocate(data % rainc(ids:ide,jds:jde), stat=localrc)
-        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
-        data % rainc = 0._CHEM_KIND_R4
-      end if
-
       ! -- biomass burning emission buffers
       if (.not.allocated(data % eburn)) then
         allocate(data % eburn(ids:ide,1:ni,jds:jde,config % num_ebu), stat=localrc)
