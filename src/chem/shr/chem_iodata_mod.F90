@@ -17,6 +17,8 @@ module chem_iodata_mod
   public :: chem_backgd_write
   public :: chem_output_init
   public :: chem_output_write
+  public :: chem_restart_read
+  public :: chem_restart_write
 
 contains
 
@@ -1541,5 +1543,96 @@ contains
     end if
 
   end subroutine chem_output_write
+
+  ! -- restart methods
+
+  subroutine chem_restart_read(verbose, rc)
+    logical, optional, intent(in)  :: verbose
+    integer, optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, item, localpe, tile
+    logical :: isVerbose
+    character(len=CHEM_MAXSTR)       :: filename
+    type(chem_config_type),  pointer :: config   => null()
+    type(chem_data_type),    pointer :: data     => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    isVerbose = .false.
+    if (present(verbose)) isVerbose = verbose
+
+    call chem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (deCount < 1) return
+
+    call chem_comm_get(localpe=localpe, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    filename = "chm_data"
+
+    do de = 0, deCount-1
+      call chem_model_get(de=de, data=data, tile=tile, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      select case (config % chem_opt)
+        case (CHEM_OPT_GOCART)
+          do item = 1, config % num_ebu
+            call chem_io_read(filename, data % eburn, order="ikj", &
+              path=trim(config % restart_inname), de=de, rc=localrc)
+            if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          end do
+          if (isVerbose) write(6,'("chem_restart_read: PET:",i4," DE:",i2," tile=",i2," eburn - min/max = "2g16.6)') &
+            localpe, de, tile, minval(data % eburn), maxval(data % eburn)
+        case default
+          ! -- not implemented yet
+        end select
+    end do
+
+  end subroutine chem_restart_read
+
+
+  subroutine chem_restart_write(timeStamp, rc)
+    character(len=*), optional, intent(in)  :: timeStamp
+    integer,          optional, intent(out) :: rc
+
+    ! -- local variables
+    integer :: localrc
+    integer :: de, deCount, item
+    character(len=CHEM_MAXSTR)       :: filename
+    type(chem_config_type),  pointer :: config   => null()
+    type(chem_data_type),    pointer :: data     => null()
+
+    ! -- begin
+    if (present(rc)) rc = CHEM_RC_SUCCESS
+
+    call chem_model_get(deCount=deCount, config=config, rc=localrc)
+    if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+    if (deCount < 1) return
+
+    filename = "chm_data"
+    if (present(timeStamp)) then
+      filename = trim(timeStamp) // "." // filename
+    end if
+
+    do de = 0, deCount-1
+      call chem_model_get(de=de, data=data, rc=localrc)
+      if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+
+      select case (config % chem_opt)
+        case (CHEM_OPT_GOCART)
+          call chem_io_write(filename, data % eburn, order="ikj", &
+            path=trim(config % restart_outname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+        case default
+          ! -- not implemented yet
+        end select
+    end do
+
+  end subroutine chem_restart_write
 
 end module chem_iodata_mod
