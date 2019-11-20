@@ -207,12 +207,12 @@ contains
     end if
 
     if (present(recstride)) then
-      rstride = recstride
+      rstride = max(rsize, recstride)
     else
       rstride = rsize
     end if
 
-    if (chem_rc_test((size(buffer) < rcount * max(rsize, rstride)), &
+    if (chem_rc_test((size(buffer) < rcount * rstride), &
         msg="insufficient buffer size", &
         file=__FILE__, line=__LINE__, rc=rc)) return
 
