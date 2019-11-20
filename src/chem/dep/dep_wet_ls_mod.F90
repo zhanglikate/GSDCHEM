@@ -425,6 +425,7 @@ contains
 
        end if
       end if                                    ! if ls washout  >>>
+#if 0
 !-----------------------------------------------------------------------------
 !  (3) CONVECTIVE RAINOUT:
 !      Tracer loss by rainout = dd0 * F * exp(-B*dt)
@@ -503,6 +504,7 @@ contains
 
        end if
       end if                                    ! if cv washout  >>>
+#endif
 !-----------------------------------------------------------------------------
 !  (5) RE-EVAPORATION.  Assume that SO2 is re-evaporated as SO4 since it
 !      has been oxidized by H2O2 at the level above.

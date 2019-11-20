@@ -551,10 +551,6 @@ contains
         ! -- compute incremental convective and large-scale rainfall
         rcav(i,j)  = max(m2mm * rc2d(ip,jp)                , 0._CHEM_KIND_R4)
         rnav(i,j)  = max(m2mm * (rn2d(ip,jp) - rc2d(ip,jp)), 0._CHEM_KIND_R4)
-        ! -- In NGAC large-scale wet removal scheme we only use non-convective
-        ! -- precipitation, therefore convective precipitation is set to 0.
-        ! -- Please uncamment the following line to also provide convective precipitation.
-        ! precc(i,j) = rcav(i,j)
       end do
     end do
 
@@ -783,7 +779,7 @@ contains
        case (WDLS_OPT_NGAC)
          call WetRemovalGOCART(its,ite, jts,jte, kts,kte, 1,1, dt, &
                                num_chem,var_rmv,chem,p_phy,t_phy,  &
-                               rho_phy,dqdti,precc,rnav,           &
+                               rho_phy,dqdti,rcav,rnav,            &
                                ims,ime, jms,jme, kms,kme, localrc)
          if (chem_rc_check(localrc, msg="Failure in NGAC wet removal scheme", &
            file=__FILE__, line=__LINE__, rc=rc)) return
