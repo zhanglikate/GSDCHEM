@@ -345,7 +345,6 @@ contains
     real(CHEM_KIND_R4), dimension(1:num_chem) :: ppm2ugkg
 
     ! -- local variables
-    logical, save :: firstfire = .true.
     logical :: call_gocart, call_plume, call_radiation, scale_fire_emiss
     logical :: store_arrays
 
@@ -526,7 +525,7 @@ contains
     call_plume       = (biomass_burn_opt == BURN_OPT_ENABLE) .and. (plumerisefire_frq > 0)
     if (call_plume) &
        call_plume    = (mod(ktau, max(1, int(60*plumerisefire_frq/dts))) == 0) &
-                        .or. (ktau == 1) .or. firstfire
+                        .or. (ktau == 1)
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
     call_radiation   = (mod(ktau, call_rad)       == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
@@ -534,7 +533,7 @@ contains
     if (present(verbose)) then
       if (verbose) &
        call gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
-         firstfire, call_gocart, call_plume, call_radiation, readrestart)
+         call_gocart, call_plume, call_radiation, readrestart)
     end if
 
     ! -- compute accumulated large-scale and convective rainfall since last call
@@ -637,7 +636,6 @@ contains
       truf(:,:,1:num_emis_dust) = emis_dust(its:ite,1,jts:jte,1:num_emis_dust)
     end if
     if (call_plume) then
-      firstfire = .false.
       call plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in, &
         ebu,ebu_in,mean_fct_agtf,mean_fct_agef,mean_fct_agsv,mean_fct_aggr, &
         firesize_agtf,firesize_agef,firesize_agsv,firesize_aggr, &
@@ -944,13 +942,12 @@ contains
   end subroutine gocart_advance
 
   subroutine gocart_diag_output(ktau, plumerise_flag, plumerisefire_frq, &
-    firstfire, call_gocart, call_plume, call_radiation, readrestart)
+    call_gocart, call_plume, call_radiation, readrestart)
 
     ! -- arguments
     integer, intent(in) :: ktau
     integer, intent(in) :: plumerise_flag
     integer, intent(in) :: plumerisefire_frq
-    logical, intent(in) :: firstfire
     logical, intent(in) :: call_gocart
     logical, intent(in) :: call_plume
     logical, intent(in) :: call_radiation
@@ -960,7 +957,8 @@ contains
     character(len=3), dimension(0:1), parameter :: switch = (/"OFF", "ON "/)
 
     ! -- local variables
-    integer :: state
+    integer       :: state
+    logical, save :: firstfire = .true.
 
     ! -- begin
     write(6,'(38("-"))')
@@ -980,7 +978,10 @@ contains
     if (call_plume) state = 1
     write(6,'(1x,"Fires    ",24x,a)') switch(state)
     if (call_plume) then
-      if (firstfire) write(6,'(1x,"* Initializing...")')
+      if (firstfire) then
+        write(6,'(1x,"* Initializing...")')
+        firstfire = .false.
+      end if
       select case (plumerise_flag)
         case (FIRE_OPT_MODIS)
           if (plumerisefire_frq > 0) write(6,'(1x,"* Using MODIS with plume-rise")')
