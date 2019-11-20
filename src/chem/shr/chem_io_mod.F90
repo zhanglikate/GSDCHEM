@@ -158,10 +158,14 @@ contains
 
     if (present(pathname)) then
       lstr = len_trim(pathname)
-      if (pathname(lstr:lstr) == "/") then
-        fullname = trim(pathname) // trim(fname)
+      if (lstr > 0) then
+        if (pathname(lstr:lstr) == "/") then
+          fullname = trim(pathname) // trim(fname)
+        else
+          fullname = trim(pathname) // "/" // trim(fname)
+        end if
       else
-        fullname = trim(pathname) // "/" // trim(fname)
+        fullname = trim(fname)
       end if
     else
       fullname = trim(fname)
