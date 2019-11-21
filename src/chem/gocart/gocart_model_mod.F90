@@ -104,11 +104,11 @@ contains
         file=__FILE__, line=__LINE__, rc=rc)) return
 
       call gocart_advance(config % readrestart, config % chem_opt,&
-        config % chem_in_opt, config % chem_conv_tr,config % biomass_burn_opt, &
-        config % seas_opt, config % dust_opt, config % dmsemis_opt, &
-        config % wetdep_ls_opt,  config % aer_ra_feedback, &
-        config % call_chemistry, config % call_radiation, &
-        config % plumerise_flag, config % plumerisefire_frq, &
+        config % chem_in_opt,     config % chem_conv_tr, config % biomass_burn_opt, &
+        config % seas_opt,        config % dust_opt,     config % dmsemis_opt,      &
+        config % wetdep_ls_opt,   config % call_chemistry,    &
+        config % aer_ra_feedback, config % aer_ra_frq,        &
+        config % plumerise_flag,  config % plumerisefire_frq, &
         config % kemit, &
         advanceCount, dts, mm, tz, julday, &
         ! -- background data 
@@ -171,7 +171,6 @@ contains
         data % ext_cof, &
         data % sscal, &
         data % asymp, &
-        data % aod2d, &
         data % pm10, &
         data % pm25, &
         data % ebu_oc, &
@@ -180,6 +179,7 @@ contains
         data % no3_bg, &
         data % wet_dep, &
         ! -- buffers
+        data % aod2d, &
         data % eburn, &
         ! -- array size
         nl, ni, &

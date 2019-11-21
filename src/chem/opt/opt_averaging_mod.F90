@@ -54,7 +54,7 @@
         USE chem_types_mod,   ONLY : CHEM_KIND_I4, CHEM_KIND_R8, CHEM_KIND_C8
 
         USE chem_tracers_mod, only : p_bc1,p_bc2,p_oc1,p_oc2,      &
-              p_msa,p_dust_1,p_dust_2,p_seas_1,p_seas_5,p_sulf,p_p25,p_so2, &
+              p_msa,p_dust_1,p_dust_2,p_seas_1,p_seas_4,p_sulf,p_p25,p_so2, &
               p_vash_1,p_vash_4,p_p10
 
         USE opt_data_mod
@@ -551,10 +551,10 @@
        end do
        end do
 ! Dust bin mass fractions
-        dustfrc_goc8bin=0.
+       dustfrc_goc8bin=0.
+       dlogoc=0.46*2.E-6 ! Begin lower dust bin, makes upper limit diam 20 micron diameter
        do m =1, ndust  ! loop over dust size bins
-        dlogoc = 2 * lo_dust(m)  ! low diameter limit (m)
-        dhigoc = 2 * up_dust(m)  ! hi diameter limit (m)
+        dhigoc = 4.*reff_dust(m)-dlogoc ! hi diameter limit (m)
         do n = 1, nbin_o
         dustfrc_goc8bin(m,n)=max(DBLE(0.),min(DBLE(dhi_sectm(n)),dhigoc)- &
                              max(dlogoc,DBLE(dlo_sectm(n))) )/(dhigoc-dlogoc)
@@ -568,6 +568,7 @@
        if(m.le.2.and.n.eq.5)dustfrc_goc8bin(m,n)=dustfrc_goc8bin(m,n)+.135*.458
 
        end do
+       dlogoc=dhigoc
        end do
         kcall=kcall+1
 !       ISTOP=1
@@ -829,7 +830,7 @@
 ! Add in seasalt and dust from GOCART sectional distributions
        n = 0
        mass_seas = 0.0
-       do m =p_seas_1,  p_seas_5
+       do m =p_seas_1,  p_seas_4 ! loop over sea salt size bins less than 10 um diam
        n = n+1
         mass_seas=mass_seas+seasfrc_goc8bin(n,isize)*chem(i,k,j,m)
        end do

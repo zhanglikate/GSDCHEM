@@ -91,11 +91,11 @@ module chem_config_mod
     integer :: aer_ic_opt
     logical :: have_bcs_chem
     integer :: aer_ra_feedback    = 0
+    integer :: aer_ra_frq
     integer :: aer_op_opt
     integer :: conv_tr_aqchem
     integer :: call_biomass       = 1
     integer :: call_chemistry     = 1
-    integer :: call_radiation     = 1
     logical :: readrestart        = .false.
     integer :: archive_step
     real(CHEM_KIND_R4):: ash_mass
@@ -192,7 +192,7 @@ contains
     integer, parameter :: unit = 200
 
     integer                :: localrc, i, iostat, is
-    integer                :: buffer(28)
+    integer                :: buffer(29)
     real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins+chem_tune_tracers)
     character(CHEM_MAXSTR) :: sbuffer(7)
 
@@ -240,6 +240,7 @@ contains
     integer :: aer_ic_opt
     logical :: have_bcs_chem
     integer :: aer_ra_feedback
+    integer :: aer_ra_frq
     integer :: aer_op_opt
     integer :: conv_tr_aqchem
     integer :: archive_step
@@ -298,6 +299,7 @@ contains
       aer_ic_opt,                &
       have_bcs_chem,             &
       aer_ra_feedback,           &
+      aer_ra_frq,                &
       aer_op_opt,                &
       conv_tr_aqchem,            &
       archive_step,              &
@@ -354,6 +356,7 @@ contains
     vertmix_onoff     = 1
     chem_conv_tr      = CTRA_OPT_NONE
     aer_ra_feedback   = 0
+    aer_ra_frq        = 60
     aer_op_opt        = 0
     chem_in_opt       = 0
     archive_step      = 1
@@ -416,6 +419,7 @@ contains
       vertmix_onoff,     &
       chem_conv_tr,      &
       aer_ra_feedback,   &
+      aer_ra_frq,        &
       chem_in_opt,       &
       archive_step,      &
       seas_emis_scheme,  &
@@ -449,11 +453,12 @@ contains
     config % vertmix_onoff     = buffer( 21 )
     config % chem_conv_tr      = buffer( 22 )
     config % aer_ra_feedback   = buffer( 23 )
-    config % chem_in_opt       = buffer( 24 )
-    config % archive_step      = buffer( 25 )
-    config % seas_emis_scheme  = buffer( 26 )
-    config % dust_calcdrag     = buffer( 27 )
-    config % wetdep_ls_opt     = buffer( 28 )
+    config % aer_ra_frq        = buffer( 24 )
+    config % chem_in_opt       = buffer( 25 )
+    config % archive_step      = buffer( 26 )
+    config % seas_emis_scheme  = buffer( 27 )
+    config % dust_calcdrag     = buffer( 28 )
+    config % wetdep_ls_opt     = buffer( 29 )
 
     ! -- pack real variables in buffer
     rbuffer(1:8) = (/ bioemdt, photdt, chemdt, ash_mass, ash_height, &

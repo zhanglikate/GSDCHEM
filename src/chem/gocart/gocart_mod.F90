@@ -96,8 +96,8 @@ contains
 
 
   subroutine gocart_advance(readrestart, chem_opt, chem_in_opt, chem_conv_tr, &
-    biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, wetdep_ls_opt, aer_ra_feedback, &
-    call_chemistry, call_rad, plumerise_flag, plumerisefire_frq, &
+    biomass_burn_opt, seas_opt, dust_opt, dmsemis_opt, wetdep_ls_opt, call_chemistry, &
+    aer_ra_feedback, aer_ra_frq, plumerise_flag, plumerisefire_frq, &
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
@@ -106,8 +106,8 @@ contains
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, dqdt, exch, ph3d, phl3d, pr3d, prl3d, &
     sm3d, tk3d, us3d, vs3d, ws3d, tr3d_in, tr3d_out, trcm, trab, truf, trdf, trdp, &
-    ext_cof, sscal, asymp, aod2d,&
-    p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, ebu, &
+    ext_cof, sscal, asymp, &
+    p10, pm25, ebu_oc, oh_bg, h2o2_bg, no3_bg, wet_dep, aod2d, ebu, &
     nvl, nvi, ntra, ntrb, nvl_gocart, nbands, numgas, num_ebu, num_ebu_in, &
     num_plume_data, num_soil_layers, num_chem, num_moist, num_emis_vol, &
     num_emis_ant, num_emis_dust, num_emis_seas, &
@@ -124,9 +124,9 @@ contains
     integer,            intent(in) :: dust_opt
     integer,            intent(in) :: dmsemis_opt
     integer,            intent(in) :: wetdep_ls_opt
-    integer,            intent(in) :: aer_ra_feedback
     integer,            intent(in) :: call_chemistry
-    integer,            intent(in) :: call_rad
+    integer,            intent(in) :: aer_ra_feedback
+    integer,            intent(in) :: aer_ra_frq
     integer,            intent(in) :: plumerise_flag
     integer,            intent(in) :: plumerisefire_frq
     integer,            intent(in) :: kemit
@@ -212,7 +212,6 @@ contains
     real(CHEM_KIND_F8), dimension(:, :, :, :), intent(out) :: trdf
 
     ! -- output tracers
-    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(out) :: aod2d
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:num_chem), intent(out) :: wet_dep
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: p10
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl), intent(out) :: pm25
@@ -226,6 +225,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme, 1:nvl, ntra+ntrb), intent(out) :: trdp
 
     ! -- buffers
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme),                     intent(inout) :: aod2d
     real(CHEM_KIND_R4), dimension(ims:ime, kms:kme, jms:jme, 1:num_ebu), intent(inout) :: ebu
 
     ! -- local variables
@@ -365,7 +365,6 @@ contains
     if (present(rc)) rc = CHEM_RC_SUCCESS
 
     ! -- initialize output arrays
-    aod2d    = 0._CHEM_KIND_R4
     wet_dep  = 0._CHEM_KIND_R4
     p10      = 0._CHEM_KIND_R4
     pm25     = 0._CHEM_KIND_R4
@@ -527,7 +526,7 @@ contains
        call_plume    = (mod(int(curr_secs), max(1, 60*plumerisefire_frq)) == 0) &
                         .or. (ktau == 1)
     call_gocart      = (mod(ktau, call_chemistry) == 0) .or. (ktau == 1)
-    call_radiation   = (mod(ktau, call_rad)       == 0) .or. (ktau == 1)
+    call_radiation   = (mod(int(curr_secs), max(1, 60*aer_ra_frq)) == 0) .or. (ktau == 1)
     scale_fire_emiss = .false.
 
     if (present(verbose)) then
@@ -539,7 +538,6 @@ contains
     ! -- compute accumulated large-scale and convective rainfall since last call
     if (ktau > 1) then
       dtstep = call_chemistry * dt
-      ! -- retrieve stored emissions
     else
       dtstep = dt
     end if
