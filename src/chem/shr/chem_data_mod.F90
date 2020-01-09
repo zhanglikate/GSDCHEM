@@ -22,7 +22,8 @@ module chem_data_mod
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero2              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ero3              ! dust erosion factor
     real(CHEM_KIND_R4), dimension(:,:),   allocatable :: rdrag             ! Drag Partition Map (FENGSHA)
-    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ssm               ! PJZ Sediment Supply Map (FENGSHA)
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: uthr              ! Threshold Friction Velocity (FENGSHA)
+    real(CHEM_KIND_R4), dimension(:,:),   allocatable :: ssm               ! Sediment Supply Map (FENGSHA)
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: h2o2_backgd       ! H2O2 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: no3_backgd        ! NO3 background for GOCART
     real(CHEM_KIND_R4), dimension(:,:,:), allocatable :: oh_backgd         ! OH background for GOCART

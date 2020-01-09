@@ -101,7 +101,7 @@ contains
     kemit, ktau, dts, current_month, tz, julday,      &
     p_gocart, clayfrac, dm0, emiss_ab, emiss_abu,                         &
     emiss_ash_dt, emiss_ash_height, emiss_ash_mass, &
-    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, rdrag, ssm, &
+    emiss_tr_dt, emiss_tr_height, emiss_tr_mass, ero1, ero2, ero3, rdrag, uthr, ssm, &
     h2o2_backgd, no3_backgd, oh_backgd, plume, sandfrac, th_pvsrf,  &
     area, hf2d, pb2d, rc2d, rn2d, rsds, slmsk2d, snwdph2d, stype2d,       &
     ts2d, us2d, vtype2d, vfrac2d, zorl2d, dqdt, exch, ph3d, phl3d, pr3d, prl3d, &
@@ -156,6 +156,7 @@ contains
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero2
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ero3
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: rdrag
+    real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: uthr
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: ssm
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_dt
     real(CHEM_KIND_R4), dimension(ims:ime, jms:jme), intent(in) :: emiss_tr_height
@@ -606,7 +607,7 @@ contains
       case (DUST_OPT_FENGSHA)
        call gocart_dust_fengsha_driver(dt,chem,rho_phy,smois,p8w,ssm,  &
             isltyp,vegfra,snowh,xland,dxy,grvity,emis_dust,ust,znt,    &
-            clayf,sandf,rdrag,                                         &
+            clayf,sandf,rdrag,uthr,                                    &
             num_emis_dust,num_moist,num_chem,num_soil_layers,          &
             ids,ide, jds,jde, kds,kde,                                 &
             ims,ime, jms,jme, kms,kme,                                 &

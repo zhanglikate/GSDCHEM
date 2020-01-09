@@ -18,7 +18,7 @@ contains
   subroutine gocart_dust_fengsha_driver(dt, &
        chem,rho_phy,smois,p8w,ssm,               &
        isltyp,vegfra,snowh,xland,area,g,emis_dust, &
-       ust,znt,clay,sand,rdrag,                         &
+       ust,znt,clay,sand,rdrag,uthr,                         &
        num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
        ids,ide, jds,jde, kds,kde,                                        &
        ims,ime, jms,jme, kms,kme,                                        &
@@ -43,7 +43,8 @@ contains
                                                         znt,        &
                                                         clay,       &
                                                         sand,       &
-                                                        rdrag
+                                                        rdrag,      & 
+                                                        uthr
     REAL, DIMENSION( ims:ime , kms:kme , jms:jme ), INTENT(IN   ) ::   &
          p8w,             &
          rho_phy
@@ -169,9 +170,12 @@ contains
              ! Call dust emission routine.
              ! print *, "i,j=",i,j
              ! print *, "ustar before call=",ustar(1,1)
-             call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
+!             call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
+!                  erodtot, dxy, gravsm, airden, airmas, &
+             !                  bems, g, drylimit, dust_alpha, dust_gamma, R, dust_uthres)
+             call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, gravsm, airden, airmas, &
-                  bems, g, drylimit, dust_alpha, dust_gamma, R, dust_uthres)
+                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j))
 
              !     write(0,*)tc(1)
              !     write(0,*)tc(2)
@@ -327,7 +331,8 @@ contains
     REAL, PARAMETER :: gsd_dust=3.0     ! geom. std deviation
     REAL, PARAMETER :: lambda=12.0D-6   ! crack propogation length (m)
     REAL, PARAMETER :: cv=12.62D-6      ! normalization constant
-    real, dimension(fengsha_maxstypes), intent(in) :: uthres
+!    real, dimension(fengsha_maxstypes), intent(in) :: uthres
+    REAL    :: uthres
 
     ! Calculate saltation surface area distribution from sand, silt, and clay
     ! mass fractions and saltation bin fraction. This will later become a
@@ -369,10 +374,11 @@ contains
              rhoa = airden(i,j,1)*1.0D-3       ! (g cm^-3)
 
              ! FENGSHA uses the 13 category soil type from the USDA
-             call calc_fengsha_styp(massfrac(1),massfrac(3),massfrac(2),styp)
-
+             ! call calc_fengsha_styp(massfrac(1),massfrac(3),massfrac(2),styp)
+             ! write(*,*) 'SOIL TYPE:',styp, 'Ut0:',uthres
              ! Fengsha uses threshold velocities based on dale gilletes data
-             call fengsha_utst(styp,uthres,u_ts0)
+             !  call fengsha_utst(styp,uthres,u_ts0)
+             u_ts0 = uthres
 
              ! Friction velocity threshold correction function based on physical
              ! properties related to moisture tension. Soil moisture greater than
