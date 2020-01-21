@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.63])
-AC_INIT([gsdchem], [0.8.8], [raffaele.montuoro@noaa.gov])
+AC_INIT([gsdchem], [0.8.9], [raffaele.montuoro@noaa.gov])
 
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
