@@ -15,20 +15,20 @@ module dust_fengsha_mod
 
 contains
 
-  subroutine gocart_dust_fengsha_driver(dt, &
-       chem,rho_phy,smois,p8w,ssm,               &
-       isltyp,vegfra,snowh,xland,area,g,emis_dust, &
-       ust,znt,clay,sand,rdrag,                         &
-       num_emis_dust,num_moist,num_chem,num_soil_layers,                 &
-       ids,ide, jds,jde, kds,kde,                                        &
-       ims,ime, jms,jme, kms,kme,                                        &
+  subroutine gocart_dust_fengsha_driver(dt,              &
+       chem,rho_phy,smois,p8w,ssm,                       &
+       isltyp,vegfra,snowh,xland,area,g,emis_dust,       &
+       ust,znt,clay,sand,rdrag,uthr,                     &
+       num_emis_dust,num_moist,num_chem,num_soil_layers, &
+       ids,ide, jds,jde, kds,kde,                        &
+       ims,ime, jms,jme, kms,kme,                        &
        its,ite, jts,jte, kts,kte)
     IMPLICIT NONE
 
-    INTEGER,      INTENT(IN   ) ::                           &
-         ids,ide, jds,jde, kds,kde,                          &
-         ims,ime, jms,jme, kms,kme,                          &
-         its,ite, jts,jte, kts,kte,                          &
+    INTEGER,      INTENT(IN   ) ::                       &
+         ids,ide, jds,jde, kds,kde,                      &
+         ims,ime, jms,jme, kms,kme,                      &
+         its,ite, jts,jte, kts,kte,                      &
          num_emis_dust,num_moist,num_chem,num_soil_layers
     INTEGER,DIMENSION( ims:ime , jms:jme ), INTENT(IN) :: isltyp
     REAL, DIMENSION( ims:ime, kms:kme, jms:jme, num_chem ), INTENT(INOUT) :: chem
@@ -43,8 +43,9 @@ contains
                                                         znt,        &
                                                         clay,       &
                                                         sand,       &
-                                                        rdrag
-    REAL, DIMENSION( ims:ime , kms:kme , jms:jme ), INTENT(IN   ) ::   &
+                                                        rdrag,      &
+                                                        uthr
+    REAL, DIMENSION( ims:ime , kms:kme , jms:jme ), INTENT(IN   ) :: &
          p8w,             &
          rho_phy
     REAL, INTENT(IN) :: dt,g
@@ -167,17 +168,10 @@ contains
              endif
 
              ! Call dust emission routine.
-             ! print *, "i,j=",i,j
-             ! print *, "ustar before call=",ustar(1,1)
-             call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, &
+             call source_dust(imx, jmx, lmx, nmx, smx, dt, tc, ustar, massfrac, & 
                   erodtot, dxy, gravsm, airden, airmas, &
-                  bems, g, drylimit, dust_alpha, dust_gamma, R, dust_uthres)
+                  bems, g, drylimit, dust_alpha, dust_gamma, R, uthr(i,j))
 
-             !     write(0,*)tc(1)
-             !     write(0,*)tc(2)
-             !     write(0,*)tc(3)
-             !     write(0,*)tc(4)
-             !     write(0,*)tc(5)
              !    if(config_flags%chem_opt == 2 .or. config_flags%chem_opt == 11 ) then
              !     dustin(i,j,1:5)=tc(1:5)*converi
              !    else
@@ -221,6 +215,7 @@ contains
     ! *         GRAVSM    Gravimetric soil moisture                     (g/g)
     ! *         DRYLIMIT  Upper GRAVSM limit for air-dry soil           (g/g)
     ! *         ALPHA     Constant to fudge the total emission of dust  (1/m)
+    ! *         GAMMA     Tuning constant for erodibility               (-)
     ! *         DXY       Surface of each grid cell                     (m2)
     ! *         AIRMAS    Mass of air for each grid box                 (kg)
     ! *         AIRDEN    Density of air for each grid box              (kg/m3)
@@ -232,7 +227,7 @@ contains
     ! *         JMX       Number of J points                            (-)
     ! *         LMX       Number of L points                            (-)
     ! *         R         Drag Partition                                (-)
-    ! *         UTH       FENGSHA Dry Threshold Velocities              (m/s)
+    ! *         UTHRES    FENGSHA Dry Threshold Velocities              (m/s)
     ! *
     ! *  Data:
     ! *         MASSFRAC  Fraction of mass in each of 3 soil classes    (-)
@@ -249,7 +244,7 @@ contains
     ! *         CMB       Constant of proportionality                   (-)
     ! *         MMD_DUST  Mass median diameter of dust                  (m)
     ! *         GSD_DUST  Geometric standard deviation of dust          (-)
-    ! *         LAMBDA    Side crack propogation length                 (m)
+    ! *         LAMBDA    Side crack propagation length                 (m)
     ! *         CV        Normalization constant                        (-)
     ! *         G0        Gravitational acceleration                    (m/s2)
     ! *         G         Gravitational acceleration in cgs             (cm/s2)
@@ -275,43 +270,45 @@ contains
     ! *
     ! ****************************************************************************
 
-    INTEGER, INTENT(IN)   :: nmx,imx,jmx,lmx,smx
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: erod(imx,jmx)
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: ustar(imx,jmx)
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: gravsm(imx,jmx)
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: drylimit(imx,jmx)
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: dxy(jmx)
-    REAL(CHEM_KIND_R8), INTENT(IN)    :: airden(imx,jmx,lmx), airmas(imx,jmx,lmx)
+    INTEGER,            INTENT(IN)    :: imx,jmx,lmx,nmx,smx
+    REAL,               INTENT(IN)    :: dt1
     REAL(CHEM_KIND_R8), INTENT(INOUT) :: tc(imx,jmx,lmx,nmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: ustar(imx,jmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: massfrac(3)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: erod(imx,jmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: dxy(jmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: gravsm(imx,jmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: airden(imx,jmx,lmx)
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: airmas(imx,jmx,lmx)
     REAL(CHEM_KIND_R8), INTENT(OUT)   :: bems(imx,jmx,nmx)
-    REAL, INTENT(IN)    :: g0,dt1
+    REAL,               INTENT(IN)    :: g0
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: drylimit(imx,jmx)
+    !! Sandblasting mass efficiency, aka "fudge factor" (based on Tegen et al,
+    !! 2006 and Hemold et al, 2007)
+    !
+    !  REAL, PARAMETER :: alpha=1.8E-8  ! (m^-1)
+    REAL,               INTENT(IN)    :: alpha
+    ! Experimental optional exponential tuning constant for erodibility.
+    ! 0 < gamma < 1 -> more relative impact by low erodibility regions.
+    REAL,               INTENT(IN)    :: gamma
+    REAL(CHEM_KIND_R8), INTENT(IN)    :: R
+    REAL,               INTENT(IN)    :: uthres
 
     REAL(CHEM_KIND_R8)    :: den(smx), diam(smx)
     REAL(CHEM_KIND_R8)    :: dvol(nmx), distr_dust(nmx), dlndp(nmx)
     REAL(CHEM_KIND_R8)    :: dsurface(smx), ds_rel(smx)
-    REAL(CHEM_KIND_R8)    :: massfrac(3)
     REAL(CHEM_KIND_R8)    :: u_ts0, u_ts, dsrc, dmass, dvol_tot
     REAL(CHEM_KIND_R8)    :: salt,emit, emit_vol, stotal
     REAL      :: rhoa, g
     INTEGER   :: i, j, n
 
-    !! Sandblasting mass efficiency, aka "fudge factor" (based on Tegen et al,
-    !! 2006 and Hemold et al, 2007)
-    !
-    !  REAL, PARAMETER :: alpha=1.8E-8  ! (m^-1)
-
-    ! Global tuning constant, alpha.  Sandblasting mass efficiency, beta.
+    ! Sandblasting mass efficiency, beta.
     ! Beta maxes out for clay fractions above 0.2 = betamax.
 
-    REAL, INTENT(IN)  :: alpha
     REAL, PARAMETER :: betamax=5.25E-4
     REAL(CHEM_KIND_R8) :: beta
-    REAL(CHEM_KIND_R8), INTENT(IN) :: R
-    ! Experimental optional exponential tuning constant for erodibility.
-    ! 0 < gamma < 1 -> more relative impact by low erodibility regions.
-
-    REAL, INTENT(IN) :: gamma
     integer :: styp
+
     ! Constant of proportionality from Marticorena et al, 1997 (unitless)
     ! Arguably more ~consistent~ fudge than alpha, which has many walnuts
     ! sprinkled throughout the literature. - GC
@@ -325,9 +322,8 @@ contains
 
     REAL, PARAMETER :: mmd_dust=3.4D-6  ! median mass diameter (m)
     REAL, PARAMETER :: gsd_dust=3.0     ! geom. std deviation
-    REAL, PARAMETER :: lambda=12.0D-6   ! crack propogation length (m)
+    REAL, PARAMETER :: lambda=12.0D-6   ! crack propagation length (m)
     REAL, PARAMETER :: cv=12.62D-6      ! normalization constant
-    real, dimension(fengsha_maxstypes), intent(in) :: uthres
 
     ! Calculate saltation surface area distribution from sand, silt, and clay
     ! mass fractions and saltation bin fraction. This will later become a
@@ -358,6 +354,9 @@ contains
     ! calculate saltation flux (salt) where ustar has exceeded u_ts.  Finally,
     ! calculate total dust emission (tot_emit), taking into account erodibility.
 
+    ! Set DRY threshold friction velocity to input value
+    u_ts0 = uthres
+
     g = g0*1.0E2
     emit=0.0
 
@@ -369,10 +368,9 @@ contains
              rhoa = airden(i,j,1)*1.0D-3       ! (g cm^-3)
 
              ! FENGSHA uses the 13 category soil type from the USDA
-             call calc_fengsha_styp(massfrac(1),massfrac(3),massfrac(2),styp)
-
+             ! call calc_fengsha_styp(massfrac(1),massfrac(3),massfrac(2),styp)
              ! Fengsha uses threshold velocities based on dale gilletes data
-             call fengsha_utst(styp,uthres,u_ts0)
+             ! call fengsha_utst(styp,uthres,u_ts0)
 
              ! Friction velocity threshold correction function based on physical
              ! properties related to moisture tension. Soil moisture greater than

@@ -90,7 +90,7 @@ contains
           2.08, 1.65, 1.3, 1.02, 0.8, 0.62, 0.48, 0.37, 0.28 /)
       end if
 
-      ! -- dust 
+      ! -- dust
       if (.not.allocated(data % dm0)) then
         allocate(data % dm0(ids:ide,jds:jde), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
@@ -131,6 +131,13 @@ contains
         allocate(data % rdrag(ids:ide,jds:jde), stat=localrc)
         if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
         data % rdrag = 0._CHEM_KIND_R4
+      end if
+
+      ! -- threshold friction velocity map (FENGSHA)
+      if (.not.allocated(data % uthr)) then
+        allocate(data % uthr(ids:ide,jds:jde), stat=localrc)
+        if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+        data % uthr = 0._CHEM_KIND_R4
       end if
 
       ! -- PJZ sediment supply map
@@ -327,7 +334,7 @@ contains
         if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') &
           localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
-        
+
         select case (config % dust_opt)
           case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
             call chem_io_read('clay.dat', data % clayfrac, path=trim(config % dust_inname), de=de, rc=localrc)
@@ -346,6 +353,11 @@ contains
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
             localpe, de, tile, minval(data % ssm), maxval(data % ssm)
+          ! -- threshold friction velocity map
+          call chem_io_read('uthr.dat', data % uthr, path=trim(config % dust_inname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," uthr - min/max = "2g16.6)') &
+               localpe, de, tile, minval(data % uthr), maxval(data % uthr)
           if (config % dust_calcdrag == 1) then
             ! -- drag partition map
             call chem_io_read('rdrag.dat', data % rdrag, path=trim(config % dust_inname), de=de, rc=localrc)
@@ -846,7 +858,7 @@ contains
         if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," e_sulf - min/max = "2g16.6)') &
           localpe, de, tile, minval(data % emiss_ab(:,:,config % species % p_e_sulf)), &
           maxval(data % emiss_ab(:,:,config % species % p_e_sulf))
-        
+
         select case (config % dust_opt)
           case (DUST_OPT_AFWA, DUST_OPT_FENGSHA)
             call chem_io_write('clay.dat', data % clayfrac, path=trim(config % emi_outname), de=de, rc=localrc)
@@ -865,6 +877,11 @@ contains
           if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
           if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," ssm - min/max = "2g16.6)') &
             localpe, de, tile, minval(data % ssm), maxval(data % ssm)
+          ! -- threshold friction velocity map
+          call chem_io_write('uthr.dat', data % uthr, path=trim(config % emi_outname), de=de, rc=localrc)
+          if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
+          if (isVerbose) write(6,'("chem_backgd_write: PET:",i4," DE:",i2," tile=",i2," uthr - min/max = "2g16.6)') &
+            localpe, de, tile, minval(data % uthr), maxval(data % uthr)
           if (config % dust_calcdrag == 1) then
             ! -- drag partition map
             call chem_io_write('rdrag.dat', data % rdrag, path=trim(config % emi_outname), de=de, rc=localrc)
@@ -1427,7 +1444,7 @@ contains
                 if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
               end do
             end if
-            
+
             call chem_io_write('ao2D', data % aod2d, &
               path=trim(config % emi_outname), pos=filepos, de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
@@ -1506,7 +1523,7 @@ contains
               if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
 
             end if
-            
+
           case (CHEM_OPT_RACM_SOA_VBS)
 
             call chem_io_write('ao2D', data % aod2d, &

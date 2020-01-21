@@ -127,6 +127,7 @@ contains
         data % ero2,  &
         data % ero3,  &
         data % rdrag, &
+        data % uthr,  &
         data % ssm,   &
         data % h2o2_backgd, &
         data % no3_backgd, &
