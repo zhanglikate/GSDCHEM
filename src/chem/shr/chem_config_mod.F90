@@ -20,7 +20,6 @@ module chem_config_mod
   integer, parameter :: DUST_OPT_GOCART  = 1
   integer, parameter :: DUST_OPT_AFWA    = 3
   integer, parameter :: DUST_OPT_FENGSHA = 5
-  integer, parameter :: dust_tune_uthres = 13
   ! -- sea salt scheme
   integer, parameter :: SEAS_OPT_NONE   = 0
   integer, parameter :: SEAS_OPT_GOCART = 1
@@ -136,7 +135,6 @@ module chem_config_mod
     ! -- tuning parameters
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
-    real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
     integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
@@ -193,7 +191,7 @@ contains
 
     integer                :: localrc, i, iostat, is
     integer                :: buffer(29)
-    real(CHEM_KIND_R4)     :: rbuffer(8+dust_tune_uthres+seas_tune_bins+chem_tune_tracers)
+    real(CHEM_KIND_R4)     :: rbuffer(8+seas_tune_bins+chem_tune_tracers)
     character(CHEM_MAXSTR) :: sbuffer(7)
 
     ! -- variables in input namelist
@@ -248,7 +246,6 @@ contains
     real(CHEM_KIND_R4) :: ash_height
     real(CHEM_KIND_R4) :: dust_alpha
     real(CHEM_KIND_R4) :: dust_gamma
-    real(CHEM_KIND_R4) :: dust_uthres(dust_tune_uthres)
     integer            :: dust_calcdrag
     real(CHEM_KIND_R4) :: seas_emis_scale(seas_tune_bins)
     integer            :: seas_emis_scheme
@@ -307,7 +304,6 @@ contains
       ash_height,                &
       dust_alpha,                &
       dust_gamma,                &
-      dust_uthres,               &
       dust_calcdrag,             &
       seas_emis_scale,           &
       seas_emis_scheme,          &
@@ -328,7 +324,6 @@ contains
     ash_height        = -999._CHEM_KIND_R4
     dust_alpha        = 0._CHEM_KIND_R4
     dust_gamma        = 0._CHEM_KIND_R4
-    dust_uthres       = 0._CHEM_KIND_R4
     dust_calcdrag     = 0
     seas_emis_scale   = 0._CHEM_KIND_R4
     seas_emis_scheme  = 0
@@ -465,11 +460,6 @@ contains
                       depo_fact, dust_alpha, dust_gamma /)
 
     is = 8
-    do i = 1, dust_tune_uthres
-      rbuffer(i+is) = dust_uthres(i)
-    end do
-
-    is = is + dust_tune_uthres
     do i = 1, seas_tune_bins
       rbuffer(i+is) = seas_emis_scale(i)
     end do
@@ -493,11 +483,6 @@ contains
     config % dust_gamma = rbuffer(8)
 
     is = 8
-    do i = 1, dust_tune_uthres
-      config % dust_uthres(i) = rbuffer(i+is)
-    end do
-
-    is = is + dust_tune_uthres
     do i = 1, seas_tune_bins
       config % seas_emis_scale(i) = rbuffer(i+is)
     end do

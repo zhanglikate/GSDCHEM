@@ -60,12 +60,8 @@ contains
        dust_alpha = afwa_alpha
        dust_gamma = afwa_gamma
      case (DUST_OPT_FENGSHA)
-       dust_alpha = fengsha_alpha
-       dust_gamma = fengsha_gamma
-       if (any(config % dust_uthres > 0._CHEM_KIND_R4)) then
-         n = min(fengsha_maxstypes, size(config % dust_uthres))
-         dust_uthres(1:n) = config % dust_uthres(1:n)
-       end if
+       dust_alpha    = fengsha_alpha
+       dust_gamma    = fengsha_gamma
        dust_calcdrag = config % dust_calcdrag
      case (DUST_OPT_GOCART )
        dust_alpha = gocart_alpha

@@ -125,6 +125,10 @@ contains
       deallocate(data % rdrag, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
     end if
+    if (allocated(data % uthr)) then
+      deallocate(data % uthr, stat=localrc)
+      if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
+    end if
     if (allocated(data % ssm)) then
       deallocate(data % ssm, stat=localrc)
       if (chem_rc_test((localrc /= 0), file=__FILE__, line=__LINE__, rc=rc)) return
