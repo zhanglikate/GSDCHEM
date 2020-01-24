@@ -521,7 +521,7 @@ contains
     if (slt .ge. 80 .and. cly .lt. 12)                                                      type = 5      ! slt
     if (cly .ge. 7  .and. cly .lt. 27 .and.slt .ge. 28 .and. slt .lt. 50 .and.snd .le. 52)  type = 6      ! loam
     if (cly .ge. 20 .and. cly .lt. 35 .and.slt .lt. 28 .and. snd .gt. 45)                   type = 7      ! sndy cly loam
-    if (cly .ge. 27 .and. cly .lt. 40 .and.snd .gt. 20)                                     type = 8      ! slt cly loam
+    if (cly .ge. 27 .and. cly .lt. 40 .and.snd .lt. 20)                                     type = 8      ! slt cly loam
     if (cly .ge. 27 .and. cly .lt. 40 .and.snd .ge. 20 .and. snd .le. 45)                   type = 9      ! cly loam
     if (cly .ge. 35 .and. snd .gt. 45)                                                      type = 10     ! sndy cly
     if (cly .ge. 40 .and. slt .ge. 40)                                                      type = 11     ! slty cly
