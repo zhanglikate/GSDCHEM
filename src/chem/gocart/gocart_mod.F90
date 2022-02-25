@@ -357,6 +357,7 @@ contains
 
     real(CHEM_KIND_R4), parameter :: m2mm = 1.e+03_CHEM_KIND_R4
     real(CHEM_KIND_R4), parameter :: frpc = 1.e+06_CHEM_KIND_R4
+    real(CHEM_KIND_R4), parameter :: ugkg = 1.e-09_CHEM_KIND_R4 !lzhang
 
     ! -- begin
     if (present(rc)) rc = CHEM_RC_SUCCESS
@@ -586,7 +587,7 @@ contains
         ims,ime, jms,jme, kms,kme,                        &
         its,ite, jts,jte, kts,kte)
       truf(:,:,num_emis_dust+1:num_emis_dust+num_emis_seas) = &
-        emis_seas(its:ite,1,jts:jte,1:num_emis_seas)
+        emis_seas(its:ite,1,jts:jte,1:num_emis_seas) !kg/m2/s
     endif
     store_arrays = .false.
     select case (dust_opt)
@@ -624,7 +625,7 @@ contains
 
     ! -- set output arrays
     if (store_arrays) then
-      truf(:,:,1:num_emis_dust) = emis_dust(its:ite,1,jts:jte,1:num_emis_dust)
+      truf(:,:,1:num_emis_dust) = ugkg*emis_dust(its:ite,1,jts:jte,1:num_emis_dust) !kg/m2/s
     end if
     if (call_plume) then
       call plumerise_driver (ktau,dtstep,num_chem,num_ebu,num_ebu_in, &
@@ -766,7 +767,7 @@ contains
      ! -- ls wet deposition
      select case (wetdep_ls_opt)
        case (WDLS_OPT_GSD)
-         call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,     &
+         call wetdep_ls(dt,chem,rnav,moist,rho_phy,var_rmv,xlat, &
                         num_moist,num_chem,p_qc,p_qi,dz8w,vvel, &
                         ids,ide, jds,jde, kds,kde,              &
                         ims,ime, jms,jme, kms,kme,              &
@@ -908,15 +909,18 @@ contains
     ! -- calculate column mass density
     call gocart_diag_cmass(chem_opt, nbegin, grvity, pr3d, tr3d_out, trcm)
 
-    ! -- output anthropogenic emissions
-    trab(:,:,1) = emis_ant(its:ite, kts, jts:jte, p_e_bc )
-    trab(:,:,2) = emis_ant(its:ite, kts, jts:jte, p_e_oc )
-    trab(:,:,3) = emis_ant(its:ite, kts, jts:jte, p_e_so2)
+    ! -- output anthropogenic emissions, kg/m2/s
+    trab(:,:,1) = ugkg*emis_ant(its:ite, kts, jts:jte, p_e_bc )
+    trab(:,:,2) = ugkg*emis_ant(its:ite, kts, jts:jte, p_e_oc )
+    trab(:,:,3) = ugkg*emis_ant(its:ite, kts, jts:jte, p_e_so2)
 
-    ! -- output biomass burning emissions
-    trab(:,:,4) = ebu_in(its:ite, jts:jte, p_ebu_in_bc )
-    trab(:,:,5) = ebu_in(its:ite, jts:jte, p_ebu_in_oc )
-    trab(:,:,6) = ebu_in(its:ite, jts:jte, p_ebu_in_so2)
+    ! -- output biomass burning emissions,kg/m2/s
+    trab(:,:,4) = ugkg*ebu_in(its:ite, jts:jte, p_ebu_in_bc )
+    trab(:,:,5) = ugkg*ebu_in(its:ite, jts:jte, p_ebu_in_oc )
+    trab(:,:,6) = ugkg*ebu_in(its:ite, jts:jte, p_ebu_in_so2)
+
+    ! -- output aod !lzhang
+    trab(:,:,7) = aod2d(its:ite, jts:jte)
 
     ! -- output sedimentation and dry/wet deposition
     call gocart_diag_store(1, sedim, trdf)

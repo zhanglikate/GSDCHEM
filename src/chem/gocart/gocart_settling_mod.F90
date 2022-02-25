@@ -49,6 +49,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1) :: tmp,airden,airmas,p_mid,delz,rh
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: dust
   real(CHEM_KIND_R8), DIMENSION (1,1,kte-kts+1,5) :: sea_salt
+  real(CHEM_KIND_R8), DIMENSION (ime,jme,kme,num_chem) :: chem_before
   real, dimension (1:5) :: maxdust,maxseas
 !
 ! bstl is for budgets
@@ -226,7 +227,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
                (t_phy(i,k,j)-36.))/(.01*p_phy(i,k,j))))
           rh(1,1,kk)=max(1.0D-1,rh(1,1,kk))
           do nv = 1, num_chem
-            sedim(i,j,nv) = sedim(i,j,nv) + chem(i,k,j,nv)*p8w(i,k,j)/g
+            chem_before(i,j,k,nv) =  chem(i,k,j,nv)  
           enddo
           enddo
 !
@@ -259,6 +260,17 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
           call settling(1, 1, lmx, 5,g,dyn_visc, &
                     dust, tmp, p_mid, delz, airmas, &
                     den_dust, reff_dust, dt, bstl_dust, rh, idust, iseas,airden)
+
+           kk = 0
+          do k = kts,kte
+             kk = kk+1
+             chem(i,k,j,p_dust_1)=dust(1,1,kk,1)*converi          ! dust for size bin 1 [ug/kg]
+             chem(i,k,j,p_dust_2)=dust(1,1,kk,2)*converi          ! ...
+             chem(i,k,j,p_dust_3)=dust(1,1,kk,3)*converi          ! ...
+             chem(i,k,j,p_dust_4)=dust(1,1,kk,4)*converi          ! ...
+             chem(i,k,j,p_dust_5)=dust(1,1,kk,5)*converi          ! dust for size bin 5 (dust_opt 3: for all size bins) [ug/kg]
+          enddo
+#if 0
           kk=0
           do k=kts,kte-4
           kk=kk+1
@@ -275,6 +287,7 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
             chem(i,k,j,p_dust_4)=1.e-16
             chem(i,k,j,p_dust_5)=1.e-16
           enddo
+#endif
           endif ! dust_opt 
 !
 !
@@ -305,6 +318,17 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
              call settling(1, 1, lmx, 5, g,dyn_visc,&
                     sea_salt, tmp, p_mid, delz, airmas, &
                     den_seas, reff_seas, dt, bstl_seas, rh, idust, iseas,airden)
+            kk=0
+          do k=kts,kte
+             kk=kk+1
+             chem(i,k,j,p_seas_1)=sea_salt(1,1,kk,1)*converi
+             chem(i,k,j,p_seas_2)=sea_salt(1,1,kk,2)*converi
+             chem(i,k,j,p_seas_3)=sea_salt(1,1,kk,3)*converi
+             chem(i,k,j,p_seas_4)=sea_salt(1,1,kk,4)*converi
+             chem(i,k,j,p_seas_5)=sea_salt(1,1,kk,5)*converi
+          enddo
+
+#if 0          
           kk=0
           do k=kts,kte-4
           kk=kk+1
@@ -321,13 +345,15 @@ SUBROUTINE gocart_settling_driver(dt,t_phy,moist,                     &
             chem(i,k,j,p_seas_4)=0.
             chem(i,k,j,p_seas_5)=0.
           enddo
+#endif
+
           endif   ! end seasopt==1
 
           do nv = 1, num_chem
             do k = kts,kte
-              sedim(i,j,nv) = sedim(i,j,nv) - chem(i,k,j,nv)*p8w(i,k,j)/g
+              sedim(i,j,nv) = sedim(i,j,nv)+(chem_before(i,j,k,nv) - chem(i,k,j,nv))*p8w(i,k,j)/g
             enddo
-            sedim(i,j,nv) = sedim(i,j,nv) / dt
+            sedim(i,j,nv) = sedim(i,j,nv) / dt  !ug/m2/s
           enddo
 !
 !
@@ -488,22 +514,13 @@ END SUBROUTINE gocart_settling_driver
 
                  vd_cor(l) = 2.0/9.0*g0*rho_priv(k)*rwet_priv(k)**2/viscosity
 
-                 ! Update mixing ratio
-                 !! Order of delz is top->sfc
-                 !IF (l == lmx) THEN
-                 !   tc(i,j,l,k) = tc(i,j,l,k) / &
-                 !        (1.0 + dt_settl(k)*vd_cor/delz(i,j,l2))
-                 !ELSE
-                 !   tc(i,j,l,k) = 1.0/(1.0+dt_settl(k)*vd_cor/delz(i,j,l2))&
-                 !        *(tc(i,j,l,k) + dt_settl(k)*vd_cor /delz(i,j,l2-1) &
-                 !        * tc(i,j,l+1,k))
-                 !END IF
             ! Update mixing ratio; order of delz: top->sfc
             temp_tc=tc(i,j,l,k)      !temp_tc - for temporal storage [ug/kg]            
             vd_wk1 = dt_settl(k)*vd_cor(l)/delz(i,j,l2)   !fraction to leave level
 
             tc(i,j,l,k)   =  tc(i,j,l,k)*(1.- vd_wk1)+transfer_to_below_level ! [ug/kg]
-            if (l.gt.1) transfer_to_below_level =(temp_tc*vd_wk1)*((delz(i,j,l2) &
+            
+           if (l.gt.1) transfer_to_below_level =(temp_tc*vd_wk1)*((delz(i,j,l2) &
                    *airden(i,j,l))/(delz(i,j,l2+1)*airden(i,j,l-1)))          ! [ug/kg]
 
               END DO   !i

@@ -73,7 +73,7 @@ CONTAINS
 
 ! LOCAL VARS
      real,    dimension (its:ite,kts:kte) ::                    &
-        OUTT,OUTQ,OUTQC,rho,zz
+        OUTT,OUTQ,OUTQC,rho,zz,dz
      real,    dimension (its:ite)         ::                    &
         pret, ter11
 
@@ -132,6 +132,7 @@ CONTAINS
          zz(I,K) =z(i,k,j)
          T(I,K)=t_phy(i,k,j)
          rho(I,K)=rho_phy(i,k,j)
+         dz(I,K)=dz8w(i,k,j)
          q(I,K)=moist(i,k,j,p_qv)
          IF(Q(I,K).LT.1.E-08)Q(I,K)=1.E-08
          if (pbl(i,j).ge.z(i,k,j).and.pbl(i,j).lt.z(i,k+1,j)) then
@@ -213,7 +214,12 @@ CONTAINS
        do nv=1,num_chem
          do I=its,itf
            if(pret(i).gt.0.)then
-             trfall(i,j,nv)=trdep(i,nv) !lzhang
+             !wet deposition into ug/m2/s
+             !trfall(i,j,nv)=trdep(i,nv) !lzhang
+             do k=kts,kte
+             trfall(i,j,nv)=trfall(i,j,nv)+(tracert(i,k,nv)*rho(i,k)*dz(i,k)) !lzhang 
+             enddo
+             trfall(i,j,nv)=max(0.,trfall(i,j,nv))  !lzhang
              trmax = maxval(chem(i,kts:ktf,j,nv))
              do k=kts,ktop(i)
                chem(i,k,j,nv)=min(trmax,chem(i,k,j,nv)+tracert(i,k,nv)*dt)
@@ -221,6 +227,7 @@ CONTAINS
                if(nv.eq.npr)then
                  cu_co_ten(i,k,j)=tracert(i,k,npr)*dt
                endif
+              
              enddo
            else
              do K=kts,ktf-1
@@ -1186,6 +1193,7 @@ CONTAINS
                       do k=kts,ktop(i)
                           outc(i,k,nv)=dellac(i,k,nv)*xmb(i)
                       enddo
+                      chem_psum(i,nv)=chem_psum(i,nv)*xmb(i) !lzhang
                     enddo
                  endif ! ierr
               enddo

@@ -223,7 +223,7 @@ CONTAINS
                   chem(i,kts,j,p_seas_4) = chem(i,kts,j,p_seas_4) + tc(4)*converi
                   chem(i,kts,j,p_seas_5) = chem(i,kts,j,p_seas_5) + tc(5)*converi
 
-                  ! for output diagnostics
+                  ! for output diagnostics kg/m2/s
                   emis_seas(i,1,j,p_eseas1) = bems(1)
                   emis_seas(i,1,j,p_eseas2) = bems(2)
                   emis_seas(i,1,j,p_eseas3) = bems(3)

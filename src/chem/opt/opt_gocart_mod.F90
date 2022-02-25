@@ -30,7 +30,10 @@
 
   real, dimension(11) :: midbands 
   data midbands/.2,.235,.27,.2875,.3025,.305,.3625,.55,1.92,1.745,6.135/ 
-  real,parameter :: frac(4)=(/ 0.01053,0.08421,0.25263,0.65263 /) !fraction for fine dust
+  !real,parameter :: frac(4)=(/ 0.01053,0.08421,0.25263,0.65263 /) !fraction for fine dust 
+  !real,parameter :: frac(4)=(/0.0054,0.0257,0.1923,0.7766/) !fraction for fine dust !lzhang Kok
+  real,parameter :: frac(4)=(/0.06,0.12,0.24,0.58/) !fraction for fine dust !lzhang GEOS-Chem
+  !real,parameter :: frac(4)=(/0.0070,0.0332,0.2487,0.7111/) !fraction for fine dust !lzhang IMP
   real,save :: Bex(tgmx,nwl,0:nrmx) ! SW Mass extinction coefficient [m2/g]
   real,save :: w0(tgmx,nwl,0:nrmx)  ! SW single scattering albedo [-]
   real,save :: g(tgmx,nwl,0:nrmx)   ! SW asymetry factor [-]
@@ -48,8 +51,8 @@
 !  2 = BC1+BC2  !black carbon (soot)
 !  3 = OC1      !non hygroscopic OC
 !  4 = OC2      !hygroscopic OC
-!  5 = SS1      !sea-salt accumulation mode
-!  6 = SS2+SS3+SS4 !sea-salt coarse mode
+!  5 = SS1      !sea-salt accumulation mode !SS1+SS2
+!  6 = SS2+SS3+SS4 !sea-salt coarse mode    !SS3+SS4+SS5
 !  7 = DU1      ! dust mode 1
 !  8 = DU1      ! dust mode 2
 !  9 = DU1      ! dust mode 3
@@ -8559,7 +8562,7 @@
                    ,its,ite, jts,jte, kts,kte )
         USE chem_tracers_mod
 !       USE module_initial_chem_namelists 
-   USE chem_const_mod, only: oc_mfac,nh4_mfac
+   USE chem_const_mod, only: oc_mfac,nh4_mfac,mw_so4_aer,mwdry !lzhang
 !  USE module_data_gocart_chem, only: oc_mfac,nh4_mfac
   implicit none
    INTEGER,    INTENT(IN   ) ::        ids,ide, jds,jde, kds,kde, &
@@ -8587,8 +8590,8 @@
 !  2 = BC1+BC2  ! black carbon (soot)
 !  3 = OC1      ! non hygroscopic OC
 !  4 = OC2      ! hygroscopic OC
-!  5 = SS1      ! sea-salt accumulation mode
-!  6 = SS2+SS3+SS4 !sea-salt coarse mode
+!  5 = SS1+SS2  ! sea-salt accumulation mode !lzhang
+!  6 = SS3+SS4+SS5 !sea-salt coarse mode !lzhang
 !  7 = DU1      ! dust mode 1
 !  8 = DU1      ! dust mode 2
 !  9 = DU1      ! dust mode 3
@@ -8617,7 +8620,7 @@
  real :: ssa_typ(tgmx) !single scattering albedo for each aerosol type [-]
  real :: asy_typ(tgmx) !asymetery factor for each aerosol type [-]
  real :: w1, w2        !weight for pressure interpolation
- real :: conv1a
+ real :: conv1a,conv1sulf
 
  do i = its,ite
  do j = jts,jte
@@ -8633,17 +8636,29 @@
  enddo
  do k = kts,kte
    conv1a=(1./alt(i,k,j))*1.e-6
-   aero(k,1)=chem(i,k,j,p_sulf)*conv1a*1.e3*nh4_mfac
-   aero(k,2)=(chem(i,k,j,p_bc1)+chem(i,k,j,p_bc2))*conv1a
-   aero(k,3)=(chem(i,k,j,p_oc1))*conv1a*oc_mfac
-   aero(k,4)=(chem(i,k,j,p_oc2))*conv1a*oc_mfac
-   aero(k,5)=(chem(i,k,j,p_seas_2))*conv1a
-   aero(k,6)=(chem(i,k,j,p_seas_3))*conv1a
-   aero(k,7)=(chem(i,k,j,p_dust_1))*conv1a*frac(1)
-   aero(k,8)=(chem(i,k,j,p_dust_1))*conv1a*frac(2)
-   aero(k,9)=(chem(i,k,j,p_dust_1))*conv1a*frac(3)
-   aero(k,10)=(chem(i,k,j,p_dust_1))*conv1a*frac(4)
-   aero(k,11)=(chem(i,k,j,p_dust_2))*conv1a
+!lzhang  convert ppmv sulfate (and coincidentally MSA) to g / m3
+        conv1sulf = (1.0/alt(i,k,j)) * 1.0e-3 * mw_so4_aer / mwdry
+
+   !aero(k,1)=chem(i,k,j,p_sulf)*conv1a*1.e3*nh4_mfac !lzhang
+   !aero(k,1)=chem(i,k,j,p_sulf)*conv1sulf*nh4_mfac
+   !aero(k,1)=chem(i,k,j,p_sulf)*conv1sulf*1.6
+   aero(k,1)=(chem(i,k,j,p_sulf)+chem(i,k,j,p_msa))*conv1sulf*1.8
+   aero(k,2)=(chem(i,k,j,p_bc1)+chem(i,k,j,p_bc2))*conv1a*1.0
+   aero(k,3)=(chem(i,k,j,p_oc1))*conv1a*1.4
+   aero(k,4)=(chem(i,k,j,p_oc2))*conv1a*1.4
+   !aero(k,5)=(chem(i,k,j,p_seas_1)+chem(i,k,j,p_seas_2))*conv1a !lzhang
+   !aero(k,6)=(chem(i,k,j,p_seas_3)+chem(i,k,j,p_seas_4)+chem(i,k,j,p_seas_5))*conv1a !lzhang
+   aero(k,5)=(chem(i,k,j,p_seas_1)+chem(i,k,j,p_seas_2))*conv1a*2.5 !lzhang
+   aero(k,6)=(chem(i,k,j,p_seas_3)+chem(i,k,j,p_seas_4)+chem(i,k,j,p_seas_5))*conv1a*2.5 !lzhang
+   aero(k,7)=(chem(i,k,j,p_dust_1))*conv1a*frac(1)*1.6
+   aero(k,8)=(chem(i,k,j,p_dust_1))*conv1a*frac(2)*1.6
+   aero(k,9)=(chem(i,k,j,p_dust_1))*conv1a*frac(3)*1.6
+   aero(k,10)=(chem(i,k,j,p_dust_1))*conv1a*frac(4)*1.6
+   !aero(k,11)=(chem(i,k,j,p_dust_2))*conv1a*3.
+   aero(k,11)=(chem(i,k,j,p_dust_2)+chem(i,k,j,p_dust_3)+chem(i,k,j,p_dust_4)+chem(i,k,j,p_dust_5))*conv1a*1.6
+   !aero(k,12)=(chem(i,k,j,p_dust_3))*conv1a*3.  !lzhang
+   !aero(k,13)=(chem(i,k,j,p_dust_4))*conv1a*3. !lzhang
+   !aero(k,14)=(chem(i,k,j,p_dust_5))*conv1a*3. !lzhang
  enddo
 
 !
@@ -8666,16 +8681,19 @@
        rad_select: select case(sw_or_lw)
        case ('sw')  !shortwave radiation
             do t = 1,tgmx !aerosol type loop
-               if(rhi == 99) then
+               !if(rhi == 99) then
+               if(rhi == 99.or.tgmx>6) then
                   ext        = Bex(t,n,rhi) 
                   tau_typ(t) = ext * aero(k,t) * dz(k)
                   ssa_typ(t) = w0(t,n,rhi) 
                   asy_typ(t) = g(t,n,rhi)
                else
+                  if (tgmx<=6)  then
                   ext        = w1*Bex(t,n,rhi) + w2*Bex(t,n,rhi+1)
                   tau_typ(t) = ext * aero(k,t) * dz(k)
                   ssa_typ(t) = w1*w0(t,n,rhi) + w2*w0(t,n,rhi+1)
                   asy_typ(t) = w1*g(t,n,rhi) + w2*g(t,n,rhi+1)
+                  endif
                endif
            
              enddo !t

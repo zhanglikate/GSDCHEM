@@ -551,11 +551,13 @@ contains
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % plume), maxval(data % plume)
           case (FIRE_OPT_GBBEPx)
+            if (config % plumerisefire_frq > 0) then
             call chem_io_read('plumefrp.dat', data % plume, &
               path=trim(config % fireemi_inname), de=de, rc=localrc)
             if (chem_rc_check(localrc, file=__FILE__, line=__LINE__, rc=rc)) return
             if (isVerbose) write(6,'("chem_backgd_read: PET:",i4," DE:",i2," tile=",i2," plume - min/max = "2g16.6)') &
               localpe, de, tile, minval(data % plume), maxval(data % plume)
+            endif
           case default
             ! -- no further options available
         end select

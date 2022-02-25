@@ -243,7 +243,7 @@ contains
       do j = jts, jte
         do i = its, ite
           factor = 1._CHEM_KIND_R8 - exp(-ddvel(i,j,nv)*cdt/dz8w(i,kts,j))
-          ddep(i,j,nv) = max(0.0, factor * chem(i,kts,j,nv)) &
+          ddep(i,j,nv) = max(0.0, factor * chem(i,kts,j,nv)) & !ug/m2/s
                          * (p8w(i,kts,j)-p8w(i,kts+1,j))/g/dtstep
         end do
       end do
